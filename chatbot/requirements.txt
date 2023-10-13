@@ -1,0 +1,5 @@
+sqlalchemy
+psycopg2-binary
+python-dotenv
+vkbottle
+loguru

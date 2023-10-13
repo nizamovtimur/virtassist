@@ -1,0 +1,28 @@
+version: '3.8'
+services:
+    chatbot:
+        build: ./chatbot
+        container_name: studpath-chatbot
+        env_file:
+            - .env.production
+        depends_on:
+            - db
+        networks:
+            - db-conn
+    db:
+        image: postgres:latest
+        container_name: studpath-db
+        environment:
+            - POSTGRES_DB=${POSTGRES_DB}
+            - POSTGRES_USER=${POSTGRES_USER}
+            - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+        volumes:
+            - db-data:/var/lib/postgresql/data
+        networks:
+            - db-conn
+volumes:
+    db-data:
+
+networks:
+    db-conn:
+        driver: bridge
