@@ -4,7 +4,7 @@ services:
         build: ./chatbot
         container_name: studpath-chatbot
         env_file:
-            - .env.production
+            - .env
         depends_on:
             - db
         networks:
