@@ -11,6 +11,5 @@ RUN pip install -r requirements.txt
 
 COPY . /usr/src/app/
 
-#CMD python database.py
-
-CMD python main.py
+CMD python database.py && \
+    python main.py
