@@ -2,8 +2,7 @@ import sys
 from loguru import logger
 from sqlalchemy import create_engine, select
 from sqlalchemy.orm import Session
-from sqlalchemy.sql.expression import func
-from vkbottle import Bot, KeyboardButtonColor, template_gen, Keyboard, Text, TemplateElement, OpenLink, ABCRule
+from vkbottle import Bot, Keyboard, Text, ABCRule
 from vkbottle.bot import Message
 from vkbottle.dispatch.rules.base import RegexRule
 from config import Config
@@ -26,7 +25,7 @@ bot.labeler.vbml_ignore_case = True
 bot.labeler.custom_rules["permission"] = Permission
 
 
-@bot.on.message(RegexRule("!send "), permission=[388376198])
+@bot.on.message(RegexRule("!send "), permission=Config.SUPERUSER_VK_ID)
 async def handler(message: Message):
     with Session(engine) as session:
         for _user in session.scalars(select(User)):
@@ -72,8 +71,10 @@ async def handler(message: Message):
     add_user(message.from_id)
     # is_user_subscribed = check_subscribing(message.from_id)
     # notify_text = "Отписаться от рассылки" if is_user_subscribed else "Подписаться на рассылку"
-    intro_message = f"👋🏻 Привет! Расскажи о вопросах, которые тебе задавали\n\n" \
-                    f"Продолжая работу с ботом, ты разрешаешь обработку своих персональных данных и получение сообщений. "
+    intro_message = f"👋🏻 Привет! Я виртуальный помощник ТюмГУ и я только учусь помогать студентам находить ответы на вопросы. " \
+                     f"В будущем я смогу отвечать на вопросы, касающиеся нашего университета, а пока что мне нужна твоя помощь. " \
+                      f"Можешь рассказать, какие вопросы у тебя возникали за время обучения в ТюмГУ?\n\n" \
+                    f"Продолжая работу с ботом, ты разрешаешь обработку своих персональных данных и получение сообщений."
     keyboard_choice = (
         Keyboard(inline=True).add(Text("Хочу рассказать о вопросах")).get_json()
     )
@@ -93,18 +94,18 @@ async def handler(message: Message):
             session.commit()
     if dialog_iteration == 1:
         await message.answer(
-            message="Какой вопрос у тебя возник?", random_id=0)
+            message="Расскажи, пожалуйста, какой вопрос у тебя возник?", random_id=0)
 
 
 @bot.on.message(text=["больше вопросов не было"])
 async def handler(message: Message):
     dialog_iteration = user_increment_iteration(message.from_id)
     if dialog_iteration == 6:
-        await message.answer(message="Спасибо за твои вопросы! 🤗", random_id=0)
+        await message.answer(message="Превосходно!", random_id=0)
         with Session(engine) as session:
             user = session.scalars(select(User).where(User.id == message.from_id)).first()
             if user.experience is None:
-                await message.answer(message="У меня есть к тебе пара вопросов. Вот первый:\n\n"
+                await message.answer(message="У меня есть к тебе ещё пара вопросов. Вот первый:\n\n"
                                              "Расскажи, пожалуйста, где ты обычно получаешь ответы на вопросы, "
                                              "возникающие в ходе обучения в ТюмГУ?", random_id=0)
             else:
@@ -112,9 +113,9 @@ async def handler(message: Message):
                 session.commit()
                 if user.fantasies is None:
                     await message.answer(
-                        message="У меня к тебе есть вопрос. Какими на твой взгляд функциями должен обладать"
+                        message="У меня к тебе есть вопрос. Какими, на твой взгляд, функциями должен обладать"
                                 " виртуальный помощник студента в идеале"
-                                " и важна ли человеко-подобность ответов как в ChatGPT?",
+                                " и важна ли человеко-подобность ответов как у ChatGPT?",
                         random_id=0)
 
 
@@ -151,8 +152,16 @@ async def handler(message: Message):
                 Question.id.desc()).limit(1)).first()
             question.department = message.text
             session.commit()
+        keyboard_choice = (
+            Keyboard(inline=True).add(Text("Отлично")).row()
+            .add(Text("Хорошо")).row()
+            .add(Text("Удовлетворительно")).row()
+            .add(Text("Плохо")).row()
+            .add(Text("Ужасно")).get_json()
+        )
         await message.answer(
-            message="Как ты оцениваешь ответ на твой вопрос?", random_id=0)
+            message="Как ты оцениваешь ответ?",
+            keyboard=keyboard_choice, random_id=0)
     if dialog_iteration == 5:
         with Session(engine) as session:
             question = session.scalars(select(Question).where(Question.user_id == message.from_id).order_by(
@@ -164,7 +173,7 @@ async def handler(message: Message):
             .add(Text("Больше вопросов не было")).get_json()
         )
         await message.answer(
-            message="Хочешь ли ещё рассказать о вопросах?",
+            message="Хочешь ли ещё рассказать о вопросах, которые у тебя возникали?",
             keyboard=keyboard_choice, random_id=0)
     if dialog_iteration == 7:
         with Session(engine) as session:
@@ -173,8 +182,8 @@ async def handler(message: Message):
             if user.fantasies is None:
                 await message.answer(
                     message="Отлично! Вот мой последний вопрос:\n\n"
-                            "Какими на твой взгляд функциями должен обладать виртуальный помощник студента в идеале"
-                            " и важна ли человеко-подобность ответов как в ChatGPT?",
+                            "Какими, на твой взгляд, функциями должен обладать виртуальный помощник студента в идеале"
+                            " и важна ли человеко-подобность ответов как у ChatGPT?",
                     random_id=0)
             else:
                 user.dialog_iteration += 1
@@ -185,9 +194,10 @@ async def handler(message: Message):
             user.fantasies = message.text
             session.commit()
         await message.answer(
-            message="Спасибо за твои ответы! 🤗", random_id=0)
+            message="Большое спасибо! 🤗", random_id=0)
         await message.answer(
-            message="Если у тебя появится чем ещё поделиться, напиши «начать»", random_id=0)
+            message="Если у тебя появится чем ещё поделиться, напиши «начать». "
+                    "Хочешь следить за моим прогрессом? Подписывайся @public222974741 (на мой паблик) 😉", random_id=0)
 
 
 # @bot.on.message(text=["уведомления", "отписаться от рассылки", "подписаться на рассылку"])
