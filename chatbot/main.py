@@ -1,6 +1,6 @@
 import sys
 from loguru import logger
-from sqlalchemy import create_engine, select
+from sqlalchemy import create_engine, select, func
 from sqlalchemy.orm import Session
 from vkbottle import Bot, Keyboard, Text, ABCRule
 from vkbottle.bot import Message
@@ -34,6 +34,28 @@ async def handler(message: Message):
                     await bot.api.messages.send(user_id=_user.id, message=message.text[6:], random_id=0)
                 except Exception as e:
                     print(e)
+
+
+@bot.on.message(text=["stats"], permission=Config.SUPERUSER_VK_ID)
+async def handler(message: Message):
+    with Session(engine) as session:
+        users_count = session.scalar(select(func.count(User.id)))
+        users_with_questions_count = session.scalar(select(func.count(User.id)).where(User.questions.any()))
+        questions_count = session.scalar(select(func.count(Question.id)))
+        answers_count = session.scalar(select(func.count(Question.answer)))
+        departments_count = session.scalar(select(func.count(Question.department)))
+        scores_count = session.scalar(select(func.count(Question.score)))
+        experience_count = session.scalar(select(func.count(User.experience)))
+        fantasies_count = session.scalar(select(func.count(User.fantasies)))
+        await message.answer(
+            message=f"Количество пользователей: {users_count}\n"
+                    f"Количество пользователей с вопросами: {users_with_questions_count}\n\n"
+                    f"Количество вопросов: {questions_count}\n"
+                    f"Количество ответов: {answers_count}\n"
+                    f"Количество отделов: {departments_count}\n"
+                    f"Количество оценок: {scores_count}\n\n"
+                    f"Количество ответов на вопрос об ответчиках: {experience_count}\n"
+                    f"Количество пожеланий: {fantasies_count}", random_id=0)
 
 
 def add_user(user_id):
@@ -74,6 +96,7 @@ async def handler(message: Message):
     intro_message = f"👋🏻 Привет! Я виртуальный помощник ТюмГУ и я только учусь помогать студентам находить ответы на вопросы. " \
                     f"В будущем я смогу отвечать на вопросы, касающиеся нашего университета, а пока что мне нужна твоя помощь. \n\n" \
                     f"Можешь рассказать, какие вопросы у тебя возникали за время обучения в ТюмГУ и что тебе на них отвечали (управление ИОТ, единый деканат, тьюторы, кураторы, ...)? " \
+                    "Если да, нажми на кнопку «Хочу рассказать о вопросах»\n\n" \
                     f"Если на твой вопрос никто не ответил, можешь также его отправить мне 😉\n\n" \
                     f"Продолжая работу с ботом, ты разрешаешь обработку своих персональных данных и получение сообщений."
     keyboard_choice = (
@@ -106,22 +129,36 @@ async def handler(message: Message):
         with Session(engine) as session:
             user = session.scalars(select(User).where(User.id == message.from_id)).first()
             if user.experience is None:
+                keyboard_choice = (
+                    Keyboard(inline=True).add(Text("Пропустить")).get_json()
+                )
                 await message.answer(message="У меня есть к тебе ещё пара вопросов. Вот первый:\n\n"
                                              "Расскажи, пожалуйста, где ты обычно получаешь ответы на вопросы, "
-                                             "возникающие в ходе обучения в ТюмГУ?", random_id=0)
+                                             "возникающие в ходе обучения в ТюмГУ?",
+                                     keyboard=keyboard_choice, random_id=0)
             else:
                 user.dialog_iteration += 1
-                session.commit()
                 if user.fantasies is None:
+                    keyboard_choice = (
+                        Keyboard(inline=True).add(Text("Пропустить")).get_json()
+                    )
                     await message.answer(
-                        message="У меня к тебе есть вопрос. Какими, на твой взгляд, функциями должен обладать"
-                                " виртуальный помощник студента в идеале"
+                        message="У меня к тебе есть вопрос. Какими, на твой взгляд, функциями должен обладать виртуальный помощник студента в идеале"
                                 " и важна ли человеко-подобность ответов как у ChatGPT?",
-                        random_id=0)
+                        keyboard=keyboard_choice, random_id=0)
+                else:
+                    user.dialog_iteration += 1
+                session.commit()
 
 
 @bot.on.message()
 async def handler(message: Message):
+    with Session(engine) as session:
+        users = session.scalars(select(User.id).where(User.id == message.from_id)).all()
+        if len(users) == 0:
+            await message.answer(
+                message="Чтобы запустить бот, напиши «начать»", random_id=0)
+            return
     if len(message.text) < 3:
         await message.answer(
             message="Твой ответ меньше трёх символов, попробуй ещё раз", random_id=0)
@@ -187,21 +224,31 @@ async def handler(message: Message):
     if dialog_iteration == 7:
         with Session(engine) as session:
             user = session.scalars(select(User).where(User.id == message.from_id)).first()
-            user.experience = message.text
+            if message.text != "Пропустить":
+                user.experience = message.text
             if user.fantasies is None:
+                keyboard_choice = (
+                    Keyboard(inline=True).add(Text("Пропустить")).get_json()
+                )
                 await message.answer(
                     message="Отлично! Вот мой последний вопрос:\n\n"
                             "Какими, на твой взгляд, функциями должен обладать виртуальный помощник студента в идеале"
                             " и важна ли человеко-подобность ответов как у ChatGPT?",
-                    random_id=0)
+                    keyboard=keyboard_choice, random_id=0)
             else:
                 user.dialog_iteration += 1
+                await message.answer(
+                    message="Большое спасибо! 🤗", random_id=0)
+                await message.answer(
+                    message="Если у тебя появится чем ещё поделиться, напиши «начать». "
+                            "Хочешь следить за моим прогрессом? Подписывайся @public222974741 (на мой паблик) 😉", random_id=0)
             session.commit()
     if dialog_iteration == 8:
         with Session(engine) as session:
             user = session.scalars(select(User).where(User.id == message.from_id)).first()
-            user.fantasies = message.text
-            session.commit()
+            if message.text != "Пропустить":
+                user.fantasies = message.text
+                session.commit()
         await message.answer(
             message="Большое спасибо! 🤗", random_id=0)
         await message.answer(
