@@ -2,7 +2,7 @@ import sys
 from loguru import logger
 from sqlalchemy import create_engine, select, func
 from sqlalchemy.orm import Session
-from vkbottle import Bot, Keyboard, Text, ABCRule
+from vkbottle import Bot, Keyboard, Text, ABCRule, DocMessagesUploader
 from vkbottle.bot import Message
 from vkbottle.dispatch.rules.base import RegexRule
 from config import Config
@@ -21,6 +21,7 @@ class Permission(ABCRule[Message]):
 
 engine = create_engine(Config.SQLALCHEMY_DATABASE_URI)
 bot = Bot(token=Config.ACCESS_GROUP_TOKEN)
+doc_uploader = DocMessagesUploader(bot.api)
 bot.labeler.vbml_ignore_case = True
 bot.labeler.custom_rules["permission"] = Permission
 
@@ -56,6 +57,23 @@ async def handler(message: Message):
                     f"Количество оценок: {scores_count}\n\n"
                     f"Количество ответов на вопрос об ответчиках: {experience_count}\n"
                     f"Количество пожеланий: {fantasies_count}", random_id=0)
+
+
+@bot.on.message(text=["csv"], permission=Config.SUPERUSER_VK_ID)
+async def handler(message: Message):
+    with Session(engine) as session:
+        questions = session.scalars(select(Question).order_by(Question.user_id)).all()
+        csv = "id;question;answer;department;score;user_id\n"
+        for question in questions:
+            csv += f"{question.id};{question.question};{question.answer};{question.department};{question.score};{question.user_id}\n"
+        csv = await doc_uploader.upload(file_source=bytes(csv, 'utf-8'), peer_id=message.from_id, title="questions.csv")
+        await message.answer(attachment=csv, random_id=0)
+        users = session.scalars(select(User).where(User.questions.any()).order_by(User.id)).all()
+        csv = "id;dialog_iteration;is_subscribed;experience;fantasies\n"
+        for user in users:
+            csv += f"{user.id};{user.dialog_iteration};{user.is_subscribed};{user.experience};{user.fantasies}\n"
+        csv = await doc_uploader.upload(file_source=bytes(csv, 'utf-8'), peer_id=message.from_id, title="users.csv")
+        await message.answer(attachment=csv, random_id=0)
 
 
 def add_user(user_id):
