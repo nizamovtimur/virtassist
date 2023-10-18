@@ -66,13 +66,15 @@ async def handler(message: Message):
         csv = "id;question;answer;department;score;user_id\n"
         for question in questions:
             csv += f"{question.id};{question.question};{question.answer};{question.department};{question.score};{question.user_id}\n"
-        csv = await doc_uploader.upload(file_source=bytes(csv, 'utf-8'), peer_id=message.from_id, title="questions.csv")
+        csv = await doc_uploader.upload(file_source=bytes(csv, 'utf-8'),
+                                        peer_id=message.from_id, title=f"questions_{len(questions)}.csv")
         await message.answer(attachment=csv, random_id=0)
         users = session.scalars(select(User).where(User.questions.any()).order_by(User.id)).all()
         csv = "id;dialog_iteration;is_subscribed;experience;fantasies\n"
         for user in users:
             csv += f"{user.id};{user.dialog_iteration};{user.is_subscribed};{user.experience};{user.fantasies}\n"
-        csv = await doc_uploader.upload(file_source=bytes(csv, 'utf-8'), peer_id=message.from_id, title="users.csv")
+        csv = await doc_uploader.upload(file_source=bytes(csv, 'utf-8'),
+                                        peer_id=message.from_id, title=f"users_{len(users)}.csv")
         await message.answer(attachment=csv, random_id=0)
 
 
