@@ -22,9 +22,9 @@ class Permission(ABCRule[Message]):
 
 async def get_answer(question: str) -> str:
     async with aiohttp.ClientSession() as session:
-        async with session.get(Config.QA_HOST) as response:
+        async with session.post(f"http://{Config.QA_HOST}/", json={"question": question}) as response:
             answer = await response.text()
-            return answer[:15]
+            return answer
 
 
 def add_user(user_id: int) -> bool:

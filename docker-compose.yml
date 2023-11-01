@@ -3,12 +3,15 @@ services:
     chatbot:
         build: ./chatbot
         container_name: studpath-chatbot
+        command: python main.py
         env_file:
-            - .env
+            - .env.docker
         depends_on:
             - db
+            - qa
         networks:
             - db-conn
+            - qa-conn
     db:
         image: postgres:latest
         container_name: studpath-db
@@ -20,10 +23,18 @@ services:
             - db-data:/var/lib/postgresql/data
         networks:
             - db-conn
+    qa:
+        build: ./qa
+        container_name: studpath-qa
+        command: python qa.py
+        networks:
+            - qa-conn
 
 volumes:
     db-data:
 
 networks:
     db-conn:
+        driver: bridge
+    qa-conn:
         driver: bridge
