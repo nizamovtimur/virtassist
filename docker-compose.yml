@@ -20,6 +20,7 @@ services:
             - db-data:/var/lib/postgresql/data
         networks:
             - db-conn
+
 volumes:
     db-data:
 
