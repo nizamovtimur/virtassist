@@ -7,7 +7,6 @@ class Base(DeclarativeBase):
     pass
 
 
-# add date of creation AND date of last update
 class User(Base):
     __tablename__ = "user"
     id: Mapped[int] = mapped_column(primary_key=True)
