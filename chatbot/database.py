@@ -1,5 +1,5 @@
 from typing import Optional, List
-from sqlalchemy import ForeignKey, Text
+from sqlalchemy import ForeignKey, Text, Column, DateTime, func
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 
 
@@ -10,12 +10,12 @@ class Base(DeclarativeBase):
 class User(Base):
     __tablename__ = "user"
     id: Mapped[int] = mapped_column(primary_key=True)
-    dialog_iteration: Mapped[int] = mapped_column()
-    is_subscribed: Mapped[int] = mapped_column()
-    experience: Mapped[Optional[str]] = mapped_column(Text())
-    fantasies: Mapped[Optional[str]] = mapped_column(Text())
+    is_subscribed: Mapped[bool] = mapped_column()
 
     questions: Mapped[List["Question"]] = relationship(back_populates="user", cascade="all, delete-orphan")
+
+    time_created = Column(DateTime(timezone=True), server_default=func.now())
+    time_updated = Column(DateTime(timezone=True), onupdate=func.now())
 
     def __repr__(self) -> str:
         return f"User(id={self.id!r}, is_subscribed={self.is_subscribed!r})"
@@ -24,17 +24,19 @@ class User(Base):
 class Question(Base):
     __tablename__ = "question"
     id: Mapped[int] = mapped_column(primary_key=True)
-    question: Mapped[Optional[str]] = mapped_column(Text())
-    answer: Mapped[Optional[str]] = mapped_column(Text())
-    department: Mapped[Optional[str]] = mapped_column(Text())
-    score: Mapped[Optional[str]] = mapped_column(Text())
+    question: Mapped[str] = mapped_column(Text())
+    answer: Mapped[str] = mapped_column(Text())
+    score: Mapped[Optional[int]] = mapped_column()
     user_id: Mapped[int] = mapped_column(ForeignKey("user.id"))
 
     user: Mapped["User"] = relationship(back_populates="questions")
 
+    time_created = Column(DateTime(timezone=True), server_default=func.now())
+    time_updated = Column(DateTime(timezone=True), onupdate=func.now())
+
     def __repr__(self) -> str:
         return (f"Question(question={self.question!r}, answer={self.answer!r}, "
-                f"department={self.department!r}, score={self.score!r})")
+                f"score={self.score!r})")
 
 
 # migrations
