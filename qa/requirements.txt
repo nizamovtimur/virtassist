@@ -1,1 +1,6 @@
-aiohttp 
+python-dotenv
+aiohttp
+langchain
+pandas
+transformers
+faiss-cpu

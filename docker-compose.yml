@@ -27,6 +27,8 @@ services:
         build: ./qa
         container_name: studpath-qa
         command: python qa.py
+        env_file:
+            - .env.docker
         networks:
             - qa-conn
 

@@ -2,3 +2,5 @@
 [v]env
 .env*
 !.env.example
+saved_models
+faiss_index
