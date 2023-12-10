@@ -1,6 +1,9 @@
 python-dotenv
 aiohttp
 langchain
-pandas
-transformers
-faiss-cpu
+gigachat
+spacy
+atlassian-python-api
+beautifulsoup4
+lxml
+pypdf

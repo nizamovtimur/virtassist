@@ -1,34 +1,77 @@
 from aiohttp import web
-from langchain.document_loaders import DataFrameLoader
-from langchain.embeddings import HuggingFaceInferenceAPIEmbeddings
-from langchain.vectorstores import FAISS
-import pandas as pd
+from atlassian import Confluence
+from bs4 import BeautifulSoup
+from langchain.document_loaders import PyPDFLoader
+from langchain.llms import GigaChat
+from langchain.prompts import PromptTemplate
+import spacy
 from config import Config
 
 
+needed_pos = ['NOUN', 'NUM', 'PROPN', 'VERB', 'X']
 routes = web.RouteTableDef()
-documents = pd.read_csv("departments.csv", index_col=0).dropna(ignore_index=True)
-documents.columns = ["institution", "department", "url", "description"]
-loader = DataFrameLoader(documents, page_content_column='description')
-loaded_documents = loader.load()
-embeddings = HuggingFaceInferenceAPIEmbeddings(
-    api_key=Config.HUGGINGFACE_TOKEN,
-    model_name="sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2"
-)
-db = FAISS.from_documents(loaded_documents, embeddings)
-db.as_retriever()
-db.save_local('faiss_index')
+nlp = spacy.load("ru_core_news_sm")
+confluence = Confluence(url=Config.CONFLUENCE_HOST, token=Config.CONFLUENCE_TOKEN)
+giga = GigaChat(credentials=Config.GIGACHAT_TOKEN, verify_ssl_certs=False)
+prompt_template = """
+Ты цифровой помощник студента ТюмГУ, помогаешь отвечать на вопросы. Извлеки ответ на вопрос из документа. 
+
+Документ:
+{context}
+
+Вопрос: {question}
+"""
+prompt = PromptTemplate.from_template(prompt_template)
+giga_chain = prompt | giga
+
+
+def get_cql_query(spaces, question):
+    words = [(token.lemma_, token.pos_) for token in nlp(question.lower()) if not token.is_stop and
+             token.pos_ in needed_pos and len(token.text) > 2]
+    spaces = " or ".join([f"space = {space}" for space in spaces])
+    words_with_verbs = " and ".join([f"text ~ '{word[0]}*'" for word in words])
+    words_without_verbs = " and ".join([f"text ~ '{word[0]}*'" for word in words if word[1] != 'VERB'])
+
+    return "(" + spaces + ") and (" + words_with_verbs + ")", "(" + spaces + ") and (" + words_without_verbs + ")"
+
+
+def get_answer_gigachat(question: str):
+    query = get_cql_query(spaces=Config.CONFLUENCE_SPACES, question=question)
+    results = confluence.cql(query[0], start=0, limit=1)['results']
+    if len(results) == 0:
+        results = confluence.cql(query[1], start=0, limit=1)['results']
+        if len(results) == 0:
+            return ""
+
+    page_id = results[0]['content']['id']
+    page = confluence.get_page_by_id(page_id, expand='space,body.export_view')
+    page_title, page_link = page['title'], page['_links']['base'] + page['_links']['webui']
+    page_body = page['body']['export_view']['value']
+    page_download = page['_links']['base'] + page['_links']['download'] if 'download' in page['_links'].keys() else ''
+
+    if len(page_body) > 50:
+        page_body = page['body']['export_view']['value']
+        soup = BeautifulSoup(page_body, 'html.parser')
+        page_body_text = soup.get_text(separator=' ')
+        context = page_body_text.replace(" \n ", "")
+    elif '.pdf' in page_download.lower():
+        loader = PyPDFLoader(page_download.split('?')[0])
+        context = " ".join([page.page_content for page in loader.load_and_split()])
+    else:
+        return ""
+
+    query = {"context": context,
+             "question": question}
+    return f"{giga_chain.invoke(query).strip()}\n\nПодробнее: {page_link}"
 
 
 @routes.post('/')
 async def main(request):
     question = (await request.json())['question']
-    found_doc = db.similarity_search(question)[0].dict()
-    department = found_doc['metadata']['department']
-    source = found_doc['metadata']['url']
-    return web.Response(text=f"Возможно, тебе стоит обраться в {department}. Подробнее: {source}")
+    return web.Response(text=get_answer_gigachat(question))
 
 
-app = web.Application()
-app.add_routes(routes)
-web.run_app(app)
+if __name__ == "__main__":
+    app = web.Application()
+    app.add_routes(routes)
+    web.run_app(app)

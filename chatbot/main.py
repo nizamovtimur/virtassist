@@ -136,11 +136,11 @@ async def handler(message: VKMessage):
 async def handler(message: VKMessage):
     is_user_added = add_user(vk_id=message.from_id)
     notify_text = "Отписаться от рассылки" if check_subscribing(vk_id=message.from_id) else "Подписаться на рассылку"
-    if is_user_added:
+    if is_user_added or "начать" in message.text.lower() or "start" in message.text.lower():
         first_message = f"👋🏻 Привет! Я виртуальный помощник ТюмГУ, ты можешь задать мне свой вопрос 😉\n\n" \
                         f"Продолжая работу, ты разрешаешь обработку своих персональных данных и получение сообщений. " \
                         f"Я также могу присылать тебе важные сообщения для всех студентов ТюмГУ, " \
-                        f"однако ты можешь отписаться от рассылки."
+                        f"однако ты можешь отписаться от рассылки, нажав на кнопку в меню ниже."
         await message.answer(
             message=first_message,
             keyboard=vk_keyboard_choice(notify_text), random_id=0)
@@ -149,6 +149,11 @@ async def handler(message: VKMessage):
         "Сейчас я попробую найти ответ на твой вопрос, это может занять какое-то время...")
     answer = await get_answer(message.text)
     await vk_bot.api.messages.delete(message_ids=[processing.message_id], peer_id=message.peer_id, delete_for_all=True)
+    if len(answer) == 0:
+        await message.answer(
+            message="Извини, но я не могу найти ответ на этот вопрос. Может быть, попробуешь перефразировать?",
+            keyboard=vk_keyboard_choice(notify_text), random_id=0)
+        return
     await message.answer(
         message=answer,
         keyboard=vk_keyboard_choice(notify_text), random_id=0)
@@ -220,8 +225,12 @@ async def handler(message: tg.types.Message):
         processing = await message.answer(
             "Сейчас я попробую найти ответ на твой вопрос, это может занять какое-то время...")
         answer = await get_answer(message["text"])
-        await message.answer(text=answer)
         await tg_bot.delete_message(message['chat']['id'], processing['message_id'])
+        if len(answer) == 0:
+            await message.answer(
+                text="Извини, но я не могу найти ответ на этот вопрос. Может быть, попробуешь перефразировать?")
+            return
+        await message.answer(text=answer)
         with Session(engine) as session:
             user = session.scalars(select(User).where(User.telegram_id == message["from"]["id"])).first()
             question = Question(question=message.text, answer=answer, user_id=user.id)

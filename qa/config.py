@@ -7,3 +7,5 @@ class Config:
     HUGGINGFACE_TOKEN = environ.get('HUGGINGFACE_TOKEN')
     GIGACHAT_TOKEN = environ.get('GIGACHAT_TOKEN')
     CONFLUENCE_TOKEN = environ.get('CONFLUENCE_TOKEN')
+    CONFLUENCE_HOST = environ.get('CONFLUENCE_HOST')
+    CONFLUENCE_SPACES = environ.get('CONFLUENCE_SPACES').split()
