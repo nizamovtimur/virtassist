@@ -3,7 +3,7 @@ services:
     chatbot:
         build: ./chatbot
         container_name: studpath-chatbot
-        command: python main.py
+        command: sh -c "python database.py && python main.py"
         env_file:
             - .env.docker
         depends_on:

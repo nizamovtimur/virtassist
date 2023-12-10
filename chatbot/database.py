@@ -1,5 +1,5 @@
 from typing import Optional, List
-from sqlalchemy import ForeignKey, Text, Column, DateTime, func
+from sqlalchemy import ForeignKey, BigInteger, Text, Column, DateTime, func
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 
 
@@ -10,6 +10,8 @@ class Base(DeclarativeBase):
 class User(Base):
     __tablename__ = "user"
     id: Mapped[int] = mapped_column(primary_key=True)
+    vk_id: Mapped[Optional[int]] = mapped_column(BigInteger, unique=True)
+    telegram_id: Mapped[Optional[int]] = mapped_column(BigInteger, unique=True)
     is_subscribed: Mapped[bool] = mapped_column()
 
     questions: Mapped[List["Question"]] = relationship(back_populates="user", cascade="all, delete-orphan")
