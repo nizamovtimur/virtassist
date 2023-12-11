@@ -7,7 +7,6 @@ from langchain.prompts import PromptTemplate
 import spacy
 from config import Config
 
-
 needed_pos = ['NOUN', 'NUM', 'PROPN', 'VERB', 'X']
 routes = web.RouteTableDef()
 nlp = spacy.load("ru_core_news_sm")
@@ -36,10 +35,10 @@ def get_cql_query(spaces, question):
 
 
 def get_answer_gigachat(question: str):
-    query = get_cql_query(spaces=Config.CONFLUENCE_SPACES, question=question)
-    results = confluence.cql(query[0], start=0, limit=1)['results']
+    cql_query = get_cql_query(spaces=Config.CONFLUENCE_SPACES, question=question)
+    results = confluence.cql(cql_query[0], start=0, limit=1)['results']
     if len(results) == 0:
-        results = confluence.cql(query[1], start=0, limit=1)['results']
+        results = confluence.cql(cql_query[1], start=0, limit=1)['results']
         if len(results) == 0:
             return ""
 
@@ -60,9 +59,13 @@ def get_answer_gigachat(question: str):
     else:
         return ""
 
-    query = {"context": context,
+    query = {"context": " ".join(context.split()[:4000]),
              "question": question}
-    return f"{giga_chain.invoke(query).strip()}\n\nПодробнее: {page_link}"
+    try:
+        answer = giga_chain.invoke(query).strip()
+    except:
+        return ""
+    return f"{answer}\n\nПодробнее: {page_link}"
 
 
 @routes.post('/')
