@@ -30,12 +30,13 @@ def get_cql_query(spaces, question):
     spaces = " or ".join([f"space = {space}" for space in spaces])
     words_with_verbs = " and ".join([f"text ~ '{word[0]}*'" for word in words])
     words_without_verbs = " and ".join([f"text ~ '{word[0]}*'" for word in words if word[1] != 'VERB'])
-
     return "(" + spaces + ") and (" + words_with_verbs + ")", "(" + spaces + ") and (" + words_without_verbs + ")"
 
 
 def get_answer_gigachat(question: str):
     cql_query = get_cql_query(spaces=Config.CONFLUENCE_SPACES, question=question)
+    if "()" in cql_query[0]:
+        return ""
     results = confluence.cql(cql_query[0], start=0, limit=1)['results']
     if len(results) == 0:
         results = confluence.cql(cql_query[1], start=0, limit=1)['results']
