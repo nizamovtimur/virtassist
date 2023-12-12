@@ -66,7 +66,7 @@ def vk_keyboard_choice(notify_text: str) -> str:
 
 
 def tg_keyboard_choice(notify_text: str) -> tg.types.ReplyKeyboardMarkup:
-    keyboard = tg.types.ReplyKeyboardMarkup()
+    keyboard = tg.types.ReplyKeyboardMarkup(resize_keyboard=True)
     keyboard.add(tg.types.KeyboardButton(notify_text))
     return keyboard
 
