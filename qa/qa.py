@@ -7,7 +7,7 @@ from langchain.prompts import PromptTemplate
 import spacy
 from config import Config
 
-needed_pos = ['NOUN', 'NUM', 'PROPN', 'VERB', 'X']
+needed_pos = ['NOUN', 'NUM', 'PROPN', 'ADJ', 'VERB', 'X']
 routes = web.RouteTableDef()
 nlp = spacy.load("ru_core_news_sm")
 confluence = Confluence(url=Config.CONFLUENCE_HOST, token=Config.CONFLUENCE_TOKEN)
@@ -30,18 +30,23 @@ def get_cql_query(spaces, question):
     spaces = " or ".join([f"space = {space}" for space in spaces])
     words_with_verbs = " and ".join(list(set([f"text ~ '{word[0]}*'" for word in words])))
     words_without_verbs = " and ".join(list(set([f"text ~ '{word[0]}*'" for word in words if word[1] != 'VERB'])))
-    return "(" + spaces + ") and (" + words_with_verbs + ")", "(" + spaces + ") and (" + words_without_verbs + ")"
+    words_without_verbs_and_adj = " and ".join(list(set([f"text ~ '{word[0]}*'" for word in words
+                                                         if word[1] not in ['VERB', 'ADJ']])))
+    return ("(" + spaces + ") and (" + words_with_verbs + ")", "(" + spaces + ") and (" + words_without_verbs + ")",
+            "(" + spaces + ") and (" + words_without_verbs_and_adj + ")")
 
 
 def get_answer_gigachat(question: str):
     cql_query = get_cql_query(spaces=Config.CONFLUENCE_SPACES, question=question)
-    if "()" in cql_query[1]:
+    if "()" in cql_query[2]:
         return ""
     results = confluence.cql(cql_query[0], start=0, limit=1)['results']
     if len(results) == 0:
         results = confluence.cql(cql_query[1], start=0, limit=1)['results']
         if len(results) == 0:
-            return ""
+            results = confluence.cql(cql_query[2], start=0, limit=1)['results']
+            if len(results) == 0:
+                return ""
 
     page_id = results[0]['content']['id']
     page = confluence.get_page_by_id(page_id, expand='space,body.export_view')
