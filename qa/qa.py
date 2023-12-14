@@ -13,9 +13,9 @@ nlp = spacy.load("ru_core_news_sm")
 confluence = Confluence(url=Config.CONFLUENCE_HOST, token=Config.CONFLUENCE_TOKEN)
 giga = GigaChat(credentials=Config.GIGACHAT_TOKEN, verify_ssl_certs=False)
 prompt_template = """
-Ты цифровой помощник студента ТюмГУ, помогаешь отвечать на вопросы. Извлеки ответ на вопрос из документа. 
+Используй следующий текст, чтобы ответить на вопрос студента Тюменского государственного университета в конце. 
+Если ты не сможешь найти ответ, просто скажи, что ответ не найден.
 
-Документ:
 {context}
 
 Вопрос: {question}
@@ -66,7 +66,7 @@ def get_answer_gigachat(question: str):
         answer = giga_chain.invoke(query).strip()
     except:
         return ""
-    return f"{answer}\n\nПодробнее: {page_link}"
+    return f"{answer}\n\nИсточник: {page_link}"
 
 
 @routes.post('/')
