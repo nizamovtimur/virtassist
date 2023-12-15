@@ -7,13 +7,13 @@ build_deploy:
   before_script:
     - cp $ENV_PRODUCTION .env.docker
   script:
-    - sudo docker compose --env-file .env.docker up -d --build
-    - sudo docker container prune -f
-    - sudo docker image prune -af
-    - sudo docker network prune -f
-    - sudo docker builder prune --filter unused-for=30m -f
-    - sudo docker system df
-    - sudo df -h
+    - docker compose --env-file .env.docker up -d --build
+    - docker container prune -f
+    - docker image prune -af
+    - docker network prune -f
+    - docker builder prune --filter unused-for=30m -f
+    - docker system df
+    - df -h
   only:
     - main
   tags:
