@@ -1,0 +1,20 @@
+stages:
+  - build_deploy
+
+build_deploy:
+  stage: build_deploy
+  environment: production
+  before_script:
+    - cp $ENV_PRODUCTION .env.docker
+  script:
+    - sudo docker compose --env-file .env.docker up -d --build
+    - sudo docker container prune -f
+    - sudo docker image prune -af
+    - sudo docker network prune -f
+    - sudo docker builder prune --filter unused-for=30m -f
+    - sudo docker system df
+    - sudo df -h
+  only:
+    - main
+  tags:
+    - srv-virtassist01
