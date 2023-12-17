@@ -13,10 +13,12 @@ nlp = spacy.load("ru_core_news_sm")
 confluence = Confluence(url=Config.CONFLUENCE_HOST, token=Config.CONFLUENCE_TOKEN)
 giga = GigaChat(credentials=Config.GIGACHAT_TOKEN, verify_ssl_certs=False)
 prompt_template = """
-Используй следующий текст, чтобы ответить на вопрос студента Тюменского государственного университета в конце. 
-Если ты не сможешь найти ответ, просто скажи, что ответ не найден.
+Используй следующий текст в тройных кавычках, чтобы ответить на вопрос студента в конце. 
+Не изменяй и не убирай ссылки, адреса и телефоны. Если ты не можешь найти ответ, напиши, что ответ не найден.
 
+\"\"\"
 {context}
+\"\"\"
 
 Вопрос: {question}
 """
@@ -25,15 +27,19 @@ giga_chain = prompt | giga
 
 
 def get_cql_query(spaces, question):
+    exclude = ' and label != "навигация"'
     words = [(token.lemma_, token.pos_) for token in nlp(question.lower()) if not token.is_stop and
              token.pos_ in needed_pos and len(token.text) > 2]
     spaces = " or ".join([f"space = {space}" for space in spaces])
-    words_with_verbs = " and ".join(list(set([f"text ~ '{word[0]}*'" for word in words])))
-    words_without_verbs = " and ".join(list(set([f"text ~ '{word[0]}*'" for word in words if word[1] != 'VERB'])))
-    words_without_verbs_and_adj = " and ".join(list(set([f"text ~ '{word[0]}*'" for word in words
-                                                         if word[1] not in ['VERB', 'ADJ']])))
-    return ("(" + spaces + ") and (" + words_with_verbs + ")", "(" + spaces + ") and (" + words_without_verbs + ")",
-            "(" + spaces + ") and (" + words_without_verbs_and_adj + ")")
+    words_with_verbs = " and ".join(list(set([f"(title ~ '{word[0]}*' or text ~ '{word[0]}*')"
+                                              for word in words])))
+    words_without_verbs = " and ".join(list(set([f"(title ~ '{word[0]}*' or text ~ '{word[0]}*')"
+                                                 for word in words if word[1] != 'VERB'])))
+    words_without_verbs_and_adj = " and ".join(list(set([f"(title ~ '{word[0]}*' or text ~ '{word[0]}*')"
+                                                         for word in words if word[1] not in ['VERB', 'ADJ']])))
+    return ("(" + spaces + ") and (" + words_with_verbs + ")" + exclude,
+            "(" + spaces + ") and (" + words_without_verbs + ")" + exclude,
+            "(" + spaces + ") and (" + words_without_verbs_and_adj + ")" + exclude)
 
 
 def get_answer_gigachat(question: str):
@@ -54,23 +60,26 @@ def get_answer_gigachat(question: str):
     page_body = page['body']['export_view']['value']
     page_download = page['_links']['base'] + page['_links']['download'] if 'download' in page['_links'].keys() else ''
 
-    if len(page_body) > 50:
-        page_body = page['body']['export_view']['value']
-        soup = BeautifulSoup(page_body, 'html.parser')
-        page_body_text = soup.get_text(separator=' ')
-        context = page_body_text.replace(" \n ", "")
-    elif '.pdf' in page_download.lower():
-        loader = PyPDFLoader(page_download.split('?')[0])
-        context = " ".join([page.page_content for page in loader.load_and_split()])
-    else:
-        return ""
+    try:
+        if len(page_body) > 50:
+            page_body = page['body']['export_view']['value']
+            soup = BeautifulSoup(page_body, 'html.parser')
+            page_body_text = soup.get_text(separator=' ')
+            context = page_body_text.replace(" \n ", "")
+        elif '.pdf' in page_download.lower():
+            loader = PyPDFLoader(page_download.split('?')[0])
+            context = " ".join([page.page_content for page in loader.load_and_split()])
+        else:
+            return ""
+    except:
+        return f"Пока я пытался найти ответ на вопрос, произошла какая-то ошибка, но ты можешь посмотреть: {page_link}"
 
     query = {"context": " ".join(context.split()[:4000]),
              "question": question}
     try:
-        answer = giga_chain.invoke(query).strip()
+        answer = giga_chain.invoke(query).replace('"""', '').strip()
     except:
-        return ""
+        return f"Пока я пытался найти ответ на вопрос, произошла какая-то ошибка, но ты можешь посмотреть: {page_link}"
     return f"{answer}\n\nИсточник: {page_link}"
 
 
