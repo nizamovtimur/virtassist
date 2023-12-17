@@ -43,7 +43,14 @@ class Question(Base):
 
 # migrations
 if __name__ == "__main__":
+    import time
     from sqlalchemy import create_engine
     from config import Config
-    engine = create_engine(Config.SQLALCHEMY_DATABASE_URI, echo=True)
-    Base.metadata.create_all(engine)
+    while True:
+        try:
+            engine = create_engine(Config.SQLALCHEMY_DATABASE_URI, echo=True)
+            Base.metadata.create_all(engine)
+            break
+        except Exception as e:
+            print(e)
+            time.sleep(2)
