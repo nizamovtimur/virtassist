@@ -1,6 +1,7 @@
 from typing import Optional, List
-from sqlalchemy import ForeignKey, BigInteger, Text, Column, DateTime, func
-from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
+from pgvector.sqlalchemy import Vector
+from sqlalchemy import ForeignKey, BigInteger, Text, Column, DateTime, func, text
+from sqlalchemy.orm import DeclarativeBase, Mapped, Session, mapped_column, relationship
 
 
 class Base(DeclarativeBase):
@@ -30,6 +31,7 @@ class Question(Base):
     answer: Mapped[str] = mapped_column(Text())
     score: Mapped[Optional[int]] = mapped_column()
     user_id: Mapped[int] = mapped_column(ForeignKey("user.id"))
+    embedding: Mapped[Optional[Vector]] = mapped_column(Vector(312))
 
     user: Mapped["User"] = relationship(back_populates="questions")
 
@@ -49,6 +51,9 @@ if __name__ == "__main__":
     while True:
         try:
             engine = create_engine(Config.SQLALCHEMY_DATABASE_URI, echo=True)
+            with Session(engine) as session:
+                session.execute(text('CREATE EXTENSION IF NOT EXISTS vector'))
+                session.commit()
             Base.metadata.create_all(engine)
             break
         except Exception as e:

@@ -4,7 +4,8 @@ import sys
 import threading
 import aiogram as tg
 from loguru import logger
-from sqlalchemy import create_engine, select, func, and_
+from sentence_transformers import SentenceTransformer
+from sqlalchemy import and_, create_engine, func, select
 from sqlalchemy.orm import Session
 import vkbottle as vk
 from vkbottle.bot import Message as VKMessage
@@ -77,7 +78,22 @@ vk_bot.labeler.vbml_ignore_case = True
 vk_bot.labeler.custom_rules["permission"] = Permission
 tg_bot = tg.Bot(token=Config.TG_ACCESS_TOKEN)
 dispatcher = tg.Dispatcher(tg_bot)
+vector_model = SentenceTransformer('saved_models/rubert-tiny2-retriever')
 
+
+@vk_bot.on.message(vk.dispatch.rules.base.RegexRule("!similar "), permission=Config.VK_SUPERUSER_ID)
+async def vk_similar_questions(message: VKMessage):
+    with Session(engine) as session:
+        similar_questions = session.scalars(select(Question).where(Question.score > 3)
+                                            .order_by(Question.embedding.cosine_distance(
+                                                vector_model.encode(message.text[9:])
+                                                )).limit(3))
+        text_debug_message = "Похожие вопросы:"
+        for q in similar_questions:
+            text_debug_message += "\n" + q.question
+        await message.answer(
+            message=text_debug_message, random_id=0)      
+        
 
 # TODO: move to web admin panel
 @vk_bot.on.message(vk.dispatch.rules.base.RegexRule("!send "), permission=Config.VK_SUPERUSER_ID)
@@ -154,7 +170,7 @@ async def vk_answer(message: VKMessage):
         keyboard=vk_keyboard_choice(notify_text), random_id=0)
     with Session(engine) as session:
         user = session.scalars(select(User).where(User.vk_id == message.from_id)).first()
-        question = Question(question=message.text, answer=answer, user_id=user.id)
+        question = Question(question=message.text, answer=answer, user_id=user.id, embedding=vector_model.encode(message.text))
         session.add(question)
         session.commit()
     await message.answer(
@@ -216,7 +232,7 @@ async def tg_answer(message: tg.types.Message):
         await message.answer(text=answer)
         with Session(engine) as session:
             user = session.scalars(select(User).where(User.telegram_id == message["from"]["id"])).first()
-            question = Question(question=message.text, answer=answer, user_id=user.id)
+            question = Question(question=message.text, answer=answer, user_id=user.id, embedding=vector_model.encode(message.text))
             session.add(question)
             session.commit()
         await message.answer(

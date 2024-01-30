@@ -4,3 +4,5 @@ python-dotenv
 vkbottle
 loguru
 aiogram
+pgvector
+sentence-transformers
