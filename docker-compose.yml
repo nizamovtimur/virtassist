@@ -2,7 +2,7 @@ version: '3.8'
 services:
     chatbot:
         build: ./chatbot
-        container_name: studpath-chatbot
+        container_name: virtassist-chatbot
         command: sh -c "python database.py && python main.py"
         env_file:
             - .env.docker
@@ -14,7 +14,7 @@ services:
             - qa-conn
     db:
         image: postgres:latest
-        container_name: studpath-db
+        container_name: virtassist-db
         environment:
             - POSTGRES_DB=${POSTGRES_DB}
             - POSTGRES_USER=${POSTGRES_USER}
@@ -25,7 +25,7 @@ services:
             - db-conn
     qa:
         build: ./qa
-        container_name: studpath-qa
+        container_name: virtassist-qa
         command: python qa.py
         env_file:
             - .env.docker
