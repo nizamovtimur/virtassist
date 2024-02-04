@@ -68,6 +68,7 @@ def vk_keyboard_choice(notify_text: str) -> str:
 def tg_keyboard_choice(notify_text: str) -> tg.types.ReplyKeyboardMarkup:
     keyboard = tg.types.ReplyKeyboardMarkup(resize_keyboard=True)
     keyboard.add(tg.types.KeyboardButton(notify_text))
+    keyboard.add(tg.types.KeyboardButton('Руководства и инструкции для обучающихся'))
     return keyboard
 
 
@@ -178,13 +179,13 @@ async def tg_start(message: tg.types.Message):
     )
 
 @dispatcher.callback_query_handler(lambda c: c.data.startswith('type'))
-async def confluence_parse(callback: types.CallbackQuery):
+async def confluence_parse(callback: tg.types.CallbackQuery):
     id = int(callback.data[5:])
     parse = parse_confluence_by_page_id(id)
     if type(parse) == list:
-        inline_keyboard = types.InlineKeyboardMarkup()
+        inline_keyboard = tg.types.InlineKeyboardMarkup()
         for i in parse:
-            inline_keyboard.add(types.InlineKeyboardButton(text=i['title'], callback_data='type ' + str(i['id'])))
+            inline_keyboard.add(tg.types.InlineKeyboardButton(text=i['title'], callback_data='type ' + str(i['id'])))
         await callback.message.answer(
             text="Какую информацию хотите получить?",
             reply_markup=inline_keyboard
@@ -195,11 +196,11 @@ async def confluence_parse(callback: types.CallbackQuery):
         )
 
 @dispatcher.message_handler(text=["Руководства и инструкции для обучающихся"])
-async def telegram_handler(message: types.Message):
-    inline_keyboard = types.InlineKeyboardMarkup()
+async def telegram_handler(message: tg.types.Message):
+    inline_keyboard = tg.types.InlineKeyboardMarkup()
     question_types = make_markup_by_confluence()
     for i in question_types:
-        inline_keyboard.add(types.InlineKeyboardButton(text=i, callback_data=question_types[i]))
+        inline_keyboard.add(tg.types.InlineKeyboardButton(text=i, callback_data=question_types[i]))
     await message.answer(
         text="Какую информацию хотите получить?",
         reply_markup=inline_keyboard
