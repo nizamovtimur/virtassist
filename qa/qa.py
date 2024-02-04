@@ -94,7 +94,7 @@ def parse_confluence_by_page_id(id) -> list | str:
     subtypes = requests.get(f'https://confluence.utmn.ru/rest/api/content/search?cql=parent={id}').json()['results']
     if len(subtypes): return subtypes
     else: 
-        soup = bs4.BeautifulSoup(requests.get(f'https://confluence.utmn.ru/rest/api/content/{id}?expand=body.storage').json()['body']['storage']['value'].replace('<br>', '\n'), 'html.parser')
+        soup = BeautifulSoup(requests.get(f'https://confluence.utmn.ru/rest/api/content/{id}?expand=body.storage').json()['body']['storage']['value'].replace('<br>', '\n'), 'html.parser')
         text = ''
         for i in soup.find_all('strong'): i.unwrap()
         for i in soup.select('br'): i.replace_with('\n')
