@@ -177,6 +177,33 @@ async def tg_start(message: tg.types.Message):
         reply_markup=tg_keyboard_choice(notify_text)
     )
 
+@dispatcher.callback_query_handler(lambda c: c.data.startswith('type'))
+async def confluence_parse(callback: types.CallbackQuery):
+    id = int(callback.data[5:])
+    parse = parse_confluence_by_page_id(id)
+    if type(parse) == list:
+        inline_keyboard = types.InlineKeyboardMarkup()
+        for i in parse:
+            inline_keyboard.add(types.InlineKeyboardButton(text=i['title'], callback_data='type ' + str(i['id'])))
+        await callback.message.answer(
+            text="Какую информацию хотите получить?",
+            reply_markup=inline_keyboard
+        )
+    else:
+        await callback.message.answer(
+            text=parse
+        )
+
+@dispatcher.message_handler(text=["Руководства и инструкции для обучающихся"])
+async def telegram_handler(message: types.Message):
+    inline_keyboard = types.InlineKeyboardMarkup()
+    question_types = make_markup_by_confluence()
+    for i in question_types:
+        inline_keyboard.add(types.InlineKeyboardButton(text=i, callback_data=question_types[i]))
+    await message.answer(
+        text="Какую информацию хотите получить?",
+        reply_markup=inline_keyboard
+    )
 
 @dispatcher.callback_query_handler()
 async def tg_rate(callback_query: tg.types.CallbackQuery):
