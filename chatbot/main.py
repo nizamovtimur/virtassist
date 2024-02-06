@@ -46,19 +46,19 @@ async def get_answer(question: str, vk_id: int|None = None, telegram_id: int|Non
             answer_db = Answer(text=answer, user=user, question=question_db)
             session.add(answer_db)
             # TODO: questions filtration
-#             if len(answer) == 0:
-#                 similar_questions_sql = session.execute(
-#                     text(f"""SELECT text
-# FROM question
-# WHERE id != :q_id
-#     AND (
-#         SELECT AVG(score)
-#         FROM answer
-#         WHERE question_id = question.id
-#     ) > 3
-# ORDER BY embedding <=> :q_embedding
-# LIMIT 3""").bindparams(q_id=0 if question_db.id is None else question_db.id, q_embedding=np.array2string(np.array(embedding), separator=','))).scalars()
-#                 similar_questions = [str(sq) for sq in similar_questions_sql]
+            if len(answer) == 0 and vk_id in Config.VK_SUPERUSER_ID:
+                similar_questions_sql = session.execute(
+                    text(f"""SELECT text
+FROM question
+WHERE id != :q_id
+    AND (
+        SELECT AVG(score)
+        FROM answer
+        WHERE question_id = question.id
+    ) > 3
+ORDER BY embedding <=> :q_embedding
+LIMIT 3""").bindparams(q_id=0 if question_db.id is None else question_db.id, q_embedding=np.array2string(np.array(embedding), separator=','))).scalars()
+                similar_questions = [str(sq) for sq in similar_questions_sql]
             session.commit()     
 
     return answer, similar_questions            

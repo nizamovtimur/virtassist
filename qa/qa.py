@@ -13,8 +13,9 @@ nlp = spacy.load("ru_core_news_sm")
 confluence = Confluence(url=Config.CONFLUENCE_HOST, token=Config.CONFLUENCE_TOKEN)
 giga = GigaChat(credentials=Config.GIGACHAT_TOKEN, verify_ssl_certs=False)
 prompt_template = """
-Используй следующий текст в тройных кавычках, чтобы ответить на вопрос студента в конце. 
+Используй следующий текст в тройных кавычках, чтобы кратко ответить на вопрос студента в конце. 
 Не изменяй и не убирай ссылки, адреса и телефоны. Если ты не можешь найти ответ, напиши, что ответ не найден.
+Ответ не должен превышать 100 слов.
 
 \"\"\"
 {context}
@@ -27,16 +28,18 @@ giga_chain = prompt | giga
 
 
 def get_cql_query(spaces, question):
-    exclude = ' and label != "навигация"'
-    words = [(token.lemma_, token.pos_) for token in nlp(question.lower()) if not token.is_stop and
+    exclude = ' and label != "навигация"' 
+    words = [token for token in nlp(question.lower()) if not token.is_stop and
              token.pos_ in needed_pos and len(token.text) > 2]
+    if len(words) == 0:
+        return ()
     spaces = " or ".join([f"space = {space}" for space in spaces])
-    words_with_verbs = " and ".join(list(set([f"(title ~ '{word[0]}*' or text ~ '{word[0]}*')"
+    words_with_verbs = " and ".join(list(set([f"(title ~ '{word}*' or text ~ '{word}*' or title ~ '{word.lemma_}*' or text ~ '{word.lemma_}*')"
                                               for word in words])))
-    words_without_verbs = " and ".join(list(set([f"(title ~ '{word[0]}*' or text ~ '{word[0]}*')"
-                                                 for word in words if word[1] != 'VERB'])))
-    words_without_verbs_and_adj = " and ".join(list(set([f"(title ~ '{word[0]}*' or text ~ '{word[0]}*')"
-                                                         for word in words if word[1] not in ['VERB', 'ADJ']])))
+    words_without_verbs = " and ".join(list(set([f"(title ~ '{word}*' or text ~ '{word}*' or title ~ '{word.lemma_}*' or text ~ '{word.lemma_}*')"
+                                                 for word in words if word.pos_ != 'VERB'])))
+    words_without_verbs_and_adj = " and ".join(list(set([f"(title ~ '{word}*' or text ~ '{word}*' or title ~ '{word.lemma_}*' or text ~ '{word.lemma_}*')"
+                                                         for word in words if word.pos_ not in ['VERB', 'ADJ']])))
     return ("(" + spaces + ") and (" + words_with_verbs + ")" + exclude,
             "(" + spaces + ") and (" + words_without_verbs + ")" + exclude,
             "(" + spaces + ") and (" + words_without_verbs_and_adj + ")" + exclude)
@@ -44,7 +47,7 @@ def get_cql_query(spaces, question):
 
 def get_answer_gigachat(question: str):
     cql_query = get_cql_query(spaces=Config.CONFLUENCE_SPACES, question=question)
-    if "()" in cql_query[2]:
+    if len(cql_query) == 0:
         return ""
     results = confluence.cql(cql_query[0], start=0, limit=1)['results']
     if len(results) == 0:
