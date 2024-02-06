@@ -12,7 +12,7 @@ from vkbottle.http import aiohttp
 from config import Config
 from database import User, Question
 from strings import Strings
-
+from confluence_interaction import ConfluenceInteraction
 
 class Permission(vk.ABCRule[VKMessage]):
     def __init__(self, user_ids: list):
@@ -181,7 +181,7 @@ async def tg_start(message: tg.types.Message):
 @dispatcher.callback_query_handler(lambda c: c.data.startswith('type'))
 async def confluence_parse(callback: tg.types.CallbackQuery):
     id = int(callback.data[5:])
-    parse = parse_confluence_by_page_id(id)
+    parse = ConfluenceInteraction.parse_confluence_by_page_id(id)
     if type(parse) == list:
         inline_keyboard = tg.types.InlineKeyboardMarkup()
         for i in parse:
@@ -198,13 +198,14 @@ async def confluence_parse(callback: tg.types.CallbackQuery):
 @dispatcher.message_handler(text=["Руководства и инструкции для обучающихся"])
 async def telegram_handler(message: tg.types.Message):
     inline_keyboard = tg.types.InlineKeyboardMarkup()
-    question_types = make_markup_by_confluence()
-    for i in question_types:
-        inline_keyboard.add(tg.types.InlineKeyboardButton(text=i, callback_data=question_types[i]))
-    await message.answer(
-        text="Какую информацию хотите получить?",
-        reply_markup=inline_keyboard
-    )
+    question_types = ConfluenceInteraction.make_markup_by_confluence()
+    if len(question_types):
+    	for i in question_types:
+        	inline_keyboard.add(tg.types.InlineKeyboardButton(text=i, callback_data=question_types[i]))
+    	await message.answer(
+        	text="Какую информацию хотите получить?",
+        	reply_markup=inline_keyboard
+    	)
 
 @dispatcher.callback_query_handler()
 async def tg_rate(callback_query: tg.types.CallbackQuery):

@@ -4,7 +4,6 @@ from bs4 import BeautifulSoup
 from langchain.document_loaders import PyPDFLoader
 from langchain.llms import GigaChat
 from langchain.prompts import PromptTemplate
-import requests
 import spacy
 from config import Config
 
@@ -82,26 +81,6 @@ def get_answer_gigachat(question: str):
     except:
         return f"Пока я пытался найти ответ на вопрос, произошла какая-то ошибка, но ты можешь посмотреть: {page_link}"
     return f"{answer}\n\nИсточник: {page_link}"
-
-def make_markup_by_confluence():
-    question_types = {}
-    for i in confluence.get_all_pages_from_space('study'):
-        if len(confluence.get_page_ancestors(i['id'])) == 1: 
-            question_types[i['title']] = 'type ' + str(i['id'])
-    return question_types
-
-def parse_confluence_by_page_id(id) -> list | str:
-    subtypes = requests.get(f'https://confluence.utmn.ru/rest/api/content/search?cql=parent={id}').json()['results']
-    if len(subtypes): return subtypes
-    else: 
-        soup = BeautifulSoup(requests.get(f'https://confluence.utmn.ru/rest/api/content/{id}?expand=body.storage').json()['body']['storage']['value'].replace('<br>', '\n'), 'html.parser')
-        text = ''
-        for i in soup.find_all('strong'): i.unwrap()
-        for i in soup.select('br'): i.replace_with('\n')
-        for i in soup.find_all():
-            if i.name == 'br': print(i.name)
-            text += i.get_text() + '\n'
-        return text
 
 @routes.post('/')
 async def main(request):

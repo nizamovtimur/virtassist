@@ -10,3 +10,7 @@ class Config:
     TG_ACCESS_TOKEN = environ.get('TG_ACCESS_TOKEN')
     TG_SUPERUSER_ID = [int(id) for id in environ.get('TG_SUPERUSER_ID').split()]
     QA_HOST = environ.get('QA_HOST')
+    CONFLUENCE_TOKEN = environ.get('CONFLUENCE_TOKEN')
+    CONFLUENCE_HOST = environ.get('CONFLUENCE_HOST')
+    CONFLUENCE_SPACES = environ.get('CONFLUENCE_SPACES').split()
+	
