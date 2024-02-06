@@ -132,6 +132,49 @@ async def vk_subscribe(message: VKMessage):
             else Strings.UnsubscribeMessage,
             keyboard=vk_keyboard_choice(notify_text), random_id=0)
 
+@vk_bot.on.message(payload=[{"command": 1}])
+async def vk_handler(message: VKMessage):
+    inline_keyboard = vk.Keyboard(inline=True)
+    inline_keyboards = []
+    question_types = ConfluenceInteraction.make_markup_by_confluence()
+    inline_keyboards.append(inline_keyboard)
+    if len(question_types):
+        for i in question_types:
+            inline_keyboards[len(inline_keyboards) - 1].add(vk.Text(i, payload={"type": question_types[i]}))
+            if len(inline_keyboards[len(inline_keyboards) - 1].buttons) == 5:
+                inline_keyboards.append(vk.Keyboard(inline=True))
+            elif sum([len(keyboard.buttons) for keyboard in inline_keyboards]) != len(question_types):
+                inline_keyboards[len(inline_keyboards) - 1].row()
+    for i in range(len(inline_keyboards)):
+        await message.answer(
+            message="Какую информацию хотите получить?",
+            keyboard=inline_keyboards[i].get_json()
+        )
+
+@vk_bot.on.message(func=lambda message: type(json.loads(message.payload)['type']) == int)
+async def confluence_parse(message: VKMessage):
+    id = json.loads(message.payload)["type"]
+    parse = ConfluenceInteraction.parse_confluence_by_page_id(id)
+    if type(parse) == list:
+        inline_keyboard = vk.Keyboard(inline=True)
+        inline_keyboards = []
+        inline_keyboards.append(inline_keyboard)
+        for i in parse:
+            inline_keyboards[len(inline_keyboards) - 1].add(vk.Text(i['title'], payload={"type": int(i['id'])}))
+            if len(inline_keyboards[len(inline_keyboards) - 1].buttons) == 5:
+                if sum([len(keyboard.buttons) for keyboard in inline_keyboards]) != len(parse):
+                    inline_keyboards.append(vk.Keyboard(inline=True))
+            elif sum([len(keyboard.buttons) for keyboard in inline_keyboards]) != len(parse):
+                inline_keyboards[len(inline_keyboards) - 1].row()
+        for i in range(len(inline_keyboards)):
+            await message.answer(
+                message="Какую информацию хотите получить?",
+                keyboard=inline_keyboards[i].get_json()
+            )
+    else:
+        await message.answer(
+            message=parse
+        )
 
 @vk_bot.on.message()
 async def vk_answer(message: VKMessage):
