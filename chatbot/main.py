@@ -60,7 +60,7 @@ def check_subscribing(vk_id: int|None = None, telegram_id: int|None = None) -> b
 
 def vk_keyboard_choice(notify_text: str) -> str:
     return (
-        vk.Keyboard().add(vk.Text(notify_text))
+        vk.Keyboard().add(vk.Text(notify_text)).row().add(vk.Text('Руководства и инструкции', payload={"command": 1}))
         .get_json()
     )
 
