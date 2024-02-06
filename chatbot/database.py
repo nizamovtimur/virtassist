@@ -1,10 +1,12 @@
 from typing import Optional, List
-from sqlalchemy import ForeignKey, BigInteger, Text, Column, DateTime, func
-from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
+from pgvector.sqlalchemy import Vector
+from sqlalchemy import ForeignKey, BigInteger, Text, Column, DateTime, func, text
+from sqlalchemy.orm import DeclarativeBase, Mapped, Session, mapped_column, relationship
 
 
 class Base(DeclarativeBase):
-    pass
+    time_created = Column(DateTime(timezone=True), server_default=func.now())
+    time_updated = Column(DateTime(timezone=True), onupdate=func.now())
 
 
 class User(Base):
@@ -14,32 +16,29 @@ class User(Base):
     telegram_id: Mapped[Optional[int]] = mapped_column(BigInteger, unique=True)
     is_subscribed: Mapped[bool] = mapped_column()
 
-    questions: Mapped[List["Question"]] = relationship(back_populates="user", cascade="all, delete-orphan")
+    answers: Mapped[List["Answer"]] = relationship(back_populates="user", cascade="all, delete-orphan")
+    
+    
+class Answer(Base):
+    __tablename__ = "answer"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    text: Mapped[str] = mapped_column(Text())
+    score: Mapped[Optional[int]] = mapped_column()
+    user_id: Mapped[int] = mapped_column(ForeignKey("user.id"))
+    question_id: Mapped[int] = mapped_column(ForeignKey("question.id"))
 
-    time_created = Column(DateTime(timezone=True), server_default=func.now())
-    time_updated = Column(DateTime(timezone=True), onupdate=func.now())
-
-    def __repr__(self) -> str:
-        return f"User(id={self.id!r}, is_subscribed={self.is_subscribed!r})"
+    user: Mapped["User"] = relationship(back_populates="answers")
+    question: Mapped["Question"] = relationship(back_populates="answers")
 
 
 class Question(Base):
     __tablename__ = "question"
     id: Mapped[int] = mapped_column(primary_key=True)
-    question: Mapped[str] = mapped_column(Text())
-    answer: Mapped[str] = mapped_column(Text())
-    score: Mapped[Optional[int]] = mapped_column()
-    user_id: Mapped[int] = mapped_column(ForeignKey("user.id"))
-
-    user: Mapped["User"] = relationship(back_populates="questions")
-
-    time_created = Column(DateTime(timezone=True), server_default=func.now())
-    time_updated = Column(DateTime(timezone=True), onupdate=func.now())
-
-    def __repr__(self) -> str:
-        return (f"Question(question={self.question!r}, answer={self.answer!r}, "
-                f"score={self.score!r})")
-
+    text: Mapped[str] = mapped_column(Text(), index=True)
+    embedding: Mapped[Optional[Vector]] = mapped_column(Vector(312))
+    
+    answers: Mapped[List["Answer"]] = relationship(back_populates="question", cascade="all, delete-orphan")
+  
 
 # migrations
 if __name__ == "__main__":
@@ -49,6 +48,9 @@ if __name__ == "__main__":
     while True:
         try:
             engine = create_engine(Config.SQLALCHEMY_DATABASE_URI, echo=True)
+            with Session(engine) as session:
+                session.execute(text('CREATE EXTENSION IF NOT EXISTS vector'))
+                session.commit()
             Base.metadata.create_all(engine)
             break
         except Exception as e:
