@@ -1,9 +1,9 @@
 from aiohttp import web
 from atlassian import Confluence
 from bs4 import BeautifulSoup
-from langchain.document_loaders import PyPDFLoader
-from langchain.llms import GigaChat
 from langchain.prompts import PromptTemplate
+from langchain_community.document_loaders import PyPDFLoader
+from langchain_community.llms import GigaChat
 import spacy
 from config import Config
 
@@ -84,6 +84,7 @@ def get_answer_gigachat(question: str):
     except:
         return f"Пока я пытался найти ответ на вопрос, произошла какая-то ошибка, но ты можешь посмотреть: {page_link}"
     return f"{answer}\n\nИсточник: {page_link}"
+
 
 @routes.post('/')
 async def main(request):
