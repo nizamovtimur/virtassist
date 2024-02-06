@@ -8,3 +8,4 @@ aiogram
 pgvector
 torch
 sentence-transformers
+atlassian-python-api

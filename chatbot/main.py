@@ -1,8 +1,10 @@
 import asyncio
 import json
+import math
 import sys
 import threading
 import aiogram as tg
+from atlassian import Confluence
 from loguru import logger
 import numpy as np
 from sentence_transformers import SentenceTransformer
@@ -12,9 +14,10 @@ import vkbottle as vk
 from vkbottle.bot import Message as VKMessage
 from vkbottle.http import aiohttp
 from config import Config
+from confluence_interaction import make_markup_by_confluence, parse_confluence_by_page_id
 from database import User, Answer, Question
 from strings import Strings
-from confluence_interaction import ConfluenceInteraction
+
 
 class Permission(vk.ABCRule[VKMessage]):
     def __init__(self, user_ids: list):
@@ -95,7 +98,8 @@ def check_subscribing(vk_id: int|None = None, telegram_id: int|None = None) -> b
 
 def vk_keyboard_choice(notify_text: str) -> str:
     return (
-        vk.Keyboard().add(vk.Text(notify_text)).row().add(vk.Text('Руководства и инструкции', payload={"command": 1}))
+        vk.Keyboard().add(vk.Text(notify_text)).row()
+        .add(vk.Text(Strings.ConfluenceButton))
         .get_json()
     )
 
@@ -103,11 +107,13 @@ def vk_keyboard_choice(notify_text: str) -> str:
 def tg_keyboard_choice(notify_text: str) -> tg.types.ReplyKeyboardMarkup:
     keyboard = tg.types.ReplyKeyboardMarkup(resize_keyboard=True)
     keyboard.add(tg.types.KeyboardButton(notify_text))
-    keyboard.add(tg.types.KeyboardButton('Руководства и инструкции для обучающихся'))
+    keyboard.add(tg.types.KeyboardButton(Strings.ConfluenceButton))
     return keyboard
 
 
 engine = create_engine(Config.SQLALCHEMY_DATABASE_URI)
+confluence = Confluence(url=Config.CONFLUENCE_HOST, token=Config.CONFLUENCE_TOKEN)
+confluence_main_space = Config.CONFLUENCE_SPACES[0]
 vk_bot = vk.Bot(token=Config.VK_ACCESS_GROUP_TOKEN)
 vk_bot.labeler.vbml_ignore_case = True
 vk_bot.labeler.custom_rules["permission"] = Permission
@@ -142,6 +148,82 @@ async def vk_send_stats(message: VKMessage):
                     f"Средняя оценка: {scores_avg}", random_id=0)
 
 
+@vk_bot.on.message(text=[Strings.ConfluenceButton])
+async def vk_handler(message: VKMessage):
+    question_types = make_markup_by_confluence(confluence, confluence_main_space)
+    keyboards = [vk.Keyboard(inline=True) for _ in range(math.ceil(len(question_types) / 5))]
+    i = 0
+    for title, id in question_types.items():
+        keyboards[i // 5].row()
+        keyboards[i // 5].add(vk.Text(title if len(title) < 40 
+                                        else title[:37]+"...", 
+                                        payload={"conf_id": id}))
+        i+=1
+    keyboard_message = Strings.WhichInfoDoYouWant
+    for i in range(len(keyboards)):
+        await message.answer(
+            message=keyboard_message,
+            keyboard=keyboards[i].get_json(),
+            random_id=0
+        )
+        keyboard_message = "⠀"
+
+
+@dispatcher.message_handler(text=[Strings.ConfluenceButton])
+async def tg_handler(message: tg.types.Message):
+    question_types = make_markup_by_confluence(confluence, confluence_main_space)
+    inline_keyboard = tg.types.InlineKeyboardMarkup()
+    if len(question_types):
+        for title, id in question_types.items():
+            inline_keyboard.add(tg.types.InlineKeyboardButton(text=title, callback_data=f"conf_id{id}"))
+        await message.answer(
+            text=Strings.WhichInfoDoYouWant,
+            reply_markup=inline_keyboard
+        )
+
+
+@vk_bot.on.message(func=lambda message: "conf_id" in message.payload if message.payload is not None else False)
+async def vk_confluence_parse(message: VKMessage):
+    id = json.loads(message.payload)["conf_id"]
+    parse = parse_confluence_by_page_id(confluence, id)
+    if type(parse) == list:
+        keyboards = [vk.Keyboard(inline=True) for _ in range(math.ceil(len(parse) / 5))]
+        for i in range(len(parse)):
+            keyboards[i // 5].row()
+            keyboards[i // 5].add(vk.Text(parse[i]['content']['title'] if len(parse[i]['content']['title']) < 40 
+                                          else parse[i]['content']['title'][:37]+"...", 
+                                          payload={"conf_id": int(parse[i]['content']['id'])}))
+        keyboard_message = Strings.WhichInfoDoYouWant
+        for i in range(len(keyboards)):
+            await message.answer(
+                message=keyboard_message,
+                keyboard=keyboards[i].get_json(),
+                random_id=0
+            )
+            keyboard_message = "⠀"
+    else:
+        await message.answer(
+            message=parse,
+            random_id=0
+        )
+
+
+@dispatcher.callback_query_handler(lambda c: c.data.startswith("conf_id"))
+async def tg_confluence_parse(callback: tg.types.CallbackQuery):
+    parse = parse_confluence_by_page_id(confluence, callback.data[7:])
+    if type(parse) == list:
+        inline_keyboard = tg.types.InlineKeyboardMarkup()
+        for i in parse:
+            inline_keyboard.add(tg.types.InlineKeyboardButton(text=i['content']['title'], 
+                                                              callback_data=f"conf_id{i['content']['id']}"))
+        await callback.message.answer(
+            text=Strings.WhichInfoDoYouWant,
+            reply_markup=inline_keyboard
+        )
+    else:
+        await callback.message.answer(text=parse)
+
+     
 @vk_bot.on.message(payload=[{"score": i} for i in range(1, 6)])
 async def vk_rate(message: VKMessage):
     with Session(engine) as session:
@@ -189,50 +271,7 @@ async def vk_subscribe(message: VKMessage):
             message=Strings.SubscribeMessage if user.is_subscribed
             else Strings.UnsubscribeMessage,
             keyboard=vk_keyboard_choice(notify_text), random_id=0)
-
-@vk_bot.on.message(payload=[{"command": 1}])
-async def vk_handler(message: VKMessage):
-    inline_keyboard = vk.Keyboard(inline=True)
-    inline_keyboards = []
-    question_types = ConfluenceInteraction.make_markup_by_confluence()
-    inline_keyboards.append(inline_keyboard)
-    if len(question_types):
-        for i in question_types:
-            inline_keyboards[len(inline_keyboards) - 1].add(vk.Text(i, payload={"type": question_types[i]}))
-            if len(inline_keyboards[len(inline_keyboards) - 1].buttons) == 5:
-                inline_keyboards.append(vk.Keyboard(inline=True))
-            elif sum([len(keyboard.buttons) for keyboard in inline_keyboards]) != len(question_types):
-                inline_keyboards[len(inline_keyboards) - 1].row()
-    for i in range(len(inline_keyboards)):
-        await message.answer(
-            message="Какую информацию хотите получить?",
-            keyboard=inline_keyboards[i].get_json()
-        )
-
-@vk_bot.on.message(func=lambda message: type(json.loads(message.payload)['type']) == int)
-async def confluence_parse(message: VKMessage):
-    id = json.loads(message.payload)["type"]
-    parse = ConfluenceInteraction.parse_confluence_by_page_id(id)
-    if type(parse) == list:
-        inline_keyboard = vk.Keyboard(inline=True)
-        inline_keyboards = []
-        inline_keyboards.append(inline_keyboard)
-        for i in parse:
-            inline_keyboards[len(inline_keyboards) - 1].add(vk.Text(i['title'], payload={"type": int(i['id'])}))
-            if len(inline_keyboards[len(inline_keyboards) - 1].buttons) == 5:
-                if sum([len(keyboard.buttons) for keyboard in inline_keyboards]) != len(parse):
-                    inline_keyboards.append(vk.Keyboard(inline=True))
-            elif sum([len(keyboard.buttons) for keyboard in inline_keyboards]) != len(parse):
-                inline_keyboards[len(inline_keyboards) - 1].row()
-        for i in range(len(inline_keyboards)):
-            await message.answer(
-                message="Какую информацию хотите получить?",
-                keyboard=inline_keyboards[i].get_json()
-            )
-    else:
-        await message.answer(
-            message=parse
-        )
+        
 
 @dispatcher.message_handler(text=[Strings.Subscribe, Strings.Unsubscribe])
 async def tg_subscribe(message: tg.types.Message):
@@ -294,34 +333,6 @@ async def tg_start(message: tg.types.Message):
         reply_markup=tg_keyboard_choice(notify_text)
     )
 
-@dispatcher.callback_query_handler(lambda c: c.data.startswith('type'))
-async def confluence_parse(callback: tg.types.CallbackQuery):
-    id = int(callback.data[5:])
-    parse = ConfluenceInteraction.parse_confluence_by_page_id(id)
-    if type(parse) == list:
-        inline_keyboard = tg.types.InlineKeyboardMarkup()
-        for i in parse:
-            inline_keyboard.add(tg.types.InlineKeyboardButton(text=i['title'], callback_data='type ' + str(i['id'])))
-        await callback.message.answer(
-            text="Какую информацию хотите получить?",
-            reply_markup=inline_keyboard
-        )
-    else:
-        await callback.message.answer(
-            text=parse
-        )
-
-@dispatcher.message_handler(text=["Руководства и инструкции для обучающихся"])
-async def telegram_handler(message: tg.types.Message):
-    inline_keyboard = tg.types.InlineKeyboardMarkup()
-    question_types = ConfluenceInteraction.make_markup_by_confluence()
-    if len(question_types):
-    	for i in question_types:
-        	inline_keyboard.add(tg.types.InlineKeyboardButton(text=i, callback_data=question_types[i]))
-    	await message.answer(
-        	text="Какую информацию хотите получить?",
-        	reply_markup=inline_keyboard
-    	)
 
 @dispatcher.message_handler()
 async def tg_answer(message: tg.types.Message):
