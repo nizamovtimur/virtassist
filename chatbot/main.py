@@ -271,7 +271,7 @@ async def vk_subscribe(message: VKMessage):
             message=Strings.SubscribeMessage if user.is_subscribed
             else Strings.UnsubscribeMessage,
             keyboard=vk_keyboard_choice(notify_text), random_id=0)
-        
+
 
 @dispatcher.message_handler(text=[Strings.Subscribe, Strings.Unsubscribe])
 async def tg_subscribe(message: tg.types.Message):
