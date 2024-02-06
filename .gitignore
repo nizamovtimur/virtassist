@@ -4,3 +4,4 @@
 !.env.example
 saved_models
 faiss_index
+__pycache__
