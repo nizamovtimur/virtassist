@@ -1,6 +1,10 @@
+--extra-index-url https://download.pytorch.org/whl/cpu
 sqlalchemy
 psycopg2-binary
 python-dotenv
 vkbottle
 loguru
 aiogram
+pgvector
+torch
+sentence-transformers
