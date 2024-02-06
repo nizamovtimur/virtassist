@@ -1,9 +1,9 @@
 from aiohttp import web
 from atlassian import Confluence
 from bs4 import BeautifulSoup
-from langchain.document_loaders import PyPDFLoader
-from langchain.llms import GigaChat
 from langchain.prompts import PromptTemplate
+from langchain_community.document_loaders import PyPDFLoader
+from langchain_community.llms import GigaChat
 import spacy
 from config import Config
 

@@ -1,6 +1,7 @@
 python-dotenv
 aiohttp
 langchain
+langchain-community
 gigachat
 spacy
 atlassian-python-api
