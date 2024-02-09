@@ -1,18 +1,17 @@
-﻿import bs4
+﻿from atlassian import Confluence 
+import bs4
 
 
-def make_markup_by_confluence(confluence, space):
-    question_types = {}
-    for i in confluence.get_all_pages_from_space(space, expand='ancestors'):
-        if len(i['ancestors']) == 1: 
-            question_types[i['title']] = i['id']
-    return question_types
+def make_markup_by_confluence(confluence: Confluence, space: str) -> list:
+    homepage_id = confluence.get_space(space, expand='homepage')["homepage"]["id"]
+    pages = confluence.cql(f"parent={homepage_id} and label=\"справка\"")['results']
+    return pages
 
 
-def parse_confluence_by_page_id(confluence, id) -> list | str:
-    subtypes = confluence.cql(f"parent={id}")['results']
-    if len(subtypes): 
-        return subtypes
+def parse_confluence_by_page_id(confluence: Confluence, id: int | str) -> list | str:
+    pages = confluence.cql(f"parent={id} and label=\"справка\"")['results']
+    if len(pages): 
+        return pages
     else: 
         page = confluence.get_page_by_id(int(id), expand='body.storage')
         page_link = page['_links']['base'] + page['_links']['webui']
