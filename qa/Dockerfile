@@ -8,6 +8,7 @@ ENV PYTHONUNBUFFERED 1
 RUN pip install --upgrade pip
 COPY ./requirements.txt .
 RUN pip install -r requirements.txt
-RUN python -m spacy download ru_core_news_sm
 
 COPY . /usr/src/app/
+
+RUN python save_models.py

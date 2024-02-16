@@ -26,10 +26,13 @@ services:
     qa:
         build: ./qa
         container_name: virtassist-qa
-        command: python qa.py
+        command: sh -c "python database.py && python main.py"
         env_file:
             - .env.docker
+        depends_on:
+            - db
         networks:
+            - db-conn
             - qa-conn
 
 volumes:

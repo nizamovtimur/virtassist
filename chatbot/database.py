@@ -1,7 +1,6 @@
 from typing import Optional, List
-from pgvector.sqlalchemy import Vector
-from sqlalchemy import ForeignKey, BigInteger, Text, Column, DateTime, func, text
-from sqlalchemy.orm import DeclarativeBase, Mapped, Session, mapped_column, relationship
+from sqlalchemy import ForeignKey, BigInteger, Text, Column, DateTime, func
+from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 
 
 class Base(DeclarativeBase):
@@ -16,29 +15,20 @@ class User(Base):
     telegram_id: Mapped[Optional[int]] = mapped_column(BigInteger, unique=True)
     is_subscribed: Mapped[bool] = mapped_column()
 
-    answers: Mapped[List["Answer"]] = relationship(back_populates="user", cascade="all, delete-orphan")
+    question_answers: Mapped[List["QuestionAnswer"]] = relationship(back_populates="user", cascade="all, delete-orphan")
     
     
-class Answer(Base):
-    __tablename__ = "answer"
+class QuestionAnswer(Base):
+    __tablename__ = "question_answer"
     id: Mapped[int] = mapped_column(primary_key=True)
-    text: Mapped[str] = mapped_column(Text())
+    question: Mapped[str] = mapped_column(Text())
+    answer: Mapped[Optional[str]] = mapped_column(Text())
+    confluence_id: Mapped[Optional[int]] = mapped_column(index=True)
     score: Mapped[Optional[int]] = mapped_column()
     user_id: Mapped[int] = mapped_column(ForeignKey("user.id"))
-    question_id: Mapped[int] = mapped_column(ForeignKey("question.id"))
 
-    user: Mapped["User"] = relationship(back_populates="answers")
-    question: Mapped["Question"] = relationship(back_populates="answers")
+    user: Mapped["User"] = relationship(back_populates="question_answers")
 
-
-class Question(Base):
-    __tablename__ = "question"
-    id: Mapped[int] = mapped_column(primary_key=True)
-    text: Mapped[str] = mapped_column(Text(), index=True)
-    embedding: Mapped[Optional[Vector]] = mapped_column(Vector(312))
-    
-    answers: Mapped[List["Answer"]] = relationship(back_populates="question", cascade="all, delete-orphan")
-  
 
 # migrations
 if __name__ == "__main__":
@@ -48,9 +38,6 @@ if __name__ == "__main__":
     while True:
         try:
             engine = create_engine(Config.SQLALCHEMY_DATABASE_URI, echo=True)
-            with Session(engine) as session:
-                session.execute(text('CREATE EXTENSION IF NOT EXISTS vector'))
-                session.commit()
             Base.metadata.create_all(engine)
             break
         except Exception as e:
