@@ -30,6 +30,7 @@ def get_document_content_by_id(confluence: Confluence, page_id: str) -> str | No
 
 
 def reindex_confluence(engine: Engine):
+    print("START CREATE INDEX")
     confluence = Confluence(url=Config.CONFLUENCE_HOST, token=Config.CONFLUENCE_TOKEN)
     spaces = "(" + " or ".join([f"space = {space}" for space in Config.CONFLUENCE_SPACES]) + ")"
     page_ids = []
@@ -50,7 +51,7 @@ def reindex_confluence(engine: Engine):
             page_content=page_content, metadata={"page_id": int(page_id)}
         ))
     
-    text_splitter = SentenceTransformersTokenTextSplitter(model_name="saved_models/rubert-tiny2-wikiutmn")
+    text_splitter = SentenceTransformersTokenTextSplitter(model_name="saved_models/rubert-tiny2-wikiutmn")   
     all_splits = text_splitter.split_documents(documents)
     
     with Session(engine) as session:
@@ -62,3 +63,4 @@ def reindex_confluence(engine: Engine):
                 embedding=text_splitter._model.encode(chunk.page_content)
             ))
         session.commit()
+    print("INDEX CREATED")

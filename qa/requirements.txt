@@ -4,7 +4,6 @@ aiohttp
 langchain
 langchain-community
 gigachat
-spacy
 atlassian-python-api
 beautifulsoup4
 lxml

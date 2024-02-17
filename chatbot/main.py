@@ -33,6 +33,7 @@ async def get_answer(question: str) -> tuple[str, int|None]:
                 resp = await response.json()
                 return resp["answer"], resp["confluence_id"]
             else:
+                logger.warning(response.json())
                 return ("", None)              
 
 
