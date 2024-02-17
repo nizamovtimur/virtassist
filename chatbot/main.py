@@ -30,7 +30,8 @@ async def get_answer(question: str) -> tuple[str, int|None]:
     async with aiohttp.ClientSession() as session:
         async with session.post(f"http://{Config.QA_HOST}/qa/", json={"question": question}) as response:
             if response.status == 200:
-                return await response.text()
+                resp = await response.json()
+                return resp["answer"], resp["confluence_id"]
             else:
                 return ("", None)              
 
@@ -107,7 +108,7 @@ async def vk_deliver_notifications(message: VKMessage):
 async def vk_send_stats(message: VKMessage):
     with Session(engine) as session:
         users_count = session.scalar(select(func.count(User.id)))
-        users_with_answers_count = session.scalar(select(func.count(User.id)).where(User.answers.any()))
+        users_with_answers_count = session.scalar(select(func.count(User.id)).where(User.question_answers.any()))
         answers_count = session.scalar(select(func.count(QuestionAnswer.id)))
         scores_avg = session.scalar(select(func.avg(QuestionAnswer.score)))
         await message.answer(
@@ -187,7 +188,7 @@ async def vk_rate(message: VKMessage):
             return
         question_answer = session.scalars(select(QuestionAnswer)
                                    .where(and_(QuestionAnswer.user_id == user.id, 
-                                               func.char_length(QuestionAnswer.text) > 0))
+                                               QuestionAnswer.confluence_id != None))
                                    .order_by(QuestionAnswer.id.desc())).first()
         if question_answer is None:
             return
@@ -206,7 +207,7 @@ async def tg_rate(callback_query: tg.types.CallbackQuery):
             return
         question_answer = session.scalars(select(QuestionAnswer)
                                    .where(and_(QuestionAnswer.user_id == user.id, 
-                                               func.char_length(QuestionAnswer.text) > 0))
+                                               QuestionAnswer.confluence_id != None))
                                    .order_by(QuestionAnswer.id.desc())).first()
         if question_answer is None:
             return
@@ -276,17 +277,19 @@ async def vk_answer(message: VKMessage):
             message=Strings.NotFound,
             keyboard=vk_keyboard_choice(notify_text), random_id=0)
     else:
+        if len(answer) == 0:
+            answer = Strings.NotAnswer
         await message.answer(
         message=f"{answer}\n\n{Strings.SourceURL} {Config.CONFLUENCE_HOST}/pages/viewpage.action?pageId={confluence_id}",
         keyboard=vk_keyboard_choice(notify_text), random_id=0)
         await message.answer(
         message=Strings.RateAnswer,
         keyboard=(
-            vk.Keyboard(inline=True).add(vk.Text("1", payload={"score": 1}))
-            .add(vk.Text("2", payload={"score": 2}))
-            .add(vk.Text("3", payload={"score": 3}))
-            .add(vk.Text("4", payload={"score": 4}))
-            .add(vk.Text("5", payload={"score": 5}))
+            vk.Keyboard(inline=True).add(vk.Text("👎", payload={"score": 1}))
+            # .add(vk.Text("2", payload={"score": 2}))
+            # .add(vk.Text("3", payload={"score": 3}))
+            # .add(vk.Text("4", payload={"score": 4}))
+            .add(vk.Text("👍", payload={"score": 5}))
         ), random_id=0)
 
 
@@ -322,16 +325,18 @@ async def tg_answer(message: tg.types.Message):
         if confluence_id is None:
             await message.answer(text=Strings.NotFound)
         else:
+            if len(answer) == 0:
+                answer = Strings.NotAnswer
             await message.answer(
                 text=f"{answer}\n\n{Strings.SourceURL} {Config.CONFLUENCE_HOST}/pages/viewpage.action?pageId={confluence_id}")
             await message.answer(
             text=Strings.RateAnswer,
             reply_markup=tg.types.InlineKeyboardMarkup().add(
-                tg.types.InlineKeyboardButton(text="1", callback_data="1"),
-                tg.types.InlineKeyboardButton(text="2", callback_data="2"),
-                tg.types.InlineKeyboardButton(text="3", callback_data="3"),
-                tg.types.InlineKeyboardButton(text="4", callback_data="4"),
-                tg.types.InlineKeyboardButton(text="5", callback_data="5")
+                tg.types.InlineKeyboardButton(text="👎", callback_data="1"),
+                # tg.types.InlineKeyboardButton(text="2", callback_data="2"),
+                # tg.types.InlineKeyboardButton(text="3", callback_data="3"),
+                # tg.types.InlineKeyboardButton(text="4", callback_data="4"),
+                tg.types.InlineKeyboardButton(text="👍", callback_data="5")
             ))
 
 

@@ -5,3 +5,4 @@
 saved_models
 faiss_index
 __pycache__
+cache

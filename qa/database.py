@@ -12,7 +12,6 @@ class Chunk(Base):
     __tablename__ = "chunk"
     id: Mapped[int] = mapped_column(primary_key=True)
     confluence_id: Mapped[int] = mapped_column(index=True)
-    start_index: Mapped[int] = mapped_column()
     text: Mapped[str] = mapped_column(Text())
     embedding: Mapped[Vector] = mapped_column(Vector(312))
   

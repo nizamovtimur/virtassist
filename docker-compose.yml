@@ -3,7 +3,7 @@ services:
     chatbot:
         build: ./chatbot
         container_name: virtassist-chatbot
-        command: sh -c "python database.py && python main.py"
+        command: sh -c "python database.py && python main.py && cron"
         env_file:
             - .env.docker
         depends_on:
