@@ -26,7 +26,7 @@ services:
     qa:
         build: ./qa
         container_name: virtassist-qa
-        command: sh -c "python database.py && python main.py && cron"
+        command: sh -c "cron && python database.py && python main.py"
         env_file:
             - .env.docker
         depends_on:

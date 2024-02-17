@@ -8,7 +8,7 @@ ENV PYTHONUNBUFFERED 1
 RUN apt-get update
 RUN apt-get -y install curl cron
 
-RUN crontab -l | { cat; echo "0 6,23 * * * curl -X POST http://localhost:8080/reindex/"; } | crontab -
+RUN crontab -l | { cat; echo "5 18 * * * curl -X POST http://localhost:8080/reindex/"; } | crontab -
 
 RUN pip install --upgrade pip
 COPY ./requirements.txt .
