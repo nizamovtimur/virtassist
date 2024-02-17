@@ -54,7 +54,7 @@ async def qa(request):
         return web.Response(text="Chunk not found", status=404)
     return web.json_response({
         "answer": get_answer_gigachat(chunk.text, question),
-        "confluence_id": chunk.confluence_id
+        "confluence_url": chunk.confluence_url
     })
 
 
@@ -68,7 +68,10 @@ async def reindex(request):
 
 
 if __name__ == "__main__":
-    reindex_confluence(engine=engine)
+    with Session(engine) as session:
+        questions = session.scalars(select(Chunk)).first()
+        if questions is None:
+            reindex_confluence(engine=engine)
     app = web.Application()
     app.add_routes(routes)
     web.run_app(app)

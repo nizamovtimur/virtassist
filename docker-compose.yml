@@ -1,17 +1,17 @@
 version: '3.8'
 services:
-    # chatbot:
-    #     build: ./chatbot
-    #     container_name: virtassist-chatbot
-    #     command: sh -c "python database.py && python main.py"
-    #     env_file:
-    #         - .env.docker
-    #     depends_on:
-    #         - db
-    #         - qa
-    #     networks:
-    #         - db-conn
-    #         - qa-conn
+    chatbot:
+        build: ./chatbot
+        container_name: virtassist-chatbot
+        command: sh -c "python database.py && python main.py"
+        env_file:
+            - .env.docker
+        depends_on:
+            - db
+            - qa
+        networks:
+            - db-conn
+            - qa-conn
     db:
         build: ./db
         container_name: virtassist-db

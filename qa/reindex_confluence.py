@@ -9,8 +9,9 @@ from config import Config
 from database import Chunk
 
 
-def get_document_content_by_id(confluence: Confluence, page_id: str) -> str | None:
+def get_document_content_by_id(confluence: Confluence, page_id: str) -> tuple[str| None, str| None]:
     page = confluence.get_page_by_id(page_id, expand='space,body.export_view')
+    page_link = page['_links']['base'] + page['_links']['webui']
     page_body = page['body']['export_view']['value']
     page_download = page['_links']['base'] + page['_links']['download'] if 'download' in page['_links'].keys() else ''
     try:
@@ -18,15 +19,15 @@ def get_document_content_by_id(confluence: Confluence, page_id: str) -> str | No
             page_body = page['body']['export_view']['value']
             soup = BeautifulSoup(page_body, 'html.parser')
             page_body_text = soup.get_text(separator=' ')
-            content = page_body_text.replace(" \n ", "")
+            page_content = page_body_text.replace(" \n ", "")
         elif '.pdf' in page_download.lower():
             loader = PyPDFLoader(page_download.split('?')[0])
-            content = " ".join([page.page_content for page in loader.load_and_split()])
+            page_content = " ".join([page.page_content for page in loader.load_and_split()])
         else:
-            return None
+            return None, None
     except:
-        return None
-    return content
+        return None, None
+    return page_content, page_link
 
 
 def reindex_confluence(engine: Engine):
@@ -44,11 +45,11 @@ def reindex_confluence(engine: Engine):
         
     documents = []
     for page_id in page_ids:
-        page_content = get_document_content_by_id(confluence, page_id)
+        page_content, page_link = get_document_content_by_id(confluence, page_id)
         if page_content is None:
             continue
         documents.append(Document(
-            page_content=page_content, metadata={"page_id": int(page_id)}
+            page_content=page_content, metadata={"page_link": page_link}
         ))
     
     text_splitter = SentenceTransformersTokenTextSplitter(model_name="saved_models/rubert-tiny2-wikiutmn")   
@@ -58,7 +59,7 @@ def reindex_confluence(engine: Engine):
         session.query(Chunk).delete()
         for chunk in all_splits:
             session.add(Chunk(
-                confluence_id=chunk.metadata["page_id"],
+                confluence_url=chunk.metadata["page_link"],
                 text=chunk.page_content,
                 embedding=text_splitter._model.encode(chunk.page_content)
             ))

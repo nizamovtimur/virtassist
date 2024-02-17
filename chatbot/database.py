@@ -23,7 +23,7 @@ class QuestionAnswer(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     question: Mapped[str] = mapped_column(Text())
     answer: Mapped[Optional[str]] = mapped_column(Text())
-    confluence_id: Mapped[Optional[int]] = mapped_column(index=True)
+    confluence_url: Mapped[Optional[str]] = mapped_column(Text(), index=True)
     score: Mapped[Optional[int]] = mapped_column()
     user_id: Mapped[int] = mapped_column(ForeignKey("user.id"))
 

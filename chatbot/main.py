@@ -31,7 +31,7 @@ async def get_answer(question: str) -> tuple[str, int|None]:
         async with session.post(f"http://{Config.QA_HOST}/qa/", json={"question": question}) as response:
             if response.status == 200:
                 resp = await response.json()
-                return resp["answer"], resp["confluence_id"]
+                return resp["answer"], resp["confluence_url"]
             else:
                 logger.warning(response.json())
                 return ("", None)              
@@ -189,7 +189,7 @@ async def vk_rate(message: VKMessage):
             return
         question_answer = session.scalars(select(QuestionAnswer)
                                    .where(and_(QuestionAnswer.user_id == user.id, 
-                                               QuestionAnswer.confluence_id != None))
+                                               QuestionAnswer.confluence_url != None))
                                    .order_by(QuestionAnswer.id.desc())).first()
         if question_answer is None:
             return
@@ -208,7 +208,7 @@ async def tg_rate(callback_query: tg.types.CallbackQuery):
             return
         question_answer = session.scalars(select(QuestionAnswer)
                                    .where(and_(QuestionAnswer.user_id == user.id, 
-                                               QuestionAnswer.confluence_id != None))
+                                               QuestionAnswer.confluence_url != None))
                                    .order_by(QuestionAnswer.id.desc())).first()
         if question_answer is None:
             return
@@ -258,7 +258,7 @@ async def vk_answer(message: VKMessage):
         return
     
     processing = await message.answer(Strings.TryFindAnswer)
-    answer, confluence_id = await get_answer(message.text)
+    answer, confluence_url = await get_answer(message.text)
     await vk_bot.api.messages.delete(message_ids=[processing.message_id], peer_id=message.peer_id, delete_for_all=True)
     
     with Session(engine) as session:
@@ -267,13 +267,13 @@ async def vk_answer(message: VKMessage):
             question_answer = QuestionAnswer(
                 question=message.text,
                 answer=answer,
-                confluence_id=confluence_id,
+                confluence_url=confluence_url,
                 user=user
             )
             session.add(question_answer)
             session.commit()     
     
-    if confluence_id is None:
+    if confluence_url is None:
         await message.answer(
             message=Strings.NotFound,
             keyboard=vk_keyboard_choice(notify_text), random_id=0)
@@ -281,7 +281,7 @@ async def vk_answer(message: VKMessage):
         if len(answer) == 0:
             answer = Strings.NotAnswer
         await message.answer(
-        message=f"{answer}\n\n{Strings.SourceURL} {Config.CONFLUENCE_HOST}/pages/viewpage.action?pageId={confluence_id}",
+        message=f"{answer}\n\n{Strings.SourceURL} {confluence_url}",
         keyboard=vk_keyboard_choice(notify_text), random_id=0)
         await message.answer(
         message=Strings.RateAnswer,
@@ -308,7 +308,7 @@ async def tg_start(message: tg.types.Message):
 async def tg_answer(message: tg.types.Message):
     if len(message['text']) > 1:
         processing = await message.answer(Strings.TryFindAnswer)
-        answer, confluence_id = await get_answer(message["text"])
+        answer, confluence_url = await get_answer(message["text"])
         await tg_bot.delete_message(message['chat']['id'], processing['message_id'])
         
         with Session(engine) as session:
@@ -317,19 +317,19 @@ async def tg_answer(message: tg.types.Message):
                 question_answer = QuestionAnswer(
                     question=message["text"],
                     answer=answer,
-                    confluence_id=confluence_id,
+                    confluence_url=confluence_url,
                     user=user
                 )
                 session.add(question_answer)
                 session.commit()  
         
-        if confluence_id is None:
+        if confluence_url is None:
             await message.answer(text=Strings.NotFound)
         else:
             if len(answer) == 0:
                 answer = Strings.NotAnswer
             await message.answer(
-                text=f"{answer}\n\n{Strings.SourceURL} {Config.CONFLUENCE_HOST}/pages/viewpage.action?pageId={confluence_id}")
+                text=f"{answer}\n\n{Strings.SourceURL} {confluence_url}")
             await message.answer(
             text=Strings.RateAnswer,
             reply_markup=tg.types.InlineKeyboardMarkup().add(

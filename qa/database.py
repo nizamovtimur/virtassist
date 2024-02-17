@@ -11,7 +11,7 @@ class Base(DeclarativeBase):
 class Chunk(Base):
     __tablename__ = "chunk"
     id: Mapped[int] = mapped_column(primary_key=True)
-    confluence_id: Mapped[int] = mapped_column(index=True)
+    confluence_url: Mapped[str] = mapped_column(Text(), index=True)
     text: Mapped[str] = mapped_column(Text())
     embedding: Mapped[Vector] = mapped_column(Vector(312))
   
