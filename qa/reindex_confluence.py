@@ -50,7 +50,7 @@ def reindex_confluence(engine: Engine):
             page_content=page_content, metadata={"page_id": int(page_id)}
         ))
     
-    text_splitter = SentenceTransformersTokenTextSplitter(model_name="saved_models/rubert-tiny2-wikiutmn-gigachat-qa")
+    text_splitter = SentenceTransformersTokenTextSplitter(model_name="saved_models/rubert-tiny2-wikiutmn")
     all_splits = text_splitter.split_documents(documents)
     
     with Session(engine) as session:

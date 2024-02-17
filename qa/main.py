@@ -11,7 +11,7 @@ from reindex_confluence import reindex_confluence
 
 routes = web.RouteTableDef()
 engine = create_engine(Config.SQLALCHEMY_DATABASE_URI)
-sbert_model = SentenceTransformer("saved_models/rubert-tiny2-wikiutmn-gigachat-qa")
+sbert_model = SentenceTransformer("saved_models/rubert-tiny2-wikiutmn")
 giga = GigaChat(credentials=Config.GIGACHAT_TOKEN, verify_ssl_certs=False)
 prompt_template = """
 Используй следующий текст в тройных кавычках, чтобы кратко ответить на вопрос студента в конце. 
