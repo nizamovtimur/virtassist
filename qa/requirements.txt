@@ -1,10 +1,15 @@
+--extra-index-url https://download.pytorch.org/whl/cpu
 python-dotenv
 aiohttp
 langchain
 langchain-community
 gigachat
-spacy
 atlassian-python-api
 beautifulsoup4
 lxml
 pypdf
+torch
+sentence-transformers
+sqlalchemy
+psycopg2-binary
+pgvector

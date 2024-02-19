@@ -8,3 +8,4 @@ class Config:
     CONFLUENCE_TOKEN = environ.get('CONFLUENCE_TOKEN')
     CONFLUENCE_HOST = environ.get('CONFLUENCE_HOST')
     CONFLUENCE_SPACES = environ.get('CONFLUENCE_SPACES').split()
+    SQLALCHEMY_DATABASE_URI = f"postgresql://{environ.get('POSTGRES_USER')}:{environ.get('POSTGRES_PASSWORD')}@{environ.get('POSTGRES_HOST')}/{environ.get('POSTGRES_DB')}"

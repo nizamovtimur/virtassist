@@ -6,16 +6,14 @@ import threading
 import aiogram as tg
 from atlassian import Confluence
 from loguru import logger
-import numpy as np
-from sentence_transformers import SentenceTransformer
-from sqlalchemy import and_, create_engine, func, select, text
+from sqlalchemy import and_, create_engine, func, select
 from sqlalchemy.orm import Session
 import vkbottle as vk
 from vkbottle.bot import Message as VKMessage
 from vkbottle.http import aiohttp
 from config import Config
 from confluence_interaction import make_markup_by_confluence, parse_confluence_by_page_id
-from database import User, Answer, Question
+from database import User, QuestionAnswer
 from strings import Strings
 
 
@@ -27,44 +25,16 @@ class Permission(vk.ABCRule[VKMessage]):
         return event.from_id in self.uids
 
 
-async def get_answer(question: str, vk_id: int|None = None, telegram_id: int|None = None) -> tuple[str, list[str]]:
+async def get_answer(question: str) -> tuple[str, int|None]:
     question = question.strip().lower()
-    similar_questions = []
     async with aiohttp.ClientSession() as session:
-        async with session.post(f"http://{Config.QA_HOST}/", json={"question": question}) as response:
-            answer = await response.text()
-    with Session(engine) as session:
-        if vk_id is not None:
-            user = session.scalars(select(User).where(User.vk_id == vk_id)).first()
-        elif telegram_id is not None:
-            user = session.scalars(select(User).where(User.telegram_id == telegram_id)).first()
-        else:
-            raise Exception("vk_id and telegram_id can't be None at the same time")
-        if user is not None:
-            question_db = session.scalars(select(Question).where(Question.text == question)).first()
-            if question_db is None:
-                question_db = Question(text=question, embedding=vector_model.encode(question))
-                session.add(question_db)
-            embedding = question_db.embedding
-            answer_db = Answer(text=answer, user=user, question=question_db)
-            session.add(answer_db)
-            # TODO: questions filtration
-            if len(answer) == 0 and vk_id in Config.VK_SUPERUSER_ID:
-                similar_questions_sql = session.execute(
-                    text(f"""SELECT text
-FROM question
-WHERE id != :q_id
-    AND (
-        SELECT AVG(score)
-        FROM answer
-        WHERE question_id = question.id
-    ) > 3
-ORDER BY embedding <=> :q_embedding
-LIMIT 3""").bindparams(q_id=0 if question_db.id is None else question_db.id, q_embedding=np.array2string(np.array(embedding), separator=','))).scalars()
-                similar_questions = [str(sq) for sq in similar_questions_sql]
-            session.commit()     
-
-    return answer, similar_questions            
+        async with session.post(f"http://{Config.QA_HOST}/qa/", json={"question": question}) as response:
+            if response.status == 200:
+                resp = await response.json()
+                return resp["answer"], resp["confluence_url"]
+            else:
+                logger.warning(response.json())
+                return ("", None)              
 
 
 def add_user(vk_id: int|None = None, telegram_id: int|None = None) -> bool:
@@ -121,7 +91,6 @@ vk_bot.labeler.vbml_ignore_case = True
 vk_bot.labeler.custom_rules["permission"] = Permission
 tg_bot = tg.Bot(token=Config.TG_ACCESS_TOKEN)
 dispatcher = tg.Dispatcher(tg_bot)
-vector_model = SentenceTransformer('saved_models/rubert-tiny2-retriever')    
         
 
 # TODO: move to web admin panel
@@ -140,13 +109,13 @@ async def vk_deliver_notifications(message: VKMessage):
 async def vk_send_stats(message: VKMessage):
     with Session(engine) as session:
         users_count = session.scalar(select(func.count(User.id)))
-        users_with_answers_count = session.scalar(select(func.count(User.id)).where(User.answers.any()))
-        answers_count = session.scalar(select(func.count(Answer.id)))
-        scores_avg = session.scalar(select(func.avg(Answer.score)))
+        users_with_answers_count = session.scalar(select(func.count(User.id)).where(User.question_answers.any()))
+        answers_count = session.scalar(select(func.count(QuestionAnswer.id)))
+        scores_avg = session.scalar(select(func.avg(QuestionAnswer.score)))
         await message.answer(
             message=f"Количество пользователей: {users_count}\n"
                     f"Количество пользователей, получивших ответ: {users_with_answers_count}\n\n"
-                    f"Количество ответов: {answers_count}\n"
+                    f"Количество вопросов: {answers_count}\n"
                     f"Средняя оценка: {scores_avg}", random_id=0)
 
 
@@ -218,12 +187,13 @@ async def vk_rate(message: VKMessage):
         user = session.scalars(select(User).where(User.vk_id == message.from_id)).first()
         if user is None:
             return
-        answer = session.scalars(select(Answer)
-                                   .where(and_(Answer.user_id == user.id, func.char_length(Answer.text) > 0))
-                                   .order_by(Answer.id.desc())).first()
-        if answer is None:
+        question_answer = session.scalars(select(QuestionAnswer)
+                                   .where(and_(QuestionAnswer.user_id == user.id, 
+                                               QuestionAnswer.confluence_url != None))
+                                   .order_by(QuestionAnswer.id.desc())).first()
+        if question_answer is None:
             return
-        answer.score = json.loads(message.payload)["score"]
+        question_answer.score = json.loads(message.payload)["score"]
         session.commit()
     await message.answer(
         message=Strings.ThanksForFeedback,
@@ -236,12 +206,13 @@ async def tg_rate(callback_query: tg.types.CallbackQuery):
         user = session.scalars(select(User).where(User.telegram_id == callback_query['from']['id'])).first()
         if user is None:
             return
-        answer = session.scalars(select(Answer)
-                                   .where(and_(Answer.user_id == user.id, func.char_length(Answer.text) > 0))
-                                   .order_by(Answer.id.desc())).first()
-        if answer is None:
+        question_answer = session.scalars(select(QuestionAnswer)
+                                   .where(and_(QuestionAnswer.user_id == user.id, 
+                                               QuestionAnswer.confluence_url != None))
+                                   .order_by(QuestionAnswer.id.desc())).first()
+        if question_answer is None:
             return
-        answer.score = int(callback_query.data)
+        question_answer.score = int(callback_query.data)
         session.commit()
     await callback_query.answer(text=Strings.ThanksForFeedback)
     
@@ -287,28 +258,39 @@ async def vk_answer(message: VKMessage):
         return
     
     processing = await message.answer(Strings.TryFindAnswer)
-    answer, similar_questions = await get_answer(message.text, vk_id=message.from_id)
+    answer, confluence_url = await get_answer(message.text)
     await vk_bot.api.messages.delete(message_ids=[processing.message_id], peer_id=message.peer_id, delete_for_all=True)
-    if len(similar_questions) > 0:
+    
+    with Session(engine) as session:
+        user = session.scalars(select(User).where(User.vk_id == message.from_id)).first()
+        if user is not None:
+            question_answer = QuestionAnswer(
+                question=message.text,
+                answer=answer,
+                confluence_url=confluence_url,
+                user=user
+            )
+            session.add(question_answer)
+            session.commit()     
+    
+    if confluence_url is None:
         await message.answer(
-            message=Strings.NotFound + "\n\n" + "\n\n".join(similar_questions),
-            keyboard=vk_keyboard_choice(notify_text), random_id=0)
-    elif len(answer) == 0:
-        await message.answer(
-            message=Strings.NotFoundNotSimilar,
+            message=Strings.NotFound,
             keyboard=vk_keyboard_choice(notify_text), random_id=0)
     else:
+        if len(answer) == 0:
+            answer = Strings.NotAnswer
         await message.answer(
-        message=answer,
+        message=f"{answer}\n\n{Strings.SourceURL} {confluence_url}",
         keyboard=vk_keyboard_choice(notify_text), random_id=0)
         await message.answer(
         message=Strings.RateAnswer,
         keyboard=(
-            vk.Keyboard(inline=True).add(vk.Text("1", payload={"score": 1}))
-            .add(vk.Text("2", payload={"score": 2}))
-            .add(vk.Text("3", payload={"score": 3}))
-            .add(vk.Text("4", payload={"score": 4}))
-            .add(vk.Text("5", payload={"score": 5}))
+            vk.Keyboard(inline=True).add(vk.Text("👎", payload={"score": 1}))
+            # .add(vk.Text("2", payload={"score": 2}))
+            # .add(vk.Text("3", payload={"score": 3}))
+            # .add(vk.Text("4", payload={"score": 4}))
+            .add(vk.Text("👍", payload={"score": 5}))
         ), random_id=0)
 
 
@@ -326,24 +308,36 @@ async def tg_start(message: tg.types.Message):
 async def tg_answer(message: tg.types.Message):
     if len(message['text']) > 1:
         processing = await message.answer(Strings.TryFindAnswer)
-        answer, similar_questions = await get_answer(message["text"], telegram_id=message['from']['id'])
+        answer, confluence_url = await get_answer(message["text"])
         await tg_bot.delete_message(message['chat']['id'], processing['message_id'])
-        if len(similar_questions) > 0:
-            await message.answer(text=Strings.NotFound + "\n\n" + "\n\n".join(similar_questions))
-        elif len(answer) == 0:
-            await message.answer(
-                text=Strings.NotFoundNotSimilar)
+        
+        with Session(engine) as session:
+            user = session.scalars(select(User).where(User.telegram_id  == message['from']['id'])).first()
+            if user is not None:
+                question_answer = QuestionAnswer(
+                    question=message["text"],
+                    answer=answer,
+                    confluence_url=confluence_url,
+                    user=user
+                )
+                session.add(question_answer)
+                session.commit()  
+        
+        if confluence_url is None:
+            await message.answer(text=Strings.NotFound)
         else:
+            if len(answer) == 0:
+                answer = Strings.NotAnswer
             await message.answer(
-                text=answer)
+                text=f"{answer}\n\n{Strings.SourceURL} {confluence_url}")
             await message.answer(
             text=Strings.RateAnswer,
             reply_markup=tg.types.InlineKeyboardMarkup().add(
-                tg.types.InlineKeyboardButton(text="1", callback_data="1"),
-                tg.types.InlineKeyboardButton(text="2", callback_data="2"),
-                tg.types.InlineKeyboardButton(text="3", callback_data="3"),
-                tg.types.InlineKeyboardButton(text="4", callback_data="4"),
-                tg.types.InlineKeyboardButton(text="5", callback_data="5")
+                tg.types.InlineKeyboardButton(text="👎", callback_data="1"),
+                # tg.types.InlineKeyboardButton(text="2", callback_data="2"),
+                # tg.types.InlineKeyboardButton(text="3", callback_data="3"),
+                # tg.types.InlineKeyboardButton(text="4", callback_data="4"),
+                tg.types.InlineKeyboardButton(text="👍", callback_data="5")
             ))
 
 
