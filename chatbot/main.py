@@ -1,4 +1,5 @@
 import asyncio
+from datetime import datetime, timedelta, timezone
 import json
 import math
 import sys
@@ -33,7 +34,6 @@ async def get_answer(question: str) -> tuple[str, int|None]:
                 resp = await response.json()
                 return resp["answer"], resp["confluence_url"]
             else:
-                logger.warning(response.json())
                 return ("", None)              
 
 
@@ -64,6 +64,22 @@ def check_subscribing(vk_id: int|None = None, telegram_id: int|None = None) -> b
         if user is None:
             return False
         return user.is_subscribed
+    
+    
+def check_spam(vk_id: int|None = None, telegram_id: int|None = None) -> bool:
+    with Session(engine) as session:
+        if vk_id is not None:
+            user = session.scalar(select(User).where(User.vk_id == vk_id))
+        elif telegram_id is not None:
+            user = session.scalar(select(User).where(User.telegram_id == telegram_id))
+        else:
+            raise Exception("vk_id and telegram_id can't be None at the same time")
+        if user is None:
+            return False
+        if len(user.question_answers) > 3:
+            if datetime.now(timezone.utc) - user.question_answers[2].time_created < timedelta(minutes=1):                
+                return True
+        return False
 
 
 def vk_keyboard_choice(notify_text: str) -> str:
@@ -257,6 +273,15 @@ async def vk_answer(message: VKMessage):
             keyboard=vk_keyboard_choice(notify_text), random_id=0)
         return
     
+    if len(message.text) < 4:
+        return
+    
+    if check_spam(vk_id=message.from_id):
+        await message.answer(
+            message=Strings.SpamWarning,
+            random_id=0)
+        return
+    
     processing = await message.answer(Strings.TryFindAnswer)
     answer, confluence_url = await get_answer(message.text)
     await vk_bot.api.messages.delete(message_ids=[processing.message_id], peer_id=message.peer_id, delete_for_all=True)
@@ -290,7 +315,7 @@ async def vk_answer(message: VKMessage):
             # .add(vk.Text("2", payload={"score": 2}))
             # .add(vk.Text("3", payload={"score": 3}))
             # .add(vk.Text("4", payload={"score": 4}))
-            .add(vk.Text("👍", payload={"score": 5}))
+            .add(vk.Text("❤", payload={"score": 5}))
         ), random_id=0)
 
 
@@ -306,39 +331,45 @@ async def tg_start(message: tg.types.Message):
 
 @dispatcher.message_handler()
 async def tg_answer(message: tg.types.Message):
-    if len(message['text']) > 1:
-        processing = await message.answer(Strings.TryFindAnswer)
-        answer, confluence_url = await get_answer(message["text"])
-        await tg_bot.delete_message(message['chat']['id'], processing['message_id'])
-        
-        with Session(engine) as session:
-            user = session.scalars(select(User).where(User.telegram_id  == message['from']['id'])).first()
-            if user is not None:
-                question_answer = QuestionAnswer(
-                    question=message["text"],
-                    answer=answer,
-                    confluence_url=confluence_url,
-                    user=user
-                )
-                session.add(question_answer)
-                session.commit()  
-        
-        if confluence_url is None:
-            await message.answer(text=Strings.NotFound)
-        else:
-            if len(answer) == 0:
-                answer = Strings.NotAnswer
-            await message.answer(
-                text=f"{answer}\n\n{Strings.SourceURL} {confluence_url}")
-            await message.answer(
-            text=Strings.RateAnswer,
-            reply_markup=tg.types.InlineKeyboardMarkup().add(
-                tg.types.InlineKeyboardButton(text="👎", callback_data="1"),
-                # tg.types.InlineKeyboardButton(text="2", callback_data="2"),
-                # tg.types.InlineKeyboardButton(text="3", callback_data="3"),
-                # tg.types.InlineKeyboardButton(text="4", callback_data="4"),
-                tg.types.InlineKeyboardButton(text="👍", callback_data="5")
-            ))
+    if len(message['text']) < 4:
+        return
+    
+    if check_spam(telegram_id=message['from']['id']):
+        await message.answer(text=Strings.SpamWarning)
+        return
+    
+    processing = await message.answer(Strings.TryFindAnswer)
+    answer, confluence_url = await get_answer(message["text"])
+    await tg_bot.delete_message(message['chat']['id'], processing['message_id'])
+    
+    with Session(engine) as session:
+        user = session.scalars(select(User).where(User.telegram_id  == message['from']['id'])).first()
+        if user is not None:
+            question_answer = QuestionAnswer(
+                question=message["text"],
+                answer=answer,
+                confluence_url=confluence_url,
+                user=user
+            )
+            session.add(question_answer)
+            session.commit()  
+    
+    if confluence_url is None:
+        await message.answer(text=Strings.NotFound)
+    else:
+        if len(answer) == 0:
+            answer = Strings.NotAnswer
+        await message.answer(
+            text=f"{answer}\n\n{Strings.SourceURL} {confluence_url}")
+        await message.answer(
+        text=Strings.RateAnswer,
+        reply_markup=tg.types.InlineKeyboardMarkup().add(
+            tg.types.InlineKeyboardButton(text="👎", callback_data="1"),
+            # tg.types.InlineKeyboardButton(text="2", callback_data="2"),
+            # tg.types.InlineKeyboardButton(text="3", callback_data="3"),
+            # tg.types.InlineKeyboardButton(text="4", callback_data="4"),
+            tg.types.InlineKeyboardButton(text="❤", callback_data="5")
+        ))
 
 
 def launch_vk_bot():
@@ -355,7 +386,7 @@ def launch_telegram_bot():
 
 if __name__ == "__main__":
     logger.remove()
-    logger.add(sys.stderr, level="INFO")
+    logger.add(sys.stderr, level="WARNING")
     thread_vk = threading.Thread(target=launch_vk_bot)
     thread_tg = threading.Thread(target=launch_telegram_bot)
     thread_tg.start()

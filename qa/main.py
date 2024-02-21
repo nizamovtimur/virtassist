@@ -1,3 +1,5 @@
+from contextlib import redirect_stderr
+import io
 from aiohttp import web
 from langchain.prompts import PromptTemplate
 from langchain_community.llms import GigaChat
@@ -14,9 +16,7 @@ engine = create_engine(Config.SQLALCHEMY_DATABASE_URI)
 sbert_model = SentenceTransformer("saved_models/rubert-tiny2-wikiutmn")
 giga = GigaChat(credentials=Config.GIGACHAT_TOKEN, verify_ssl_certs=False)
 prompt_template = """
-Используй следующий текст в тройных кавычках, чтобы кратко ответить на вопрос студента в конце. 
-Не изменяй и не убирай ссылки, адреса и телефоны. Если ты не можешь найти ответ, напиши, что ответ не найден.
-Ответ не должен превышать 100 слов.
+Сделай глубокий вдох и действуй как виртуальный помощник студента ТюмГУ. Кратко ответь на вопрос студента по тексту тройных кавычках. Не изменяй и не убирай ссылки, адреса и телефоны. Если в тексте нет ответа на вопрос, напиши "Ответ не найден".
 
 \"\"\"
 {context}
@@ -28,7 +28,6 @@ prompt = PromptTemplate.from_template(prompt_template)
 giga_chain = prompt | giga
 
 
-# TODO: предусмотреть порог бреда
 def get_chunk(question: str) -> Chunk | None:
     with Session(engine) as session:
         return session.scalars(select(Chunk)
@@ -52,8 +51,13 @@ async def qa(request):
     chunk = get_chunk(question)
     if chunk is None:
         return web.Response(text="Chunk not found", status=404)
+    f = io.StringIO()
+    with redirect_stderr(f):
+        answer = get_answer_gigachat(chunk.text, question)
+    if "stopped" in f.getvalue() or "ответ не найден" in answer.lower():
+        return web.Response(text="Answer not found", status=404)
     return web.json_response({
-        "answer": get_answer_gigachat(chunk.text, question),
+        "answer": answer,
         "confluence_url": chunk.confluence_url
     })
 
