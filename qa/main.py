@@ -17,7 +17,8 @@ engine = create_engine(Config.SQLALCHEMY_DATABASE_URI)
 sbert_model = SentenceTransformer("saved_models/rubert-tiny2-wikiutmn")
 giga = GigaChat(credentials=Config.GIGACHAT_TOKEN, verify_ssl_certs=False)
 prompt_template = """
-Сделай глубокий вдох и действуй как виртуальный помощник студента ТюмГУ. Кратко ответь на вопрос студента по тексту тройных кавычках. Не изменяй и не убирай ссылки, адреса и телефоны. Если в тексте нет ответа на вопрос, напиши "Ответ не найден".
+Используй следующий текст в тройных кавычках, чтобы кратко ответить на вопрос студента в конце. 
+Не изменяй и не убирай ссылки, адреса и телефоны. Если ты не можешь найти ответ, напиши, что ответ не найден.
 
 \"\"\"
 {context}
@@ -52,11 +53,12 @@ async def qa(request):
     chunk = get_chunk(question)
     if chunk is None:
         return web.Response(text="Chunk not found", status=404)
-    f = io.StringIO()
-    with redirect_stderr(f):
+    alt_stream = io.StringIO()
+    with redirect_stderr(alt_stream):
         answer = get_answer_gigachat(chunk.text, question)
-    warnings = f.getvalue()
-    logging.warning(warnings)
+    warnings = alt_stream.getvalue()
+    if len(warnings) > 0:
+        logging.warning(warnings)
     if "stopped" in warnings or "ответ не найден" in answer.lower():
         return web.Response(text="Answer not found", status=404)
     return web.json_response({

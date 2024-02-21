@@ -13,6 +13,7 @@ RUN pip install --upgrade pip
 COPY ./requirements.txt .
 RUN pip install -r requirements.txt
 
-COPY . /usr/src/app/
-
+COPY ./save_models.py .
 RUN python save_models.py
+
+COPY . /usr/src/app/
