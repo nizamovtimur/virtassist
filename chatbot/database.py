@@ -15,7 +15,7 @@ class User(Base):
     telegram_id: Mapped[Optional[int]] = mapped_column(BigInteger, unique=True)
     is_subscribed: Mapped[bool] = mapped_column()
 
-    question_answers: Mapped[List["QuestionAnswer"]] = relationship(back_populates="user", cascade="all, delete-orphan")
+    question_answers: Mapped[List["QuestionAnswer"]] = relationship(back_populates="user", cascade="all, delete-orphan", order_by="desc(QuestionAnswer.time_created)")
     
     
 class QuestionAnswer(Base):
