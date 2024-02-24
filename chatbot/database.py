@@ -10,7 +10,7 @@ class Base(DeclarativeBase):
 
 class User(Base):
     __tablename__ = "user"
-    id: Mapped[int] = mapped_column(primary_key=True)
+    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
     vk_id: Mapped[Optional[int]] = mapped_column(BigInteger, unique=True)
     telegram_id: Mapped[Optional[int]] = mapped_column(BigInteger, unique=True)
     is_subscribed: Mapped[bool] = mapped_column()
@@ -20,7 +20,7 @@ class User(Base):
     
 class QuestionAnswer(Base):
     __tablename__ = "question_answer"
-    id: Mapped[int] = mapped_column(primary_key=True)
+    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
     question: Mapped[str] = mapped_column(Text())
     answer: Mapped[Optional[str]] = mapped_column(Text())
     confluence_url: Mapped[Optional[str]] = mapped_column(Text(), index=True)

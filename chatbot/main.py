@@ -26,7 +26,7 @@ class Permission(vk.ABCRule[VKMessage]):
         return event.from_id in self.uids
 
 
-async def get_answer(question: str) -> tuple[str, int|None]:
+async def get_answer(question: str) -> tuple[str, str|None]:
     question = question.strip().lower()
     async with aiohttp.ClientSession() as session:
         async with session.post(f"http://{Config.QA_HOST}/qa/", json={"question": question}) as response:
@@ -196,21 +196,20 @@ async def tg_confluence_parse(callback: tg.types.CallbackQuery):
     elif type(parse) == str:
         await callback.message.answer(text=parse)
 
-     
-@vk_bot.on.message(payload=[{"score": i} for i in range(1, 6)])
-async def vk_rate(message: VKMessage):
+
+def rate_answer(score: int, question_answer_id: int):
     with Session(engine) as session:
-        user = session.scalars(select(User).where(User.vk_id == message.from_id)).first()
-        if user is None:
-            return
-        question_answer = session.scalars(select(QuestionAnswer)
-                                   .where(and_(QuestionAnswer.user_id == user.id, 
-                                               QuestionAnswer.confluence_url != None))
-                                   .order_by(QuestionAnswer.id.desc())).first()
+        question_answer = session.scalars(select(QuestionAnswer).where(QuestionAnswer.id == question_answer_id)).first()
         if question_answer is None:
             return
-        question_answer.score = json.loads(message.payload)["score"]
+        question_answer.score = score
         session.commit()
+
+
+@vk_bot.on.message(func=lambda message: "score" in message.payload if message.payload is not None else False)
+async def vk_rate(message: VKMessage):
+    payload_data = json.loads(message.payload)
+    rate_answer(payload_data["score"], payload_data["question_answer_id"])
     await message.answer(
         message=Strings.ThanksForFeedback,
         random_id=0)
@@ -218,18 +217,8 @@ async def vk_rate(message: VKMessage):
 
 @dispatcher.callback_query_handler()
 async def tg_rate(callback_query: tg.types.CallbackQuery):
-    with Session(engine) as session:
-        user = session.scalars(select(User).where(User.telegram_id == callback_query['from']['id'])).first()
-        if user is None:
-            return
-        question_answer = session.scalars(select(QuestionAnswer)
-                                   .where(and_(QuestionAnswer.user_id == user.id, 
-                                               QuestionAnswer.confluence_url != None))
-                                   .order_by(QuestionAnswer.id.desc())).first()
-        if question_answer is None:
-            return
-        question_answer.score = int(callback_query.data)
-        session.commit()
+    score, question_answer_id = map(int, callback_query.data.split())
+    rate_answer(score, question_answer_id)
     await callback_query.answer(text=Strings.ThanksForFeedback)
     
 
@@ -274,6 +263,9 @@ async def vk_answer(message: VKMessage):
         return
     
     if len(message.text) < 4:
+        await message.answer(
+            message=Strings.Less4Symbols,
+            random_id=0)
         return
     
     if check_spam(vk_id=message.from_id):
@@ -296,6 +288,9 @@ async def vk_answer(message: VKMessage):
                 user=user
             )
             session.add(question_answer)
+            session.flush()
+            session.refresh(question_answer)
+            question_answer_id = question_answer.id
             session.commit()     
     
     if confluence_url is None:
@@ -307,15 +302,10 @@ async def vk_answer(message: VKMessage):
             answer = Strings.NotAnswer
         await message.answer(
         message=f"{answer}\n\n{Strings.SourceURL} {confluence_url}",
-        keyboard=vk_keyboard_choice(notify_text), random_id=0)
-        await message.answer(
-        message=Strings.RateAnswer,
         keyboard=(
-            vk.Keyboard(inline=True).add(vk.Text("👎", payload={"score": 1}))
-            # .add(vk.Text("2", payload={"score": 2}))
-            # .add(vk.Text("3", payload={"score": 3}))
-            # .add(vk.Text("4", payload={"score": 4}))
-            .add(vk.Text("❤", payload={"score": 5}))
+            vk.Keyboard(inline=True)
+            .add(vk.Text("👎", payload={"score": 1, "question_answer_id": question_answer_id}))
+            .add(vk.Text("❤", payload={"score": 5, "question_answer_id": question_answer_id}))
         ), random_id=0)
 
 
@@ -332,6 +322,7 @@ async def tg_start(message: tg.types.Message):
 @dispatcher.message_handler()
 async def tg_answer(message: tg.types.Message):
     if len(message['text']) < 4:
+        await message.answer(text=Strings.Less4Symbols)
         return
     
     if check_spam(telegram_id=message['from']['id']):
@@ -352,6 +343,9 @@ async def tg_answer(message: tg.types.Message):
                 user=user
             )
             session.add(question_answer)
+            session.flush()
+            session.refresh(question_answer)
+            question_answer_id = question_answer.id
             session.commit()  
     
     if confluence_url is None:
@@ -360,16 +354,11 @@ async def tg_answer(message: tg.types.Message):
         if len(answer) == 0:
             answer = Strings.NotAnswer
         await message.answer(
-            text=f"{answer}\n\n{Strings.SourceURL} {confluence_url}")
-        await message.answer(
-        text=Strings.RateAnswer,
-        reply_markup=tg.types.InlineKeyboardMarkup().add(
-            tg.types.InlineKeyboardButton(text="👎", callback_data="1"),
-            # tg.types.InlineKeyboardButton(text="2", callback_data="2"),
-            # tg.types.InlineKeyboardButton(text="3", callback_data="3"),
-            # tg.types.InlineKeyboardButton(text="4", callback_data="4"),
-            tg.types.InlineKeyboardButton(text="❤", callback_data="5")
-        ))
+            text=f"{answer}\n\n{Strings.SourceURL} {confluence_url}",
+            reply_markup=tg.types.InlineKeyboardMarkup().add(
+                tg.types.InlineKeyboardButton(text="👎", callback_data=f"1 {question_answer_id}"),
+                tg.types.InlineKeyboardButton(text="❤", callback_data=f"5 {question_answer_id}")
+            ))
 
 
 def launch_vk_bot():
