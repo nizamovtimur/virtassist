@@ -32,9 +32,9 @@ def parse_confluence_by_page_id(confluence: Confluence, id: int | str) -> list |
 
 
 def cache_confluence_tree(confluence: Confluence, space: str):
-        tree = make_markup_by_confluence(confluence, space)
-        for i in tree:
-            parse = parse_confluence_by_page_id(confluence, i['content']['id'])
-            if type(parse) == list:
-                for l in parse:
-                    parse_confluence_by_page_id(confluence, l['content']['id'])
+    tree = make_markup_by_confluence(confluence, space)
+    for i in tree:
+        parse = parse_confluence_by_page_id(confluence, i['content']['id'])
+        if type(parse) == list:
+            for l in parse:
+                parse_confluence_by_page_id(confluence, l['content']['id'])
