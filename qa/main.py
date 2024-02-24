@@ -43,7 +43,8 @@ def get_answer_gigachat(context: str, question: str) -> str:
              "question": question}
     try:
         return giga_chain.invoke(query).replace('"""', '').strip()
-    except:
+    except Exception as e:
+        logging.error(e)
         return ""
 
 
