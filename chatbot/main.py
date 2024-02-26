@@ -5,7 +5,6 @@ import math
 import sys
 import threading
 import aiogram as tg
-from atlassian import Confluence
 from loguru import logger
 from sqlalchemy import and_, create_engine, func, select
 from sqlalchemy.orm import Session
@@ -100,8 +99,6 @@ def tg_keyboard_choice(notify_text: str) -> tg.types.ReplyKeyboardMarkup:
 
 
 engine = create_engine(Config.SQLALCHEMY_DATABASE_URI)
-confluence = Confluence(url=Config.CONFLUENCE_HOST, token=Config.CONFLUENCE_TOKEN)
-confluence_main_space = Config.CONFLUENCE_SPACES[0]
 vk_bot = vk.Bot(token=Config.VK_ACCESS_GROUP_TOKEN)
 vk_bot.labeler.vbml_ignore_case = True
 vk_bot.labeler.custom_rules["permission"] = Permission
@@ -155,7 +152,7 @@ async def vk_send_confluence_keyboard(message: VKMessage, question_types: list):
 async def tg_send_confluence_keyboard(message: tg.types.Message, question_types: list):
     inline_keyboard = tg.types.InlineKeyboardMarkup()
     for i in question_types:
-        inline_keyboard.add(tg.types.InlineKeyboardButton(text=i['content']['title'], 
+        inline_keyboard.add(tg.types.InlineKeyboardButton(text=i['content']['title'],
                                                             callback_data=f"conf_id{i['content']['id']}"))
     await message.answer(
         text=Strings.WhichInfoDoYouWant,
@@ -165,20 +162,20 @@ async def tg_send_confluence_keyboard(message: tg.types.Message, question_types:
 
 @vk_bot.on.message(text=[Strings.ConfluenceButton])
 async def vk_handler(message: VKMessage):
-    question_types = make_markup_by_confluence(confluence, confluence_main_space)
+    question_types = make_markup_by_confluence()
     await vk_send_confluence_keyboard(message, question_types)
     
 
 @dispatcher.message_handler(text=[Strings.ConfluenceButton])
 async def tg_handler(message: tg.types.Message):
-    question_types = make_markup_by_confluence(confluence, confluence_main_space)
+    question_types = make_markup_by_confluence()
     await tg_send_confluence_keyboard(message, question_types)
 
 
 @vk_bot.on.message(func=lambda message: "conf_id" in message.payload if message.payload is not None else False)
 async def vk_confluence_parse(message: VKMessage):
     id = json.loads(message.payload)["conf_id"]
-    parse = parse_confluence_by_page_id(confluence, id)
+    parse = parse_confluence_by_page_id(id)
     if type(parse) == list:
         await vk_send_confluence_keyboard(message, parse)
     elif type(parse) == str:
@@ -190,7 +187,7 @@ async def vk_confluence_parse(message: VKMessage):
 
 @dispatcher.callback_query_handler(lambda c: c.data.startswith("conf_id"))
 async def tg_confluence_parse(callback: tg.types.CallbackQuery):
-    parse = parse_confluence_by_page_id(confluence, callback.data[7:])
+    parse = parse_confluence_by_page_id(callback.data[7:])
     if type(parse) == list:
         await tg_send_confluence_keyboard(callback.message, parse)
     elif type(parse) == str:
