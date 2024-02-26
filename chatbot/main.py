@@ -5,7 +5,6 @@ import math
 import sys
 import threading
 import aiogram as tg
-from atlassian import Confluence
 from loguru import logger
 from sqlalchemy import and_, create_engine, func, select
 from sqlalchemy.orm import Session
@@ -26,60 +25,12 @@ class Permission(vk.ABCRule[VKMessage]):
         return event.from_id in self.uids
 
 
-async def get_answer(question: str) -> tuple[str, str|None]:
-    question = question.strip().lower()
-    async with aiohttp.ClientSession() as session:
-        async with session.post(f"http://{Config.QA_HOST}/qa/", json={"question": question}) as response:
-            if response.status == 200:
-                resp = await response.json()
-                return resp["answer"], resp["confluence_url"]
-            else:
-                return ("", None)              
-
-
-def add_user(vk_id: int|None = None, telegram_id: int|None = None) -> bool:
-    with Session(engine) as session:
-        if vk_id is not None:
-            user = session.scalar(select(User).where(User.vk_id == vk_id))
-        elif telegram_id is not None:
-            user = session.scalar(select(User).where(User.telegram_id == telegram_id))
-        else:
-            raise Exception("vk_id and telegram_id can't be None at the same time")
-        if user is None:
-            user = User(vk_id=vk_id, telegram_id=telegram_id, is_subscribed=True)
-            session.add(user)
-            session.commit()
-            return True
-        return False
-
-
-def check_subscribing(vk_id: int|None = None, telegram_id: int|None = None) -> bool:
-    with Session(engine) as session:
-        if vk_id is not None:
-            user = session.scalar(select(User).where(User.vk_id == vk_id))
-        elif telegram_id is not None:
-            user = session.scalar(select(User).where(User.telegram_id == telegram_id))
-        else:
-            raise Exception("vk_id and telegram_id can't be None at the same time")
-        if user is None:
-            return False
-        return user.is_subscribed
-    
-    
-def check_spam(vk_id: int|None = None, telegram_id: int|None = None) -> bool:
-    with Session(engine) as session:
-        if vk_id is not None:
-            user = session.scalar(select(User).where(User.vk_id == vk_id))
-        elif telegram_id is not None:
-            user = session.scalar(select(User).where(User.telegram_id == telegram_id))
-        else:
-            raise Exception("vk_id and telegram_id can't be None at the same time")
-        if user is None:
-            return False
-        if len(user.question_answers) > 3:
-            if datetime.now(timezone.utc) - user.question_answers[2].time_created < timedelta(minutes=1):                
-                return True
-        return False
+engine = create_engine(Config.SQLALCHEMY_DATABASE_URI)
+vk_bot = vk.Bot(token=Config.VK_ACCESS_GROUP_TOKEN)
+vk_bot.labeler.vbml_ignore_case = True
+vk_bot.labeler.custom_rules["permission"] = Permission
+tg_bot = tg.Bot(token=Config.TG_ACCESS_TOKEN) # type: ignore
+dispatcher = tg.Dispatcher(tg_bot)
 
 
 def vk_keyboard_choice(notify_text: str) -> str:
@@ -93,21 +44,11 @@ def vk_keyboard_choice(notify_text: str) -> str:
 
 
 def tg_keyboard_choice(notify_text: str) -> tg.types.ReplyKeyboardMarkup:
-    keyboard = tg.types.ReplyKeyboardMarkup(resize_keyboard=True)
-    keyboard.add(tg.types.KeyboardButton(Strings.ConfluenceButton))
-    keyboard.add(tg.types.KeyboardButton(notify_text))
+    keyboard = tg.types.ReplyKeyboardMarkup(resize_keyboard=True) # type: ignore
+    keyboard.add(tg.types.KeyboardButton(Strings.ConfluenceButton)) # type: ignore
+    keyboard.add(tg.types.KeyboardButton(notify_text)) # type: ignore
     return keyboard
 
-
-engine = create_engine(Config.SQLALCHEMY_DATABASE_URI)
-confluence = Confluence(url=Config.CONFLUENCE_HOST, token=Config.CONFLUENCE_TOKEN)
-confluence_main_space = Config.CONFLUENCE_SPACES[0]
-vk_bot = vk.Bot(token=Config.VK_ACCESS_GROUP_TOKEN)
-vk_bot.labeler.vbml_ignore_case = True
-vk_bot.labeler.custom_rules["permission"] = Permission
-tg_bot = tg.Bot(token=Config.TG_ACCESS_TOKEN)
-dispatcher = tg.Dispatcher(tg_bot)
-        
 
 # TODO: move to web admin panel
 @vk_bot.on.message(vk.dispatch.rules.base.RegexRule("!send "), permission=Config.VK_SUPERUSER_ID)
@@ -150,35 +91,35 @@ async def vk_send_confluence_keyboard(message: VKMessage, question_types: list):
             random_id=0
         )
         keyboard_message = "⠀"
-        
-        
+
+
 async def tg_send_confluence_keyboard(message: tg.types.Message, question_types: list):
     inline_keyboard = tg.types.InlineKeyboardMarkup()
     for i in question_types:
-        inline_keyboard.add(tg.types.InlineKeyboardButton(text=i['content']['title'], 
-                                                            callback_data=f"conf_id{i['content']['id']}"))
+        inline_keyboard.add(tg.types.InlineKeyboardButton(text=i['content']['title'],
+                                                            callback_data=f"conf_id{i['content']['id']}")) # type: ignore
     await message.answer(
         text=Strings.WhichInfoDoYouWant,
         reply_markup=inline_keyboard
     )
-    
+
 
 @vk_bot.on.message(text=[Strings.ConfluenceButton])
 async def vk_handler(message: VKMessage):
-    question_types = make_markup_by_confluence(confluence, confluence_main_space)
+    question_types = make_markup_by_confluence()
     await vk_send_confluence_keyboard(message, question_types)
-    
+
 
 @dispatcher.message_handler(text=[Strings.ConfluenceButton])
 async def tg_handler(message: tg.types.Message):
-    question_types = make_markup_by_confluence(confluence, confluence_main_space)
+    question_types = make_markup_by_confluence()
     await tg_send_confluence_keyboard(message, question_types)
 
 
 @vk_bot.on.message(func=lambda message: "conf_id" in message.payload if message.payload is not None else False)
 async def vk_confluence_parse(message: VKMessage):
-    id = json.loads(message.payload)["conf_id"]
-    parse = parse_confluence_by_page_id(confluence, id)
+    id = json.loads(message.payload)["conf_id"] # type: ignore
+    parse = parse_confluence_by_page_id(id)
     if type(parse) == list:
         await vk_send_confluence_keyboard(message, parse)
     elif type(parse) == str:
@@ -190,7 +131,7 @@ async def vk_confluence_parse(message: VKMessage):
 
 @dispatcher.callback_query_handler(lambda c: c.data.startswith("conf_id"))
 async def tg_confluence_parse(callback: tg.types.CallbackQuery):
-    parse = parse_confluence_by_page_id(confluence, callback.data[7:])
+    parse = parse_confluence_by_page_id(callback.data[7:])
     if type(parse) == list:
         await tg_send_confluence_keyboard(callback.message, parse)
     elif type(parse) == str:
@@ -208,7 +149,7 @@ def rate_answer(score: int, question_answer_id: int):
 
 @vk_bot.on.message(func=lambda message: "score" in message.payload if message.payload is not None else False)
 async def vk_rate(message: VKMessage):
-    payload_data = json.loads(message.payload)
+    payload_data = json.loads(message.payload) # type: ignore
     rate_answer(payload_data["score"], payload_data["question_answer_id"])
     await message.answer(
         message=Strings.ThanksForFeedback,
@@ -220,7 +161,7 @@ async def tg_rate(callback_query: tg.types.CallbackQuery):
     score, question_answer_id = map(int, callback_query.data.split())
     rate_answer(score, question_answer_id)
     await callback_query.answer(text=Strings.ThanksForFeedback)
-    
+
 
 @vk_bot.on.message(text=[Strings.Subscribe, Strings.Unsubscribe])
 async def vk_subscribe(message: VKMessage):
@@ -252,6 +193,62 @@ async def tg_subscribe(message: tg.types.Message):
             reply_markup=tg_keyboard_choice(notify_text))
 
 
+def add_user(vk_id: int|None = None, telegram_id: int|None = None) -> bool:
+    with Session(engine) as session:
+        if vk_id is not None:
+            user = session.scalar(select(User).where(User.vk_id == vk_id))
+        elif telegram_id is not None:
+            user = session.scalar(select(User).where(User.telegram_id == telegram_id))
+        else:
+            raise Exception("vk_id and telegram_id can't be None at the same time")
+        if user is None:
+            user = User(vk_id=vk_id, telegram_id=telegram_id, is_subscribed=True)
+            session.add(user)
+            session.commit()
+            return True
+        return False
+
+
+def check_subscribing(vk_id: int|None = None, telegram_id: int|None = None) -> bool:
+    with Session(engine) as session:
+        if vk_id is not None:
+            user = session.scalar(select(User).where(User.vk_id == vk_id))
+        elif telegram_id is not None:
+            user = session.scalar(select(User).where(User.telegram_id == telegram_id))
+        else:
+            raise Exception("vk_id and telegram_id can't be None at the same time")
+        if user is None:
+            return False
+        return user.is_subscribed
+
+
+def check_spam(vk_id: int|None = None, telegram_id: int|None = None) -> bool:
+    with Session(engine) as session:
+        if vk_id is not None:
+            user = session.scalar(select(User).where(User.vk_id == vk_id))
+        elif telegram_id is not None:
+            user = session.scalar(select(User).where(User.telegram_id == telegram_id))
+        else:
+            raise Exception("vk_id and telegram_id can't be None at the same time")
+        if user is None:
+            return False
+        if len(user.question_answers) > 3:
+            if datetime.now(timezone.utc) - user.question_answers[2].time_created < timedelta(minutes=1): # type: ignore
+                return True
+        return False
+
+
+async def get_answer(question: str) -> tuple[str, str|None]:
+    question = question.strip().lower()
+    async with aiohttp.ClientSession() as session:
+        async with session.post(f"http://{Config.QA_HOST}/qa/", json={"question": question}) as response:
+            if response.status == 200:
+                resp = await response.json()
+                return resp["answer"], resp["confluence_url"]
+            else:
+                return ("", None)  
+
+
 @vk_bot.on.message()
 async def vk_answer(message: VKMessage):
     is_user_added = add_user(vk_id=message.from_id)
@@ -276,7 +273,8 @@ async def vk_answer(message: VKMessage):
     
     processing = await message.answer(Strings.TryFindAnswer)
     answer, confluence_url = await get_answer(message.text)
-    await vk_bot.api.messages.delete(message_ids=[processing.message_id], peer_id=message.peer_id, delete_for_all=True)
+    if processing.message_id is not None:
+        await vk_bot.api.messages.delete(message_ids=[processing.message_id], peer_id=message.peer_id, delete_for_all=True)
     
     with Session(engine) as session:
         user = session.scalars(select(User).where(User.vk_id == message.from_id)).first()
@@ -306,7 +304,7 @@ async def vk_answer(message: VKMessage):
             vk.Keyboard(inline=True)
             .add(vk.Text("👎", payload={"score": 1, "question_answer_id": question_answer_id}))
             .add(vk.Text("❤", payload={"score": 5, "question_answer_id": question_answer_id}))
-        ), random_id=0)
+        ), random_id=0) # type: ignore
 
 
 @dispatcher.message_handler(commands=['start'])
@@ -356,8 +354,8 @@ async def tg_answer(message: tg.types.Message):
         await message.answer(
             text=f"{answer}\n\n{Strings.SourceURL} {confluence_url}",
             reply_markup=tg.types.InlineKeyboardMarkup().add(
-                tg.types.InlineKeyboardButton(text="👎", callback_data=f"1 {question_answer_id}"),
-                tg.types.InlineKeyboardButton(text="❤", callback_data=f"5 {question_answer_id}")
+                tg.types.InlineKeyboardButton(text="👎", callback_data=f"1 {question_answer_id}"), # type: ignore
+                tg.types.InlineKeyboardButton(text="❤", callback_data=f"5 {question_answer_id}") # type: ignore
             ))
 
 

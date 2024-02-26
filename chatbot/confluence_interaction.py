@@ -1,14 +1,22 @@
 ﻿from atlassian import Confluence 
 import bs4
+from cachetools import cached, TTLCache
+from config import Config
 
 
-def make_markup_by_confluence(confluence: Confluence, space: str) -> list:
-    homepage_id = confluence.get_space(space, expand='homepage')["homepage"]["id"]
+confluence = Confluence(url=Config.CONFLUENCE_HOST, token=Config.CONFLUENCE_TOKEN)
+confluence_main_space = Config.CONFLUENCE_SPACES[0]
+
+
+@cached(cache=TTLCache(maxsize=100, ttl=3600))
+def make_markup_by_confluence() -> list:
+    homepage_id = confluence.get_space(confluence_main_space, expand='homepage')["homepage"]["id"]
     pages = confluence.cql(f"parent={homepage_id} and label=\"справка\"")['results']
     return pages
 
 
-def parse_confluence_by_page_id(confluence: Confluence, id: int | str) -> list | str:
+@cached(cache=TTLCache(maxsize=100, ttl=3600))
+def parse_confluence_by_page_id(id: int | str) -> list | str:
     pages = confluence.cql(f"parent={id} and label=\"справка\"")['results']
     if len(pages): 
         return pages
@@ -26,4 +34,3 @@ def parse_confluence_by_page_id(confluence: Confluence, id: int | str) -> list |
             text += i.get_text() + '\n\n'
         if text != '': return text 
         else: return f'Информация находится по ссылке: {page_link}'
-    

@@ -1,5 +1,6 @@
 sqlalchemy
 psycopg2-binary
+cachetools
 python-dotenv
 vkbottle
 loguru
