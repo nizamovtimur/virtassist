@@ -142,6 +142,7 @@ def rate_answer(score: int, question_answer_id: int):
     with Session(engine) as session:
         question_answer = session.scalars(select(QuestionAnswer).where(QuestionAnswer.id == question_answer_id)).first()
         if question_answer is None:
+            logger.error("QuestionAnswer.id is None")
             return
         question_answer.score = score
         session.commit()
@@ -168,6 +169,9 @@ async def vk_subscribe(message: VKMessage):
     with Session(engine) as session:
         user = session.scalars(select(User).where(User.vk_id == message.from_id)).first()
         if user is None:
+            await message.answer(
+                message=Strings.NoneUserVK,
+                random_id=0)
             return
         user.is_subscribed = not user.is_subscribed
         session.commit()
@@ -183,6 +187,7 @@ async def tg_subscribe(message: tg.types.Message):
     with Session(engine) as session:
         user = session.scalars(select(User).where(User.telegram_id == message['from']['id'])).first()
         if user is None:
+            await message.answer(text=Strings.NoneUserTelegram)
             return
         user.is_subscribed = not user.is_subscribed
         session.commit()
@@ -258,63 +263,66 @@ async def vk_answer(message: VKMessage):
             message=Strings.FirstMessage,
             keyboard=vk_keyboard_choice(notify_text), random_id=0)
         return
-    
     if len(message.text) < 4:
         await message.answer(
             message=Strings.Less4Symbols,
             random_id=0)
         return
-    
     if check_spam(vk_id=message.from_id):
         await message.answer(
             message=Strings.SpamWarning,
             random_id=0)
         return
-    
-    processing = await message.answer(Strings.TryFindAnswer)
-    answer, confluence_url = await get_answer(message.text)
-    if processing.message_id is not None:
-        await vk_bot.api.messages.delete(message_ids=[processing.message_id], peer_id=message.peer_id, delete_for_all=True)
-    
     with Session(engine) as session:
         user = session.scalars(select(User).where(User.vk_id == message.from_id)).first()
-        if user is not None:
-            question_answer = QuestionAnswer(
-                question=message.text,
-                answer=answer,
-                confluence_url=confluence_url,
-                user=user
-            )
-            session.add(question_answer)
-            session.flush()
-            session.refresh(question_answer)
-            question_answer_id = question_answer.id
-            session.commit()     
-    
+        if user is None:
+            await message.answer(
+                message=Strings.NoneUserVK,
+                random_id=0)
+            return
+        processing = await message.answer(Strings.TryFindAnswer)
+        answer, confluence_url = await get_answer(message.text)
+        if processing.message_id is not None:
+            await vk_bot.api.messages.delete(message_ids=[processing.message_id], peer_id=message.peer_id, delete_for_all=True)
+        question_answer = QuestionAnswer(
+            question=message.text,
+            answer=answer,
+            confluence_url=confluence_url,
+            user=user
+        )
+        session.add(question_answer)
+        session.flush()
+        session.refresh(question_answer)
+        question_answer_id = question_answer.id
+        session.commit()
+    if question_answer_id is None:
+        logger.error("QuestionAnswer.id is None")
+        return
     if confluence_url is None:
         await message.answer(
             message=Strings.NotFound,
             keyboard=vk_keyboard_choice(notify_text), random_id=0)
-    else:
-        if len(answer) == 0:
-            answer = Strings.NotAnswer
-        await message.answer(
-        message=f"{answer}\n\n{Strings.SourceURL} {confluence_url}",
-        keyboard=(
-            vk.Keyboard(inline=True)
-            .add(vk.Text("👎", payload={"score": 1, "question_answer_id": question_answer_id}))
-            .add(vk.Text("❤", payload={"score": 5, "question_answer_id": question_answer_id}))
-        ), random_id=0) # type: ignore
+        return
+    if len(answer) == 0:
+        answer = Strings.NotAnswer
+    await message.answer(
+    message=f"{answer}\n\n{Strings.SourceURL} {confluence_url}",
+    keyboard=(
+        vk.Keyboard(inline=True)
+        .add(vk.Text("👎", payload={"score": 1, "question_answer_id": question_answer_id}))
+        .add(vk.Text("❤", payload={"score": 5, "question_answer_id": question_answer_id}))
+    ), random_id=0) # type: ignore
 
 
 @dispatcher.message_handler(commands=['start'])
 async def tg_start(message: tg.types.Message):
-    add_user(telegram_id=message['from']['id'])
+    is_user_added = add_user(telegram_id=message['from']['id'])
     notify_text = Strings.Unsubscribe if check_subscribing(telegram_id=message['from']['id']) else Strings.Subscribe
-    await message.answer(
-        text=Strings.FirstMessage,
-        reply_markup=tg_keyboard_choice(notify_text)
-    )
+    if is_user_added or Strings.Start in message.text.lower() or Strings.StartEnglish in message.text.lower():
+        await message.answer(
+            text=Strings.FirstMessage,
+            reply_markup=tg_keyboard_choice(notify_text)
+        )
 
 
 @dispatcher.message_handler()
@@ -322,41 +330,42 @@ async def tg_answer(message: tg.types.Message):
     if len(message['text']) < 4:
         await message.answer(text=Strings.Less4Symbols)
         return
-    
     if check_spam(telegram_id=message['from']['id']):
         await message.answer(text=Strings.SpamWarning)
         return
-    
-    processing = await message.answer(Strings.TryFindAnswer)
-    answer, confluence_url = await get_answer(message["text"])
-    await tg_bot.delete_message(message['chat']['id'], processing['message_id'])
-    
     with Session(engine) as session:
         user = session.scalars(select(User).where(User.telegram_id  == message['from']['id'])).first()
-        if user is not None:
-            question_answer = QuestionAnswer(
-                question=message["text"],
-                answer=answer,
-                confluence_url=confluence_url,
-                user=user
-            )
-            session.add(question_answer)
-            session.flush()
-            session.refresh(question_answer)
-            question_answer_id = question_answer.id
-            session.commit()  
-    
+        if user is None:
+            await message.answer(text=Strings.NoneUserTelegram)
+            return
+        processing = await message.answer(Strings.TryFindAnswer)
+        answer, confluence_url = await get_answer(message["text"])
+        await tg_bot.delete_message(message['chat']['id'], processing['message_id'])
+        question_answer = QuestionAnswer(
+            question=message["text"],
+            answer=answer,
+            confluence_url=confluence_url,
+            user=user
+        )
+        session.add(question_answer)
+        session.flush()
+        session.refresh(question_answer)
+        question_answer_id = question_answer.id
+        session.commit()
+    if question_answer_id is None:
+        logger.error("QuestionAnswer.id is None")
+        return
     if confluence_url is None:
         await message.answer(text=Strings.NotFound)
-    else:
-        if len(answer) == 0:
-            answer = Strings.NotAnswer
-        await message.answer(
-            text=f"{answer}\n\n{Strings.SourceURL} {confluence_url}",
-            reply_markup=tg.types.InlineKeyboardMarkup().add(
-                tg.types.InlineKeyboardButton(text="👎", callback_data=f"1 {question_answer_id}"), # type: ignore
-                tg.types.InlineKeyboardButton(text="❤", callback_data=f"5 {question_answer_id}") # type: ignore
-            ))
+        return
+    if len(answer) == 0:
+        answer = Strings.NotAnswer
+    await message.answer(
+        text=f"{answer}\n\n{Strings.SourceURL} {confluence_url}",
+        reply_markup=tg.types.InlineKeyboardMarkup().add(
+            tg.types.InlineKeyboardButton(text="👎", callback_data=f"1 {question_answer_id}"), # type: ignore
+            tg.types.InlineKeyboardButton(text="❤", callback_data=f"5 {question_answer_id}") # type: ignore
+        ))
 
 
 def launch_vk_bot():
