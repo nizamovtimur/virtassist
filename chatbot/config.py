@@ -13,4 +13,3 @@ class Config:
     CONFLUENCE_TOKEN = environ.get('CONFLUENCE_TOKEN')
     CONFLUENCE_HOST = environ.get('CONFLUENCE_HOST')
     CONFLUENCE_SPACES = environ.get('CONFLUENCE_SPACES').split()
-	

@@ -1,13 +1,45 @@
 stages:
-  - build_deploy
+  - build
+  - test
+  - deploy
+  - prune
 
-build_deploy:
-  stage: build_deploy
+build:
+  stage: build
+  script:
+    - docker build -t virtassist/db:latest ./db
+    - docker build -t virtassist/qa:latest ./qa
+    - docker build -t virtassist/chatbot:latest ./chatbot
+  only:
+    - main
+  tags:
+    - srv-virtassist01
+
+test:
+  stage: test
+  script:
+    - echo "docker run --rm virtassist/chatbot:latest python test.py"
+    - echo "something for QA"
+  only:
+    - main
+  tags:
+    - srv-virtassist01
+
+deploy:
+  stage: deploy
   environment: production
   before_script:
     - cp $ENV_PRODUCTION .env.docker
   script:
-    - docker compose --env-file .env.docker up -d --build
+    - docker compose --env-file .env.docker up -d
+  only:
+    - main
+  tags:
+    - srv-virtassist01
+
+prune:
+  stage: prune
+  script:
     - docker container prune -f
     - docker image prune -af
     - docker network prune -f
