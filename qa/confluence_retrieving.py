@@ -1,9 +1,11 @@
+import logging
 from atlassian import Confluence
 from bs4 import BeautifulSoup
 from langchain.text_splitter import SentenceTransformersTokenTextSplitter
 from langchain_community.document_loaders import PyPDFLoader
 from langchain_core.documents import Document
-from sqlalchemy import Engine
+from sentence_transformers import SentenceTransformer
+from sqlalchemy import Engine, select
 from sqlalchemy.orm import Session
 from config import Config
 from database import Chunk
@@ -30,8 +32,8 @@ def get_document_content_by_id(confluence: Confluence, page_id: str) -> tuple[st
     return page_content, page_link
 
 
-def reindex_confluence(engine: Engine):
-    print("START CREATE INDEX")
+def reindex_confluence(engine: Engine, text_splitter: SentenceTransformersTokenTextSplitter):
+    logging.info("START CREATE INDEX")
     confluence = Confluence(url=Config.CONFLUENCE_HOST, token=Config.CONFLUENCE_TOKEN)
     spaces = "(" + " or ".join([f"space = {space}" for space in Config.CONFLUENCE_SPACES]) + ")"
     page_ids = []
@@ -42,7 +44,6 @@ def reindex_confluence(engine: Engine):
         page_ids = page_ids + [page['content']['id'] for page in pages if 'content' in page.keys()]
         count_start += limit
         pages = confluence.cql(f"{spaces} and label != \"навигация\" order by id", start=count_start, limit=limit)["results"]
-        
     documents = []
     for page_id in page_ids:
         page_content, page_link = get_document_content_by_id(confluence, page_id)
@@ -51,10 +52,7 @@ def reindex_confluence(engine: Engine):
         documents.append(Document(
             page_content=page_content, metadata={"page_link": page_link}
         ))
-    
-    text_splitter = SentenceTransformersTokenTextSplitter(model_name="saved_models/rubert-tiny2-wikiutmn")   
     all_splits = text_splitter.split_documents(documents)
-    
     with Session(engine) as session:
         session.query(Chunk).delete()
         for chunk in all_splits:
@@ -64,4 +62,12 @@ def reindex_confluence(engine: Engine):
                 embedding=text_splitter._model.encode(chunk.page_content)
             ))
         session.commit()
-    print("INDEX CREATED")
+    logging.info("INDEX CREATED")
+    
+    
+def get_chunk(engine: Engine, model: SentenceTransformer, question: str) -> Chunk | None:
+    with Session(engine) as session:
+        return session.scalars(select(Chunk)
+                        .order_by(Chunk.embedding.cosine_distance(
+                            model.encode(question)
+                            )).limit(1)).first()

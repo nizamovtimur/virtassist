@@ -13,3 +13,4 @@ sentence-transformers
 sqlalchemy
 psycopg2-binary
 pgvector
+pytest

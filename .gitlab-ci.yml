@@ -17,9 +17,11 @@ build:
 
 test:
   stage: test
+  before_script:
+    - cp $ENV_PRODUCTION .env.docker
   script:
-    - echo "docker run --rm virtassist/chatbot:latest python test.py"
-    - echo "something for QA"
+    - echo "docker run --rm virtassist/chatbot:latest pytest tests.py"
+    - docker run --env-file .env.docker --network host --rm virtassist/qa:latest pytest tests.py
   only:
     - main
   tags:
