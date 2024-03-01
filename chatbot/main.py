@@ -34,20 +34,28 @@ dispatcher = tg.Dispatcher(tg_bot)
 
 
 def vk_keyboard_choice(notify_text: str) -> str:
-    return (
-        vk.Keyboard()
+    keyboard = (vk.Keyboard()
         .add(vk.Text(Strings.ConfluenceButton))
         .row()
-        .add(vk.Text(notify_text))
-        .get_json()
-    )
+        .add(vk.Text(notify_text)))
+    if Config.PRIVACY_POLICY_URL is not None:
+        keyboard.row().add(vk.OpenLink(Config.PRIVACY_POLICY_URL, Strings.PrivacyPolicyButton))
+    return keyboard.get_json()
 
 
 def tg_keyboard_choice(notify_text: str) -> tg.types.ReplyKeyboardMarkup:
     keyboard = tg.types.ReplyKeyboardMarkup(resize_keyboard=True) # type: ignore
     keyboard.add(tg.types.KeyboardButton(Strings.ConfluenceButton)) # type: ignore
     keyboard.add(tg.types.KeyboardButton(notify_text)) # type: ignore
+    if Config.PRIVACY_POLICY_URL is not None:
+        keyboard.add(tg.types.KeyboardButton(Strings.PrivacyPolicyButton)) # type: ignore
     return keyboard
+
+
+@dispatcher.message_handler(text=[Strings.PrivacyPolicyButton])
+async def tg_privacy_policy(message: tg.types.Message):
+    if Config.PRIVACY_POLICY_URL is not None:
+        await message.answer(text=f"{Strings.PrivacyPolicyButton}: {Config.PRIVACY_POLICY_URL}")
 
 
 # TODO: move to web admin panel
