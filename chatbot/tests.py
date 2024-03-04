@@ -107,7 +107,6 @@ def test_db_functions():
         session.flush()
         session.refresh(question_answer)
         session.commit()
-        print(question_answer.time_created)
         assert check_spam(engine, user2.vk_id, user2.telegram_id) == True
         with pytest.raises(Exception):
             check_spam(engine, None, None)
