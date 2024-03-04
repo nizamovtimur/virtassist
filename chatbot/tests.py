@@ -42,7 +42,7 @@ class TestDBFunctions:
         assert user_id is not None
         answer_id = add_question_answer(self.engine, "Вопрос", "Ответ", "confluence.com", user_id)
         assert answer_id is not None
-        rate_answer(self.engine, answer_id, 1)
+        assert rate_answer(self.engine, answer_id, 1) == True
         with Session(self.engine) as session:
             answer = session.scalar(select(QuestionAnswer).where(QuestionAnswer.id == answer_id))
             assert answer is not None
@@ -51,11 +51,12 @@ class TestDBFunctions:
             assert answer.confluence_url == "confluence.com"
             assert answer.score == 1
             assert answer.user_id == user_id
-        rate_answer(self.engine, answer_id, 5)
+        assert rate_answer(self.engine, answer_id, 5) == True
         with Session(self.engine) as session:
             answer = session.scalar(select(QuestionAnswer).where(QuestionAnswer.id == answer_id))
             assert answer is not None
             assert answer.score == 5
+        assert rate_answer(self.engine, 0, 5) == False
     
     def test_check_spam(self):
         user_id = get_user_id(self.engine, 1, None)

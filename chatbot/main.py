@@ -132,17 +132,17 @@ async def tg_confluence_parse(callback: tg.types.CallbackQuery):
 @vk_bot.on.message(func=lambda message: "score" in message.payload if message.payload is not None else False)
 async def vk_rate(message: VKMessage):
     payload_data = json.loads(message.payload) # type: ignore
-    rate_answer(engine, payload_data["question_answer_id"], payload_data["score"])
-    await message.answer(
-        message=Strings.ThanksForFeedback,
-        random_id=0)
+    if rate_answer(engine, payload_data["question_answer_id"], payload_data["score"]):
+        await message.answer(
+            message=Strings.ThanksForFeedback,
+            random_id=0)
 
 
 @dispatcher.callback_query_handler()
 async def tg_rate(callback_query: tg.types.CallbackQuery):
     score, question_answer_id = map(int, callback_query.data.split())
-    rate_answer(engine, question_answer_id, score)
-    await callback_query.answer(text=Strings.ThanksForFeedback)
+    if rate_answer(engine, question_answer_id, score):
+        await callback_query.answer(text=Strings.ThanksForFeedback)
 
 
 @vk_bot.on.message(text=[Strings.Subscribe, Strings.Unsubscribe])
@@ -214,9 +214,6 @@ async def vk_answer(message: VKMessage):
     processing = await message.answer(message=Strings.TryFindAnswer, random_id=0)
     answer, confluence_url = await get_answer(message.text)
     question_answer_id = add_question_answer(engine, message.text, answer, confluence_url, user_id)
-    if question_answer_id is None:
-        logger.error("QuestionAnswer.id is None")
-        return
     if processing.message_id is not None:
         await vk_bot.api.messages.delete(message_ids=[processing.message_id], peer_id=message.peer_id, delete_for_all=True)
     if confluence_url is None:
@@ -261,9 +258,6 @@ async def tg_answer(message: tg.types.Message):
     processing = await message.answer(Strings.TryFindAnswer)
     answer, confluence_url = await get_answer(message.text)
     question_answer_id = add_question_answer(engine, message.text, answer, confluence_url, user_id)
-    if question_answer_id is None:
-        logger.error("QuestionAnswer.id is None")
-        return
     await tg_bot.delete_message(message['chat']['id'], processing['message_id'])
     if confluence_url is None:
         await message.answer(text=Strings.NotFound)

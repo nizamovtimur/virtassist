@@ -75,29 +75,29 @@ def get_user_id(engine, vk_id: int|None = None, telegram_id: int|None = None) ->
         return user.id
         
 
-def subscribe_user(engine, user_id: int) -> bool | None:
+def subscribe_user(engine, user_id: int) -> bool:
     with Session(engine) as session:
         user = session.scalars(select(User).where(User.id == user_id)).first()
         if user is None:
-            return None
+            return False
         user.is_subscribed = not user.is_subscribed
         session.commit()
         return user.is_subscribed
 
 
-def check_subscribing(engine, user_id: int) -> bool | None:
+def check_subscribing(engine, user_id: int) -> bool:
     with Session(engine) as session:
         user = session.scalars(select(User).where(User.id == user_id)).first()
         if user is None:
-            return None
+            return False
         return user.is_subscribed
 
 
-def check_spam(engine, user_id) -> bool | None:
+def check_spam(engine, user_id: int) -> bool:
     with Session(engine) as session:
         user = session.scalars(select(User).where(User.id == user_id)).first()
         if user is None:
-            return None
+            return False
         if len(user.question_answers) > 3:
             return datetime.now(timezone.utc).replace(tzinfo=None) - user.question_answers[2].time_created.replace(tzinfo=None) < timedelta(minutes=1)
         return False
@@ -115,13 +115,16 @@ def add_question_answer(engine, question: str, answer: str, confluence_url: str 
         session.flush()
         session.refresh(question_answer)
         session.commit()
+        if question_answer.id is None:
+            return 0
         return question_answer.id
 
 
-def rate_answer(engine, question_answer_id: int, score: int):
+def rate_answer(engine, question_answer_id: int, score: int) -> bool:
     with Session(engine) as session:
         question_answer = session.scalars(select(QuestionAnswer).where(QuestionAnswer.id == question_answer_id)).first()
         if question_answer is None:
-            return
+            return False
         question_answer.score = score
         session.commit()
+        return True
