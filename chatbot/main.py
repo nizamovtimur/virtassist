@@ -13,7 +13,7 @@ from vkbottle.bot import Message as VKMessage
 from vkbottle.http import aiohttp
 from config import Config
 from confluence_interaction import make_markup_by_confluence, parse_confluence_by_page_id
-from database import User, QuestionAnswer, Base
+from database import User, QuestionAnswer
 from strings import Strings
 
 
