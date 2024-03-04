@@ -1,6 +1,7 @@
+from datetime import datetime, timedelta, timezone
 from typing import Optional, List
-from sqlalchemy import ForeignKey, BigInteger, Text, Column, DateTime, func
-from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
+from sqlalchemy import BigInteger, Column, DateTime, ForeignKey, Text, func, select
+from sqlalchemy.orm import DeclarativeBase, Mapped, Session, mapped_column, relationship
 
 
 class Base(DeclarativeBase):
@@ -43,3 +44,84 @@ if __name__ == "__main__":
         except Exception as e:
             print(e)
             time.sleep(2)
+
+
+def add_user(engine, vk_id: int|None = None, telegram_id: int|None = None) -> tuple[bool, int]:
+    with Session(engine) as session:
+        if vk_id is not None:
+            user = session.scalar(select(User).where(User.vk_id == vk_id))
+        elif telegram_id is not None:
+            user = session.scalar(select(User).where(User.telegram_id == telegram_id))
+        else:
+            raise Exception("vk_id and telegram_id can't be None at the same time")
+        if user is None:
+            user = User(vk_id=vk_id, telegram_id=telegram_id, is_subscribed=True)
+            session.add(user)
+            session.commit()
+            return True, user.id
+        return False, user.id
+
+            
+def get_user_id(engine, vk_id: int|None = None, telegram_id: int|None = None) -> int | None:
+    with Session(engine) as session:
+        if vk_id is not None:
+            user = session.scalar(select(User).where(User.vk_id == vk_id))
+        elif telegram_id is not None:
+            user = session.scalar(select(User).where(User.telegram_id == telegram_id))
+        else:
+            raise Exception("vk_id and telegram_id can't be None at the same time")
+        if user is None:
+            return None
+        return user.id
+        
+
+def subscribe_user(engine, user_id: int) -> bool | None:
+    with Session(engine) as session:
+        user = session.scalars(select(User).where(User.id == user_id)).first()
+        if user is None:
+            return None
+        user.is_subscribed = not user.is_subscribed
+        session.commit()
+        return user.is_subscribed
+
+
+def check_subscribing(engine, user_id: int) -> bool | None:
+    with Session(engine) as session:
+        user = session.scalars(select(User).where(User.id == user_id)).first()
+        if user is None:
+            return None
+        return user.is_subscribed
+
+
+def check_spam(engine, user_id) -> bool | None:
+    with Session(engine) as session:
+        user = session.scalars(select(User).where(User.id == user_id)).first()
+        if user is None:
+            return None
+        if len(user.question_answers) > 3:
+            return datetime.now(timezone.utc).replace(tzinfo=None) - user.question_answers[2].time_created.replace(tzinfo=None) < timedelta(minutes=1)
+        return False
+
+
+def add_question_answer(engine, question: str, answer: str, confluence_url: str | None, user_id: int) -> int:
+    with Session(engine) as session:
+        question_answer = QuestionAnswer(
+            question=question,
+            answer=answer,
+            confluence_url=confluence_url,
+            user_id=user_id
+        )
+        session.add(question_answer)
+        session.flush()
+        session.refresh(question_answer)
+        session.commit()
+        return question_answer.id
+
+
+def rate_answer(engine, question_answer_id: int, score: int):
+    with Session(engine) as session:
+        question_answer = session.scalars(select(QuestionAnswer).where(QuestionAnswer.id == question_answer_id)).first()
+        if question_answer is None:
+            return
+        question_answer.score = score
+        session.commit()
