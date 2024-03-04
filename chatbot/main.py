@@ -13,7 +13,7 @@ from vkbottle.bot import Message as VKMessage
 from vkbottle.http import aiohttp
 from config import Config
 from confluence_interaction import make_markup_by_confluence, parse_confluence_by_page_id
-from database import User, QuestionAnswer
+from database import User, QuestionAnswer, Base
 from strings import Strings
 
 
@@ -138,7 +138,7 @@ async def tg_confluence_parse(callback: tg.types.CallbackQuery):
         await callback.message.answer(text=parse)
 
 
-def rate_answer(score: int, question_answer_id: int):
+def rate_answer(engine, score: int, question_answer_id: int):
     with Session(engine) as session:
         question_answer = session.scalars(select(QuestionAnswer).where(QuestionAnswer.id == question_answer_id)).first()
         if question_answer is None:
@@ -151,7 +151,7 @@ def rate_answer(score: int, question_answer_id: int):
 @vk_bot.on.message(func=lambda message: "score" in message.payload if message.payload is not None else False)
 async def vk_rate(message: VKMessage):
     payload_data = json.loads(message.payload) # type: ignore
-    rate_answer(payload_data["score"], payload_data["question_answer_id"])
+    rate_answer(engine, payload_data["score"], payload_data["question_answer_id"])
     await message.answer(
         message=Strings.ThanksForFeedback,
         random_id=0)
@@ -160,7 +160,7 @@ async def vk_rate(message: VKMessage):
 @dispatcher.callback_query_handler()
 async def tg_rate(callback_query: tg.types.CallbackQuery):
     score, question_answer_id = map(int, callback_query.data.split())
-    rate_answer(score, question_answer_id)
+    rate_answer(engine, score, question_answer_id)
     await callback_query.answer(text=Strings.ThanksForFeedback)
 
 
@@ -198,7 +198,7 @@ async def tg_subscribe(message: tg.types.Message):
             reply_markup=tg_keyboard_choice(notify_text))
 
 
-def add_user(vk_id: int|None = None, telegram_id: int|None = None) -> bool:
+def add_user(engine, vk_id: int|None = None, telegram_id: int|None = None) -> bool:
     with Session(engine) as session:
         if vk_id is not None:
             user = session.scalar(select(User).where(User.vk_id == vk_id))
@@ -214,7 +214,7 @@ def add_user(vk_id: int|None = None, telegram_id: int|None = None) -> bool:
         return False
 
 
-def check_subscribing(vk_id: int|None = None, telegram_id: int|None = None) -> bool:
+def check_subscribing(engine, vk_id: int|None = None, telegram_id: int|None = None) -> bool:
     with Session(engine) as session:
         if vk_id is not None:
             user = session.scalar(select(User).where(User.vk_id == vk_id))
@@ -227,7 +227,7 @@ def check_subscribing(vk_id: int|None = None, telegram_id: int|None = None) -> b
         return user.is_subscribed
 
 
-def check_spam(vk_id: int|None = None, telegram_id: int|None = None) -> bool:
+def check_spam(engine, vk_id: int|None = None, telegram_id: int|None = None) -> bool:
     with Session(engine) as session:
         if vk_id is not None:
             user = session.scalar(select(User).where(User.vk_id == vk_id))
@@ -238,7 +238,7 @@ def check_spam(vk_id: int|None = None, telegram_id: int|None = None) -> bool:
         if user is None:
             return False
         if len(user.question_answers) > 3:
-            if datetime.now(timezone.utc) - user.question_answers[2].time_created < timedelta(minutes=1): # type: ignore
+            if datetime.now(timezone.utc).replace(tzinfo=None) - user.question_answers[2].time_created.replace(tzinfo=None) < timedelta(minutes=1): # type: ignore
                 return True
         return False
 
@@ -256,8 +256,8 @@ async def get_answer(question: str) -> tuple[str, str|None]:
 
 @vk_bot.on.message()
 async def vk_answer(message: VKMessage):
-    is_user_added = add_user(vk_id=message.from_id)
-    notify_text = Strings.Unsubscribe if check_subscribing(vk_id=message.from_id) else Strings.Subscribe
+    is_user_added = add_user(engine, vk_id=message.from_id)
+    notify_text = Strings.Unsubscribe if check_subscribing(engine, vk_id=message.from_id) else Strings.Subscribe
     if is_user_added or Strings.Start in message.text.lower() or Strings.StartEnglish in message.text.lower():
         await message.answer(
             message=Strings.FirstMessage,
@@ -268,7 +268,7 @@ async def vk_answer(message: VKMessage):
             message=Strings.Less4Symbols,
             random_id=0)
         return
-    if check_spam(vk_id=message.from_id):
+    if check_spam(engine, vk_id=message.from_id):
         await message.answer(
             message=Strings.SpamWarning,
             random_id=0)
@@ -316,8 +316,8 @@ async def vk_answer(message: VKMessage):
 
 @dispatcher.message_handler(commands=['start'])
 async def tg_start(message: tg.types.Message):
-    is_user_added = add_user(telegram_id=message['from']['id'])
-    notify_text = Strings.Unsubscribe if check_subscribing(telegram_id=message['from']['id']) else Strings.Subscribe
+    is_user_added = add_user(engine, telegram_id=message['from']['id'])
+    notify_text = Strings.Unsubscribe if check_subscribing(engine, telegram_id=message['from']['id']) else Strings.Subscribe
     if is_user_added or Strings.Start in message.text.lower() or Strings.StartEnglish in message.text.lower():
         await message.answer(
             text=Strings.FirstMessage,
@@ -330,7 +330,7 @@ async def tg_answer(message: tg.types.Message):
     if len(message['text']) < 4:
         await message.answer(text=Strings.Less4Symbols)
         return
-    if check_spam(telegram_id=message['from']['id']):
+    if check_spam(engine, telegram_id=message['from']['id']):
         await message.answer(text=Strings.SpamWarning)
         return
     with Session(engine) as session:
