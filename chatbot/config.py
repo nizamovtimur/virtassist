@@ -13,3 +13,4 @@ class Config:
     CONFLUENCE_TOKEN = environ.get('CONFLUENCE_TOKEN')
     CONFLUENCE_HOST = environ.get('CONFLUENCE_HOST')
     CONFLUENCE_SPACES = environ.get('CONFLUENCE_SPACES').split() if environ.get('CONFLUENCE_SPACES') is not None else []
+    PRIVACY_POLICY_URL = environ.get('PRIVACY_POLICY_URL')
