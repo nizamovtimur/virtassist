@@ -1,4 +1,5 @@
 sqlalchemy
+pytest
 psycopg2-binary
 cachetools
 python-dotenv
