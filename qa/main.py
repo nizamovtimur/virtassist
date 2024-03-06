@@ -13,7 +13,8 @@ from confluence_retrieving import get_chunk, reindex_confluence
 
 routes = web.RouteTableDef()
 engine = create_engine(Config.SQLALCHEMY_DATABASE_URI)
-text_splitter = SentenceTransformersTokenTextSplitter(model_name="saved_models/rubert-tiny2-wikiutmn") 
+text_splitter = SentenceTransformersTokenTextSplitter(
+    model_name="saved_models/rubert-tiny2-wikiutmn")
 
 
 @routes.post('/qa/')
@@ -42,7 +43,7 @@ async def reindex(request):
         reindex_confluence(engine, text_splitter)
         return web.Response(status=200)
     except Exception as e:
-        return web.Response(text=str(e), status=500) 
+        return web.Response(text=str(e), status=500)
 
 
 if __name__ == "__main__":
