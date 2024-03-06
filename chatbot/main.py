@@ -275,7 +275,7 @@ async def tg_answer(message: tg.types.Message):
         text=f"{answer}\n\n{Strings.SourceURL} {confluence_url}",
         reply_markup=tg.types.InlineKeyboardMarkup().add(
             tg.types.InlineKeyboardButton(
-                text="👎", callback_data=f"1 {question_answer_id}") 
+                text="👎", callback_data=f"1 {question_answer_id}"),
             tg.types.InlineKeyboardButton(
                 text="❤", callback_data=f"5 {question_answer_id}")
         ))
