@@ -14,7 +14,7 @@ class Chunk(Base):
     confluence_url: Mapped[str] = mapped_column(Text(), index=True)
     text: Mapped[str] = mapped_column(Text())
     embedding: Mapped[Vector] = mapped_column(Vector(312))
-  
+
 
 # migrations
 if __name__ == "__main__":

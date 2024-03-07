@@ -16,9 +16,10 @@ class User(Base):
     telegram_id: Mapped[Optional[int]] = mapped_column(BigInteger, unique=True)
     is_subscribed: Mapped[bool] = mapped_column()
 
-    question_answers: Mapped[List["QuestionAnswer"]] = relationship(back_populates="user", cascade="all, delete-orphan", order_by="desc(QuestionAnswer.time_created)")
-    
-    
+    question_answers: Mapped[List["QuestionAnswer"]] = relationship(
+        back_populates="user", cascade="all, delete-orphan", order_by="desc(QuestionAnswer.time_created)")
+
+
 class QuestionAnswer(Base):
     __tablename__ = "question_answer"
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
@@ -46,34 +47,39 @@ if __name__ == "__main__":
             time.sleep(2)
 
 
-def add_user(engine: Engine, vk_id: int|None = None, telegram_id: int|None = None) -> tuple[bool, int]:
+def add_user(engine: Engine, vk_id: int | None = None, telegram_id: int | None = None) -> tuple[bool, int]:
     with Session(engine) as session:
         if vk_id is not None:
             user = session.scalar(select(User).where(User.vk_id == vk_id))
         elif telegram_id is not None:
-            user = session.scalar(select(User).where(User.telegram_id == telegram_id))
+            user = session.scalar(select(User).where(
+                User.telegram_id == telegram_id))
         else:
-            raise Exception("vk_id and telegram_id can't be None at the same time")
+            raise TypeError(
+                "vk_id and telegram_id can't be None at the same time")
         if user is None:
-            user = User(vk_id=vk_id, telegram_id=telegram_id, is_subscribed=True)
+            user = User(vk_id=vk_id, telegram_id=telegram_id,
+                        is_subscribed=True)
             session.add(user)
             session.commit()
             return True, user.id
         return False, user.id
 
-            
-def get_user_id(engine: Engine, vk_id: int|None = None, telegram_id: int|None = None) -> int | None:
+
+def get_user_id(engine: Engine, vk_id: int | None = None, telegram_id: int | None = None) -> int | None:
     with Session(engine) as session:
         if vk_id is not None:
             user = session.scalar(select(User).where(User.vk_id == vk_id))
         elif telegram_id is not None:
-            user = session.scalar(select(User).where(User.telegram_id == telegram_id))
+            user = session.scalar(select(User).where(
+                User.telegram_id == telegram_id))
         else:
-            raise Exception("vk_id and telegram_id can't be None at the same time")
+            raise TypeError(
+                "vk_id and telegram_id can't be None at the same time")
         if user is None:
             return None
         return user.id
-        
+
 
 def subscribe_user(engine: Engine, user_id: int) -> bool:
     with Session(engine) as session:
@@ -122,7 +128,8 @@ def add_question_answer(engine: Engine, question: str, answer: str, confluence_u
 
 def rate_answer(engine: Engine, question_answer_id: int, score: int) -> bool:
     with Session(engine) as session:
-        question_answer = session.scalars(select(QuestionAnswer).where(QuestionAnswer.id == question_answer_id)).first()
+        question_answer = session.scalars(select(QuestionAnswer).where(
+            QuestionAnswer.id == question_answer_id)).first()
         if question_answer is None:
             return False
         question_answer.score = score
