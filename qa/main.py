@@ -18,7 +18,16 @@ text_splitter = SentenceTransformersTokenTextSplitter(
 
 
 @routes.post('/qa/')
-async def qa(request):
+async def qa(request: web.Request) -> web.Response:
+    """Возвращает ответ на вопрос пользователя и ссылку на источник
+
+    Args:
+        request (web.Request): запрос, содержащий `question`
+
+    Returns:
+        web.Response: ответ
+    """
+    
     question = (await request.json())['question']
     chunk = get_chunk(engine, text_splitter._model, question)
     if chunk is None:
@@ -38,7 +47,16 @@ async def qa(request):
 
 
 @routes.post('/reindex/')
-async def reindex(request):
+async def reindex(request: web.Request) -> web.Response:
+    """Пересоздаёт векторный индекс тестов для ответов на вопросы
+
+    Args:
+        request (web.Request): запрос
+
+    Returns:
+        web.Response: ответ
+    """
+    
     try:
         reindex_confluence(engine, text_splitter)
         return web.Response(status=200)
