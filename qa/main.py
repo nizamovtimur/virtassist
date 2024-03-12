@@ -47,7 +47,7 @@ async def qa(request: web.Request) -> web.Response:
 
 @routes.post('/reindex/')
 async def reindex(request: web.Request) -> web.Response:
-    """Пересоздаёт векторный индекс тестов для ответов на вопросы
+    """Пересоздаёт векторный индекс текстов для ответов на вопросы
 
     :param request: запрос
     :type request: web.Request
