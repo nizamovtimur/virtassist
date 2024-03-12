@@ -12,7 +12,8 @@ from database import Chunk
 
 
 def get_document_content_by_id(confluence: Confluence, page_id: str) -> tuple[str | None, str | None]:
-    """Возвращает содержимое страницы на Confluence после предобработки с помощью PyPDF или BS4 и ссылку на страницу
+    """Возвращает содержимое страницы на Confluence 
+    после предобработки с помощью PyPDF или BS4 и ссылку на страницу
 
     :param confluence: экземпляр Confluence
     :type confluence: Confluence
@@ -46,7 +47,8 @@ def get_document_content_by_id(confluence: Confluence, page_id: str) -> tuple[st
 
 
 def reindex_confluence(engine: Engine, text_splitter: SentenceTransformersTokenTextSplitter):
-    """Пересоздаёт векторный индекс тестов для ответов на вопросы
+    """Пересоздаёт векторный индекс текстов для ответов на вопросы. 
+    При этом не рассматриваются страницы с тегом "навигация"
 
     :param engine: экземпляр подключения к БД
     :type engine: Engine
@@ -69,8 +71,8 @@ def reindex_confluence(engine: Engine, text_splitter: SentenceTransformersTokenT
         page_ids = page_ids + [page['content']['id']
                                for page in pages if 'content' in page.keys()]
         count_start += limit
-        pages = confluence.cql(
-            f"{spaces} and label != \"навигация\" order by id", start=count_start, limit=limit)["results"]
+        pages = confluence.cql(f"{spaces} and label != \"навигация\" order by id",
+                               start=count_start, limit=limit)["results"]
     documents = []
     for page_id in page_ids:
         page_content, page_link = get_document_content_by_id(
