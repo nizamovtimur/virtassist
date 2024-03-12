@@ -6,7 +6,7 @@ load_dotenv(dotenv_path="../.env")
 class Config:
     """Класс с переменными окружения
     """
-    
+
     GIGACHAT_TOKEN = environ.get('GIGACHAT_TOKEN')
     CONFLUENCE_TOKEN = environ.get('CONFLUENCE_TOKEN')
     CONFLUENCE_HOST = environ.get('CONFLUENCE_HOST')

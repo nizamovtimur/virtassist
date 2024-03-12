@@ -11,9 +11,9 @@ class Base(DeclarativeBase):
 class Chunk(Base):
     """Фрагмент документа из вики-системы
 
-    confluence_url (str): ссылка на источник
-    text (str): текст фрагмента
-    embedding (Vector): векторное представление текста фрагмента
+    :ivar confluence_url: ссылка на источник
+    :ivar text: текст фрагмента
+    :ivar embedding: векторное представление текста фрагмента
     """
 
     __tablename__ = "chunk"

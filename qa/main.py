@@ -21,13 +21,12 @@ text_splitter = SentenceTransformersTokenTextSplitter(
 async def qa(request: web.Request) -> web.Response:
     """Возвращает ответ на вопрос пользователя и ссылку на источник
 
-    Args:
-        request (web.Request): запрос, содержащий `question`
-
-    Returns:
-        web.Response: ответ
+    :param request: запрос, содержащий `question`
+    :type request: web.Request
+    :return: ответ
+    :rtype: web.Response
     """
-    
+
     question = (await request.json())['question']
     chunk = get_chunk(engine, text_splitter._model, question)
     if chunk is None:
@@ -50,13 +49,12 @@ async def qa(request: web.Request) -> web.Response:
 async def reindex(request: web.Request) -> web.Response:
     """Пересоздаёт векторный индекс тестов для ответов на вопросы
 
-    Args:
-        request (web.Request): запрос
-
-    Returns:
-        web.Response: ответ
+    :param request: запрос
+    :type request: web.Request
+    :return: ответ
+    :rtype: web.Response
     """
-    
+
     try:
         reindex_confluence(engine, text_splitter)
         return web.Response(status=200)
