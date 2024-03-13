@@ -36,27 +36,14 @@ def vk_keyboard_choice(notify_text: str) -> str:
                 .add(vk.Text(Strings.ConfluenceButton))
                 .row()
                 .add(vk.Text(notify_text)))
-    if Config.PRIVACY_POLICY_URL is not None:
-        keyboard.row().add(vk.OpenLink(Config.PRIVACY_POLICY_URL, Strings.PrivacyPolicyButton))
     return keyboard.get_json()
 
 
 def tg_keyboard_choice(notify_text: str) -> tg.types.ReplyKeyboardMarkup:
-    keyboard = tg.types.ReplyKeyboardMarkup(
-        resize_keyboard=True)
-    keyboard.add(tg.types.KeyboardButton(
-        Strings.ConfluenceButton))
+    keyboard = tg.types.ReplyKeyboardMarkup(resize_keyboard=True)
+    keyboard.add(tg.types.KeyboardButton(Strings.ConfluenceButton))
     keyboard.add(tg.types.KeyboardButton(notify_text))
-    if Config.PRIVACY_POLICY_URL is not None:
-        keyboard.add(tg.types.KeyboardButton(
-            Strings.PrivacyPolicyButton))
     return keyboard
-
-
-@dispatcher.message_handler(text=[Strings.PrivacyPolicyButton])
-async def tg_privacy_policy(message: tg.types.Message):
-    if Config.PRIVACY_POLICY_URL is not None:
-        await message.answer(text=f"{Strings.PrivacyPolicyButton}: {Config.PRIVACY_POLICY_URL}")
 
 
 # @vk_bot.on.message(vk.dispatch.rules.base.RegexRule("!send "), permission=Config.VK_SUPERUSER_ID)
@@ -229,6 +216,7 @@ async def vk_answer(message: VKMessage):
         answer = Strings.NotAnswer
     await message.answer(
         message=f"{answer}\n\n{Strings.SourceURL} {confluence_url}",
+        dont_parse_links=True,
         keyboard=(
             vk.Keyboard(inline=True)
             .add(vk.Text("👎", payload={"score": 1, "question_answer_id": question_answer_id}))

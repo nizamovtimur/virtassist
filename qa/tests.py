@@ -5,6 +5,9 @@ from confluence_retrieving import get_document_content_by_id
 
 
 def test_gigachat():
+    """тест взаимодействия с GigaChat
+    """
+
     context = "После осени наступает зима, после зимы наступает осень"
     assert "осень" in get_answer(context, "Когда наступит осень?").lower()
     assert "ответ не найден" in get_answer(
@@ -12,6 +15,9 @@ def test_gigachat():
 
 
 def test_confluence():
+    """тест взаимодействия с Confluence
+    """
+
     confluence = Confluence(url=Config.CONFLUENCE_HOST,
                             token=Config.CONFLUENCE_TOKEN)
     main_space = confluence.get_space(

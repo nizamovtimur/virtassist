@@ -12,6 +12,17 @@ from database import Chunk
 
 
 def get_document_content_by_id(confluence: Confluence, page_id: str) -> tuple[str | None, str | None]:
+    """Возвращает содержимое страницы на Confluence 
+    после предобработки с помощью PyPDF или BS4 и ссылку на страницу
+
+    Args:
+        confluence (Confluence): экземпляр Confluence
+        page_id (str): ИД страницы
+
+    Returns:
+        tuple[str | None, str | None]: содержимое страницы, ссылка на страницу
+    """
+
     page = confluence.get_page_by_id(page_id, expand='space,body.export_view')
     page_link = page['_links']['base'] + page['_links']['webui']
     page_body = page['body']['export_view']['value']
@@ -36,6 +47,14 @@ def get_document_content_by_id(confluence: Confluence, page_id: str) -> tuple[st
 
 
 def reindex_confluence(engine: Engine, text_splitter: SentenceTransformersTokenTextSplitter):
+    """Пересоздаёт векторный индекс текстов для ответов на вопросы. 
+    При этом не рассматриваются страницы с тегом "навигация"
+
+    Args:
+        engine (Engine): экземпляр подключения к БД
+        text_splitter (SentenceTransformersTokenTextSplitter): экземпляр SentenceTransformersTokenTextSplitter
+    """
+
     logging.info("START CREATE INDEX")
     confluence = Confluence(url=Config.CONFLUENCE_HOST,
                             token=Config.CONFLUENCE_TOKEN)
@@ -51,8 +70,8 @@ def reindex_confluence(engine: Engine, text_splitter: SentenceTransformersTokenT
         page_ids = page_ids + [page['content']['id']
                                for page in pages if 'content' in page.keys()]
         count_start += limit
-        pages = confluence.cql(
-            f"{spaces} and label != \"навигация\" order by id", start=count_start, limit=limit)["results"]
+        pages = confluence.cql(f"{spaces} and label != \"навигация\" order by id",
+                               start=count_start, limit=limit)["results"]
     documents = []
     for page_id in page_ids:
         page_content, page_link = get_document_content_by_id(
@@ -76,6 +95,17 @@ def reindex_confluence(engine: Engine, text_splitter: SentenceTransformersTokenT
 
 
 def get_chunk(engine: Engine, model: SentenceTransformer, question: str) -> Chunk | None:
+    """Возвращает ближайший к вопросу фрагмент документа Chunk из векторной базы данных
+
+    Args:
+        engine (Engine): экземпляр подключения к БД
+        model (SentenceTransformer): модель SentenceTransformer
+        question (str): вопрос пользователя
+
+    Returns:
+        Chunk | None: экземпляр класса Chunk — фрагмент документа
+    """
+
     with Session(engine) as session:
         return session.scalars(select(Chunk)
                                .order_by(Chunk.embedding.cosine_distance(
