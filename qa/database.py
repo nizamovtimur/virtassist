@@ -9,12 +9,20 @@ class Base(DeclarativeBase):
 
 
 class Chunk(Base):
+    """Фрагмент документа из вики-системы
+
+    Args:
+        confluence_url (str): ссылка на источник
+        text (str): текст фрагмента
+        embedding (Vector): векторное представление текста фрагмента
+    """
+
     __tablename__ = "chunk"
     id: Mapped[int] = mapped_column(primary_key=True)
     confluence_url: Mapped[str] = mapped_column(Text(), index=True)
     text: Mapped[str] = mapped_column(Text())
     embedding: Mapped[Vector] = mapped_column(Vector(312))
-  
+
 
 # migrations
 if __name__ == "__main__":

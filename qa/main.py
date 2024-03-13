@@ -13,11 +13,21 @@ from confluence_retrieving import get_chunk, reindex_confluence
 
 routes = web.RouteTableDef()
 engine = create_engine(Config.SQLALCHEMY_DATABASE_URI)
-text_splitter = SentenceTransformersTokenTextSplitter(model_name="saved_models/rubert-tiny2-wikiutmn") 
+text_splitter = SentenceTransformersTokenTextSplitter(
+    model_name="saved_models/rubert-tiny2-wikiutmn")
 
 
 @routes.post('/qa/')
-async def qa(request):
+async def qa(request: web.Request) -> web.Response:
+    """Возвращает ответ на вопрос пользователя и ссылку на источник
+
+    Args:
+        request (web.Request): запрос, содержащий `question`
+
+    Returns:
+        web.Response: ответ
+    """
+
     question = (await request.json())['question']
     chunk = get_chunk(engine, text_splitter._model, question)
     if chunk is None:
@@ -37,12 +47,21 @@ async def qa(request):
 
 
 @routes.post('/reindex/')
-async def reindex(request):
+async def reindex(request: web.Request) -> web.Response:
+    """Пересоздаёт векторный индекс текстов для ответов на вопросы
+
+    Args:
+        request (web.Request): запрос
+
+    Returns:
+        web.Response: ответ
+    """
+
     try:
         reindex_confluence(engine, text_splitter)
         return web.Response(status=200)
     except Exception as e:
-        return web.Response(text=str(e), status=500) 
+        return web.Response(text=str(e), status=500)
 
 
 if __name__ == "__main__":
