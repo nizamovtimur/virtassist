@@ -10,9 +10,13 @@
     </head>
     <body>
         <h2>Введите информацию:</h2>
-        <form id="infoForm">
+        <form id="infoForm" method="POST">
             <label for="infoInput">Информация:</label>
-            <input type="text" id="infoInput" name="infoInput">
+            <input type="text" id="name11" name="name">
+            <input type="radio" id="telegram" name="telegram" value="telegram">
+            <label for="telegram">Телеграм</label>
+            <input type="radio" id="vk" name="vk" value="vk">
+            <label for="vk">ВКонтакте</label>
             <button type="submit">Отправить</button>
         </form>
     </body>

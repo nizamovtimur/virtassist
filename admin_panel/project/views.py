@@ -10,7 +10,12 @@ def index():
     return render_template('main-page.html')
 
 
-@app.route('/broadcast', methods=['POST'])
+@app.route('/broadcast', methods=['POST', 'GET'])
 def broadcast():
-    requests.post()
-    return render_template('broadcast.html')
+    if request.method == 'POST':
+        text = request.form.get('name')
+        requests.post(url=f"http://{app.config['CHATBOT_HOST']}/broadcast",
+                      json={"text": text})
+        return 'Hello world'
+    else:
+        return render_template('broadcast.html')
