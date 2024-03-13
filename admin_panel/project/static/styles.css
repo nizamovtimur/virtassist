@@ -1,0 +1,9 @@
+.broadcast-form {
+    display: flex;
+    flex-direction: column;
+    flex-wrap: nowrap;
+    align-content: normal;
+    justify-content: center;
+    align-items: center;
+}
+

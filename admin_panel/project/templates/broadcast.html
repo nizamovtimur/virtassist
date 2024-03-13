@@ -1,23 +1,26 @@
-<<!DOCTYPE html>
+<!DOCTYPE html>
 <html>
+    {% block head %}
     <head>
-        <meta charset="utf-8">
-        <meta http-equiv="X-UA-Compatible" content="IE=edge">
-        <title></title>
-        <meta name="description" content="">
-        <meta name="viewport" content="width=device-width, initial-scale=1">
-        <link rel="stylesheet" href="">
+        <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='styles.css') }}">
     </head>
+    {% endblock %}
+
+    {% block body %}
     <body>
-        <h2>Введите информацию:</h2>
-        <form id="infoForm" method="POST">
-            <label for="infoInput">Информация:</label>
-            <input type="text" id="name11" name="name">
-            <input type="radio" id="telegram" name="telegram" value="telegram">
-            <label for="telegram">Телеграм</label>
-            <input type="radio" id="vk" name="vk" value="vk">
-            <label for="vk">ВКонтакте</label>
-            <button type="submit">Отправить</button>
-        </form>
+        <div class="broadcast-form">
+            <h2>Введите информацию:</h2>
+            <form id="infoForm" method="POST">
+                <label for="infoInput">Информация:</label>
+                <input type="text" id="name11" name="name">
+                <input type="radio" id="telegram" name="telegram" value="telegram">
+                <label for="telegram">Телеграм</label>
+                <input type="radio" id="vk" name="vk" value="vk">
+                <label for="vk">ВКонтакте</label>
+                <button type="submit">Отправить</button>
+            </form>
+            <p> {{ response }} </p>
+        </div>
     </body>
+    {% endblock %}
 </html>
