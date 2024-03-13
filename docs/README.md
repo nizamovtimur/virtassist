@@ -10,6 +10,9 @@
 
 TODO: write + figure
 
+## Переменные среды
+Пример файла с переменными среды представлен в [.env.example](../.env.example) в корне репозитория.
+
 ## Содержание
 1. [Интеграция с Confluence + инструкция по наполнению пространства](confluence-integration.md)
 2. [Модуль Chatbot](chatbot.md)
