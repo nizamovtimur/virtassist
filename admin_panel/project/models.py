@@ -3,6 +3,7 @@ from flask_sqlalchemy import SQLAlchemy
 
 
 db = SQLAlchemy(app)
+app.app_context().push()
 
 class Chunk(db.Model):
     id = db.Column(db.Integer, primary_key=True)

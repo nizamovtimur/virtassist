@@ -3,3 +3,4 @@ flask_sqlalchemy
 flask_oidc
 python-dotenv
 pytest
+requests
