@@ -1,7 +1,14 @@
-from core import app
-from core.models import db, User, Chunk, QuestionAnswer
+from config import app
+from models import db, User, Chunk, QuestionAnswer
+
+from flask import render_template
 
 
 @app.route('/')
 def index():
-    return "<h1>Hello World</h1>"
+    return render_template('main-page.html')
+
+
+@app.route('/broadcast')
+def broadcast():
+    return render_template('broadcast.html')
