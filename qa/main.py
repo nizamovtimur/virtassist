@@ -21,10 +21,11 @@ text_splitter = SentenceTransformersTokenTextSplitter(
 async def qa(request: web.Request) -> web.Response:
     """Возвращает ответ на вопрос пользователя и ссылку на источник
 
-    :param request: запрос, содержащий `question`
-    :type request: web.Request
-    :return: ответ
-    :rtype: web.Response
+    Args:
+        request (web.Request): запрос, содержащий `question`
+
+    Returns:
+        web.Response: ответ
     """
 
     question = (await request.json())['question']
@@ -49,10 +50,11 @@ async def qa(request: web.Request) -> web.Response:
 async def reindex(request: web.Request) -> web.Response:
     """Пересоздаёт векторный индекс текстов для ответов на вопросы
 
-    :param request: запрос
-    :type request: web.Request
-    :return: ответ
-    :rtype: web.Response
+    Args:
+        request (web.Request): запрос
+
+    Returns:
+        web.Response: ответ
     """
 
     try:

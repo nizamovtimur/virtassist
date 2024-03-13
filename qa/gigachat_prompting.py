@@ -22,12 +22,12 @@ def get_answer(context: str, question: str) -> str:
     """Возвращает сгенерированный LLM ответ на вопрос пользователя 
     по заданному документу в соответствии с промтом
 
-    :param context: текст документа (или фрагмента документа)
-    :type context: str
-    :param question: вопрос пользователя
-    :type question: str
-    :return: сгенерированный ответ
-    :rtype: str
+    Args:
+        context (str): текст документа (или фрагмента документа)
+        question (str): вопрос пользователя
+
+    Returns:
+        str: экземпляр класса Chunk — фрагмент документа    
     """
 
     query = {"context": context,

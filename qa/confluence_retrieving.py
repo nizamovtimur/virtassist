@@ -15,12 +15,12 @@ def get_document_content_by_id(confluence: Confluence, page_id: str) -> tuple[st
     """Возвращает содержимое страницы на Confluence 
     после предобработки с помощью PyPDF или BS4 и ссылку на страницу
 
-    :param confluence: экземпляр Confluence
-    :type confluence: Confluence
-    :param page_id: ИД страницы
-    :type page_id: str
-    :return: содержимое страницы, ссылка на страницу
-    :rtype: tuple[str | None, str | None]
+    Args:
+        confluence (Confluence): экземпляр Confluence
+        page_id (str): ИД страницы
+
+    Returns:
+        tuple[str | None, str | None]: содержимое страницы, ссылка на страницу
     """
 
     page = confluence.get_page_by_id(page_id, expand='space,body.export_view')
@@ -50,10 +50,9 @@ def reindex_confluence(engine: Engine, text_splitter: SentenceTransformersTokenT
     """Пересоздаёт векторный индекс текстов для ответов на вопросы. 
     При этом не рассматриваются страницы с тегом "навигация"
 
-    :param engine: экземпляр подключения к БД
-    :type engine: Engine
-    :param text_splitter: экземпляр SentenceTransformersTokenTextSplitter
-    :type text_splitter: SentenceTransformersTokenTextSplitter
+    Args:
+        engine (Engine): экземпляр подключения к БД
+        text_splitter (SentenceTransformersTokenTextSplitter): экземпляр SentenceTransformersTokenTextSplitter
     """
 
     logging.info("START CREATE INDEX")
@@ -98,14 +97,13 @@ def reindex_confluence(engine: Engine, text_splitter: SentenceTransformersTokenT
 def get_chunk(engine: Engine, model: SentenceTransformer, question: str) -> Chunk | None:
     """Возвращает ближайший к вопросу фрагмент документа Chunk из векторной базы данных
 
-    :param engine: экземпляр подключения к БД
-    :type engine: Engine
-    :param model: модель SentenceTransformer
-    :type model: SentenceTransformer
-    :param question: вопрос пользователя
-    :type question: str
-    :return: экземпляр класса Chunk — фрагмент документа
-    :rtype: Chunk | None
+    Args:
+        engine (Engine): экземпляр подключения к БД
+        model (SentenceTransformer): модель SentenceTransformer
+        question (str): вопрос пользователя
+
+    Returns:
+        Chunk | None: экземпляр класса Chunk — фрагмент документа
     """
 
     with Session(engine) as session:

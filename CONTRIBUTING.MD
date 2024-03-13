@@ -10,11 +10,11 @@
 ## Python
 
  * Код оформляется в соответствии со стандартом PEP8.
- * Документируется в соответствии со стандартом Sphinx.
+ * Документируется в соответствии со стандартом Google.
 
 # Рекомендации
 
 Рекомендуется использовать IDE **VS Code** с предустановленными расширениями:
  * https://marketplace.visualstudio.com/items?itemName=donjayamanne.python-extension-pack
  * https://marketplace.visualstudio.com/items?itemName=ms-python.autopep8
- * https://marketplace.visualstudio.com/items?itemName=njpwerner.autodocstring (Необходимо задать настройку "autoDocstring.docstringFormat": "sphinx" в разделе File > Preferences > Settings)
+ * https://marketplace.visualstudio.com/items?itemName=njpwerner.autodocstring (Необходимо задать настройку "autoDocstring.docstringFormat": "google" в разделе File > Preferences > Settings)
