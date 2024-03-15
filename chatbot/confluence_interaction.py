@@ -36,7 +36,7 @@ def parse_confluence_by_page_id(id: int | str) -> list | str:
         for i in soup.find_all():
             if i.find("ac:parameter"):
                 i.decompose()
-        for i in soup.find_all(["p", "ul"]):
+        for i in soup.find_all(["p", "li", "ul"]):
             text += i.get_text() + "\n\n"
         if len(text) == 0:
             return f"Информация находится по ссылке: {page_link}"
