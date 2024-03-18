@@ -10,6 +10,15 @@ class Base(DeclarativeBase):
 
 
 class User(Base):
+    """Пользователь чат-бота
+
+    Args:
+        id (int): id пользователя
+        vk_id (int | None): id пользователя ВКонтакте
+        telegram_id (int | None): id пользователя Telegram
+        vk_id (int | None): id пользователя ВКонтакте
+    """
+
     __tablename__ = "user"
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
     vk_id: Mapped[Optional[int]] = mapped_column(BigInteger, unique=True)
@@ -21,6 +30,17 @@ class User(Base):
 
 
 class QuestionAnswer(Base):
+    """Вопрос пользователя с ответом на него
+
+    Args:
+        id (int): id ответа
+        question (str): вопрос пользователя
+        answer (str): ответ на вопрос пользователя
+        confluence_url (str): ссылка на страницу в вики-системе, содержащую ответ
+        score (int): оценка пользователем ответа
+        user_id (int): id пользователя, задавшего вопрос
+    """
+
     __tablename__ = "question_answer"
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
     question: Mapped[str] = mapped_column(Text())

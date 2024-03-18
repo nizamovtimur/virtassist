@@ -4,6 +4,9 @@ load_dotenv(dotenv_path="../.env")
 
 
 class Config:
+    """Класс с переменными окружения
+    """
+
     SQLALCHEMY_DATABASE_URI = f"postgresql://{environ.get('POSTGRES_USER')}:{environ.get('POSTGRES_PASSWORD')}@{environ.get('POSTGRES_HOST')}/{environ.get('POSTGRES_DB')}"
     VK_ACCESS_GROUP_TOKEN = environ.get('VK_ACCESS_GROUP_TOKEN')
     VK_SUPERUSER_ID = [(int(id) for id in environ.get('VK_SUPERUSER_ID').split(

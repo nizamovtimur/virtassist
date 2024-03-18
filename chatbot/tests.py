@@ -5,6 +5,9 @@ from database import Base, QuestionAnswer, add_user, get_user_id, subscribe_user
 
 
 class TestDBFunctions:
+    """Класс с функциями тестирования функций, взаимодействующих с БД
+    """
+
     engine = create_engine("sqlite://", echo=True)
     Base.metadata.create_all(engine)
 
@@ -13,6 +16,9 @@ class TestDBFunctions:
     test_confluence_url = "confluence.com"
 
     def test_add_get_user(self):
+        """Тест добавления и получения пользователя по id
+        """
+
         is_added, id = add_user(self.engine, 1, None)
         assert is_added is True
         assert id == get_user_id(self.engine, 1, None)
@@ -33,6 +39,9 @@ class TestDBFunctions:
             get_user_id(self.engine, None, None)
 
     def test_subscribing(self):
+        """Тест оформления подписки пользователя на рассылку 
+        """
+
         user_id = get_user_id(self.engine, 1, None)
         assert user_id is not None
         assert check_subscribing(self.engine, user_id) is True
@@ -42,6 +51,9 @@ class TestDBFunctions:
         assert check_subscribing(self.engine, user_id) is True
 
     def test_rate_answer(self):
+        """Тест функции оценивания ответа
+        """
+
         user_id = get_user_id(self.engine, 1, None)
         assert user_id is not None
         answer_id = add_question_answer(
@@ -66,6 +78,9 @@ class TestDBFunctions:
         assert rate_answer(self.engine, 0, 5) == False
 
     def test_check_spam(self):
+        """Тест функции, проверяющую спам
+        """
+
         user_id = get_user_id(self.engine, 1, None)
         assert user_id is not None
         assert check_spam(self.engine, user_id) is False
