@@ -401,7 +401,6 @@ async def tg_answer(message: tg.types.Message):
 
 def launch_vk_bot():
     """Функция начала работы чат-бота ВКонтакте
-    
     """
 
     loop = asyncio.new_event_loop()
@@ -411,7 +410,6 @@ def launch_vk_bot():
 
 def launch_telegram_bot():
     """Функция начала работы чат-бота Telegram
-
     """
 
     loop = asyncio.new_event_loop()
