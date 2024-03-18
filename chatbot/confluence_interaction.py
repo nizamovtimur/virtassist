@@ -28,7 +28,7 @@ def make_markup_by_confluence() -> list:
 
 @cached(cache=TTLCache(maxsize=100, ttl=3600))
 def parse_confluence_by_page_id(id: int | str) -> list | str:
-    """Возвращает текст страницы из структуры пространства в вики-системы
+    """Возвращает текст страницы из структуры пространства в вики-системе
     или список вложенных страниц по id
 
     Проводится часовое кэширование
