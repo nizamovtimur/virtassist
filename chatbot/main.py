@@ -268,7 +268,7 @@ async def get_answer(question: str) -> tuple[str, str | None]:
     """Получение ответа на вопрос с использованием микросервиса
 
     Args:
-        question (str): вопрос пользоваетля
+        question (str): вопрос пользователя
 
     Returns:
         tuple[str, str | None]: ответ на вопрос и ссылка на страницу в вики-системе
