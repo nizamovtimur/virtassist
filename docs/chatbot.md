@@ -266,7 +266,7 @@
 ### `test_add_get_user(self)`
 Тест добавления и получения пользователя по id
 
-### `test_subscribing(self)
+### `test_subscribing(self)`
 Тест оформления подписки пользователя на рассылку
 
 ### `test_rate_answer(self)`
