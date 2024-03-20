@@ -32,6 +32,17 @@ dispatcher = tg.Dispatcher(tg_bot)
 
 
 def vk_keyboard_choice(notify_text: str) -> str:
+    """Возвращает клавиатуру из кнопок предоставления справочной информации
+    и подписки на рассылку (если пользователь подписан, то отписки от неё)
+    для чат-бота ВКонтакте
+
+    Args:
+        notify_text (str): "Подписаться на рассылку" если пользователь не подписан, иначе "Отписаться от рассылки"
+
+    Returns:
+        str: JSON-объект, описывающий клавиатуру с шаблонами сообщений
+    """
+    
     keyboard = (vk.Keyboard()
                 .add(vk.Text(Strings.ConfluenceButton))
                 .row()
@@ -40,6 +51,17 @@ def vk_keyboard_choice(notify_text: str) -> str:
 
 
 def tg_keyboard_choice(notify_text: str) -> tg.types.ReplyKeyboardMarkup:
+    """Возвращает клавиатуру из кнопок предоставления справочной информации
+    и подписки на рассылку (если пользователь подписан, то отписки от неё)
+    для чат-бота Telegram
+
+    Args:
+        notify_text (str): "Подписаться на рассылку" если пользователь не подписан, иначе "Отписаться от рассылки"
+
+    Returns:
+        tg.types.ReplyKeyboardMarkup: клавиатура с шаблонами сообщений
+    """
+
     keyboard = tg.types.ReplyKeyboardMarkup(resize_keyboard=True)
     keyboard.add(tg.types.KeyboardButton(Strings.ConfluenceButton))
     keyboard.add(tg.types.KeyboardButton(notify_text))
@@ -57,6 +79,14 @@ def tg_keyboard_choice(notify_text: str) -> tg.types.ReplyKeyboardMarkup:
 
 
 async def vk_send_confluence_keyboard(message: VKMessage, question_types: list):
+    """Создаёт inline-кнопки для чат-бота ВКонтакте на основе справочной структуры
+    пространства в вики-системе
+
+    Args:
+        message (VKMessage): сообщение пользователя
+        question_types (list): страницы или подстраницы из структуры пространства в вики-системе
+    """
+
     keyboards = [vk.Keyboard(inline=True)
                  for _ in range(math.ceil(len(question_types) / 5))]
     for i in range(len(question_types)):
@@ -75,6 +105,14 @@ async def vk_send_confluence_keyboard(message: VKMessage, question_types: list):
 
 
 async def tg_send_confluence_keyboard(message: tg.types.Message, question_types: list):
+    """Создаёт inline-кнопки для чат-бота Telegram на основе справочной структуры
+    пространства в вики-системе
+
+    Args:
+        message (tg.types.Message): сообщение пользователя
+        question_types (list): страницы или подстраницы из структуры пространства в вики-системе
+    """
+
     inline_keyboard = tg.types.InlineKeyboardMarkup()
     for i in question_types:
         inline_keyboard.add(tg.types.InlineKeyboardButton(text=i['content']['title'],
@@ -87,18 +125,39 @@ async def tg_send_confluence_keyboard(message: tg.types.Message, question_types:
 
 @vk_bot.on.message(text=[Strings.ConfluenceButton])
 async def vk_handler(message: VKMessage):
+    """Обработчик события (для чат-бота ВКонтакте), при котором пользователь запрашивает
+    справочную информацию
+
+    Args:
+        message (VKMessage): сообщение, отправленное пользователем при запросе справочной информации
+    """
+
     question_types = make_markup_by_confluence()
     await vk_send_confluence_keyboard(message, question_types)
 
 
 @dispatcher.message_handler(text=[Strings.ConfluenceButton])
 async def tg_handler(message: tg.types.Message):
+    """Обработчик события (для чат-бота Telegram), при котором пользователь запрашивает
+    справочную информацию
+
+    Args:
+        message (tg.types.Message): сообщение, отправленное пользователем при запросе справочной информации
+    """
+
     question_types = make_markup_by_confluence()
     await tg_send_confluence_keyboard(message, question_types)
 
 
 @vk_bot.on.message(func=lambda message: "conf_id" in message.payload if message.payload is not None else False)
 async def vk_confluence_parse(message: VKMessage):
+    """Обработчик события (для чат-бота ВКонтакте), при котором пользователь нажимает
+    на кнопку, относящуюся к типу или подтипу вопросов
+
+    Args:
+        message (VKMessage): сообщение пользователя
+    """
+
     parse = parse_confluence_by_page_id(json.loads(message.payload)["conf_id"])
     if isinstance(parse, list):
         await vk_send_confluence_keyboard(message, parse)
@@ -111,6 +170,13 @@ async def vk_confluence_parse(message: VKMessage):
 
 @dispatcher.callback_query_handler(lambda c: c.data.startswith("conf_id"))
 async def tg_confluence_parse(callback: tg.types.CallbackQuery):
+    """Обработчик события (для чат-бота Telegram), при котором пользователь нажимает
+    на кнопку, относящуюся к типу или подтипу вопросов
+
+    Args:
+        callback (tg.types.CallbackQuery): запрос при нажатии на inline-кнопку
+    """
+
     parse = parse_confluence_by_page_id(callback.data[7:])
     if isinstance(parse, list):
         await tg_send_confluence_keyboard(callback.message, parse)
@@ -120,6 +186,13 @@ async def tg_confluence_parse(callback: tg.types.CallbackQuery):
 
 @vk_bot.on.message(func=lambda message: "score" in message.payload if message.payload is not None else False)
 async def vk_rate(message: VKMessage):
+    """Обработчик события (для чат-бота ВКонтакте), при котором пользователь оценивает
+    ответ на вопрос
+
+    Args:
+        message (VKMessage): сообщение пользователя
+    """
+
     payload_data = json.loads(message.payload)
     if rate_answer(engine, payload_data["question_answer_id"], payload_data["score"]):
         await message.answer(
@@ -129,6 +202,13 @@ async def vk_rate(message: VKMessage):
 
 @dispatcher.callback_query_handler()
 async def tg_rate(callback_query: tg.types.CallbackQuery):
+    """Обработчик события (для чат-бота Telegram), при котором пользователь оценивает
+    ответ на вопрос
+
+    Args:
+        callback_query (tg.types.CallbackQuery): запрос при нажатии на inline-кнопку
+    """
+
     score, question_answer_id = map(int, callback_query.data.split())
     if rate_answer(engine, question_answer_id, score):
         await callback_query.answer(text=Strings.ThanksForFeedback)
@@ -136,6 +216,13 @@ async def tg_rate(callback_query: tg.types.CallbackQuery):
 
 @vk_bot.on.message(text=[Strings.Subscribe, Strings.Unsubscribe])
 async def vk_subscribe(message: VKMessage):
+    """Обработчик события (для чат-бота ВКонтакте), при котором пользователь оформляет
+    или снимает подписку на рассылку
+
+    Args:
+        message (VKMessage): сообщение пользователя
+    """
+
     user_id = get_user_id(engine, vk_id=message.from_id)
     if user_id is None:
         await message.answer(
@@ -155,6 +242,13 @@ async def vk_subscribe(message: VKMessage):
 
 @dispatcher.message_handler(text=[Strings.Subscribe, Strings.Unsubscribe])
 async def tg_subscribe(message: tg.types.Message):
+    """Обработчик события (для чат-бота Telegram), при котором пользователь оформляет
+    или снимает подписку на рассылку
+
+    Args:
+        message (tg.types.Message): сообщение пользователя
+    """
+
     user_id = get_user_id(engine, telegram_id=message['from']['id'])
     if user_id is None:
         await message.answer(text=Strings.NoneUserTelegram)
@@ -171,6 +265,15 @@ async def tg_subscribe(message: tg.types.Message):
 
 
 async def get_answer(question: str) -> tuple[str, str | None]:
+    """Получение ответа на вопрос с использованием микросервиса
+
+    Args:
+        question (str): вопрос пользователя
+
+    Returns:
+        tuple[str, str | None]: ответ на вопрос и ссылка на страницу в вики-системе
+    """
+
     question = question.strip().lower()
     async with aiohttp.ClientSession() as session:
         async with session.post(f"http://{Config.QA_HOST}/qa/", json={"question": question}) as response:
@@ -183,6 +286,16 @@ async def get_answer(question: str) -> tuple[str, str | None]:
 
 @vk_bot.on.message()
 async def vk_answer(message: VKMessage):
+    """Обработчик события (для чат-бота ВКонтакте), при котором пользователь задаёт
+    вопрос чат-боту
+
+    После отображения ответа на вопрос чат-бот отправляет inline-кнопки для оценивания
+    ответа
+
+    Args:
+        message (VKMessage): сообщение пользователя с вопросом
+    """
+
     is_user_added, user_id = add_user(engine, vk_id=message.from_id)
     notify_text = Strings.Unsubscribe if check_subscribing(
         engine, user_id) else Strings.Subscribe
@@ -226,6 +339,13 @@ async def vk_answer(message: VKMessage):
 
 @dispatcher.message_handler(commands=['start'])
 async def tg_start(message: tg.types.Message):
+    """Обработчик события (для чат-бота Telegram), при котором пользователь отправляет
+    команду /start
+
+    Args:
+        message (tg.types.Message): сообщение пользователя
+    """
+
     is_user_added, user_id = add_user(
         engine, telegram_id=message['from']['id'])
     notify_text = Strings.Unsubscribe if check_subscribing(
@@ -239,6 +359,16 @@ async def tg_start(message: tg.types.Message):
 
 @dispatcher.message_handler()
 async def tg_answer(message: tg.types.Message):
+    """Обработчик события (для чат-бота Telegram), при котором пользователь задаёт
+    вопрос чат-боту
+
+    После отображения ответа на вопрос чат-бот отправляет inline-кнопки для оценивания
+    ответа
+
+    Args:
+        message (tg.types.Message): сообщение с вопросом пользователя
+    """
+
     if len(message['text']) < 4:
         await message.answer(text=Strings.Less4Symbols)
         return
@@ -270,12 +400,18 @@ async def tg_answer(message: tg.types.Message):
 
 
 def launch_vk_bot():
+    """Функция начала работы чат-бота ВКонтакте
+    """
+
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
     vk_bot.run_forever()
 
 
 def launch_telegram_bot():
+    """Функция начала работы чат-бота Telegram
+    """
+
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
     tg.executor.start_polling(dispatcher, skip_updates=True)

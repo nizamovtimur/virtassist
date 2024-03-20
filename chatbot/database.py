@@ -10,6 +10,15 @@ class Base(DeclarativeBase):
 
 
 class User(Base):
+    """Пользователь чат-бота
+
+    Args:
+        id (int): id пользователя
+        vk_id (int | None): id пользователя ВКонтакте
+        telegram_id (int | None): id пользователя Telegram
+        vk_id (int | None): id пользователя ВКонтакте
+    """
+
     __tablename__ = "user"
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
     vk_id: Mapped[Optional[int]] = mapped_column(BigInteger, unique=True)
@@ -21,6 +30,17 @@ class User(Base):
 
 
 class QuestionAnswer(Base):
+    """Вопрос пользователя с ответом на него
+
+    Args:
+        id (int): id ответа
+        question (str): вопрос пользователя
+        answer (str): ответ на вопрос пользователя
+        confluence_url (str): ссылка на страницу в вики-системе, содержащую ответ
+        score (int): оценка пользователем ответа
+        user_id (int): id пользователя, задавшего вопрос
+    """
+
     __tablename__ = "question_answer"
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
     question: Mapped[str] = mapped_column(Text())
@@ -48,6 +68,20 @@ if __name__ == "__main__":
 
 
 def add_user(engine: Engine, vk_id: int | None = None, telegram_id: int | None = None) -> tuple[bool, int]:
+    """Функция добавления в БД пользователя виртуального помощника
+
+    Args:
+        engine (Engine): подключение к БД
+        vk_id (int | None): id пользователя ВКонтакте
+        telegram_id (int | None): id пользователя Telegram
+
+    Raises:
+        TypeError: vk_id и telegram_id не могут быть None в одно время
+
+    Returns:
+        tuple[bool, int]: добавился пользователь или нет, какой у него id в БД
+    """
+
     with Session(engine) as session:
         if vk_id is not None:
             user = session.scalar(select(User).where(User.vk_id == vk_id))
@@ -67,6 +101,20 @@ def add_user(engine: Engine, vk_id: int | None = None, telegram_id: int | None =
 
 
 def get_user_id(engine: Engine, vk_id: int | None = None, telegram_id: int | None = None) -> int | None:
+    """Функция получения из БД пользователя
+
+    Args:
+        engine (Engine): подключение к БД
+        vk_id (int | None): id пользователя ВКонтакте
+        telegram_id (int | None): id пользователя Telegram
+
+    Raises:
+        TypeError: vk_id и telegram_id не могут быть None в одно время
+
+    Returns:
+        int | None: id пользователя или None
+    """
+
     with Session(engine) as session:
         if vk_id is not None:
             user = session.scalar(select(User).where(User.vk_id == vk_id))
@@ -82,6 +130,16 @@ def get_user_id(engine: Engine, vk_id: int | None = None, telegram_id: int | Non
 
 
 def subscribe_user(engine: Engine, user_id: int) -> bool:
+    """Функция оформления подписки пользователя на рассылку
+
+    Args:
+        engine (Engine): подключение к БД
+        user_id (int): id пользователя
+
+    Returns:
+        bool: подписан пользователь или нет
+    """
+
     with Session(engine) as session:
         user = session.scalars(select(User).where(User.id == user_id)).first()
         if user is None:
@@ -92,6 +150,16 @@ def subscribe_user(engine: Engine, user_id: int) -> bool:
 
 
 def check_subscribing(engine: Engine, user_id: int) -> bool:
+    """Функция проверки подписки пользователя на рассылку
+
+    Args:
+        engine (Engine): подключение к БД
+        user_id (int): id пользователя
+
+    Returns:
+        bool: подписан пользователь или нет
+    """
+
     with Session(engine) as session:
         user = session.scalars(select(User).where(User.id == user_id)).first()
         if user is None:
@@ -100,6 +168,16 @@ def check_subscribing(engine: Engine, user_id: int) -> bool:
 
 
 def check_spam(engine: Engine, user_id: int) -> bool:
+    """Функция проверки на спам
+
+    Args:
+        engine (Engine): подключение к БД
+        user_id (int): id пользователя
+
+    Returns:
+        bool: пользователь написал 4 сообщения за одну минуту или нет
+    """
+
     with Session(engine) as session:
         user = session.scalars(select(User).where(User.id == user_id)).first()
         if user is None:
@@ -110,6 +188,19 @@ def check_spam(engine: Engine, user_id: int) -> bool:
 
 
 def add_question_answer(engine: Engine, question: str, answer: str, confluence_url: str | None, user_id: int) -> int:
+    """Функция добавления в БД вопроса пользователя с ответом на него
+
+    Args:
+        engine (Engine): подключение к БД
+        question (str): вопрос пользователя
+        answer (str): ответ на вопрос пользователя
+        confluence_url (str | None): ссылка на страницу в вики-системе, содержащую ответ
+        user_id (int): id пользователя
+
+    Returns:
+        int: id вопроса с ответом на него
+    """
+
     with Session(engine) as session:
         question_answer = QuestionAnswer(
             question=question,
@@ -127,6 +218,17 @@ def add_question_answer(engine: Engine, question: str, answer: str, confluence_u
 
 
 def rate_answer(engine: Engine, question_answer_id: int, score: int) -> bool:
+    """Функция оценивания ответа на вопрос
+
+    Args:
+        engine (Engine): подключение к БД
+        question_answer_id (int): id вопроса с ответом
+        score (int): оценка ответа
+
+    Returns:
+        bool: удалось добавить в БД оценку ответа или нет
+    """
+
     with Session(engine) as session:
         question_answer = session.scalars(select(QuestionAnswer).where(
             QuestionAnswer.id == question_answer_id)).first()
