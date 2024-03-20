@@ -78,7 +78,7 @@ class TestDBFunctions:
         assert rate_answer(self.engine, 0, 5) == False
 
     def test_check_spam(self):
-        """Тест функции, проверяющую спам
+        """Тест функции, проверяющей спам
         """
 
         user_id = get_user_id(self.engine, 1, None)
