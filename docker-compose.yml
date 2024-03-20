@@ -17,6 +17,7 @@ services:
         image: virtassist/db:latest
         container_name: virtassist-db
         environment:
+            - TZ=${TZ}
             - POSTGRES_DB=${POSTGRES_DB}
             - POSTGRES_USER=${POSTGRES_USER}
             - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}

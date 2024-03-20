@@ -48,7 +48,7 @@ def get_document_content_by_id(confluence: Confluence, page_id: str) -> tuple[st
 
 def reindex_confluence(engine: Engine, text_splitter: SentenceTransformersTokenTextSplitter):
     """Пересоздаёт векторный индекс текстов для ответов на вопросы. 
-    При этом не рассматриваются страницы с тегом "навигация"
+    При этом обрабатываются страницы, не имеющие вложенных страниц.
 
     Args:
         engine (Engine): экземпляр подключения к БД
@@ -64,16 +64,19 @@ def reindex_confluence(engine: Engine, text_splitter: SentenceTransformersTokenT
     page_ids = []
     count_start = 0
     limit = 100
-    pages = confluence.cql(f"{spaces} and label != \"навигация\" order by id",
+    pages = confluence.cql(f"{spaces} order by id",
                            start=count_start, limit=limit)["results"]
     while len(pages) != 0:
         page_ids = page_ids + [page['content']['id']
                                for page in pages if 'content' in page.keys()]
         count_start += limit
-        pages = confluence.cql(f"{spaces} and label != \"навигация\" order by id",
+        pages = confluence.cql(f"{spaces} order by id",
                                start=count_start, limit=limit)["results"]
     documents = []
     for page_id in page_ids:
+        children = confluence.cql(f"parent={page_id}")["results"]
+        if len(children) > 0:
+            continue
         page_content, page_link = get_document_content_by_id(
             confluence, page_id)
         if page_content is None:
