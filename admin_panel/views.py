@@ -18,6 +18,26 @@ def index() -> str:
     return render_template('main-page.html')
 
 
+@app.route('/reind', methods=['POST'])
+def reindex_qa() -> str:
+    """Функция отправляет POST-запрос на переиндексацию в модуле QA.
+
+    Arguments: 
+        None
+
+    Returns:
+        str: Статус отправки запроса.
+    """
+    response = requests.post(f"http://{app.config['QA_HOST']}/qa/", json={"url": f"http://{app.config['QA_HOST']}/qa/reindex/",
+                                                                          "type": "URL_UPDATED"})
+    if response.status_code == '200':
+        answer = "Переиндексация прошла успешно!"
+        return answer
+    else:
+        answer = "Ошибка переиндексации..."
+        return answer
+
+
 @app.route('/broadcast', methods=['POST', 'GET'])
 def broadcast() -> str:
     """Функция позволяет отправить HTML-POST запрос на выполнение массовой рассылки на HOST чатбота.
