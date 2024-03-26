@@ -1,56 +1,82 @@
 from config import app
 from flask_sqlalchemy import SQLAlchemy
+from datetime import datetime, timedelta, timezone
+from typing import Optional, List
+from sqlalchemy import BigInteger, Column, DateTime, Engine, ForeignKey, Text, func, select
+from sqlalchemy.orm import DeclarativeBase, Mapped, Session, mapped_column, relationship
+from pgvector.sqlalchemy import Vector
 
 
 db = SQLAlchemy(app)
 app.app_context().push()
 
 
-class Chunk(db.Model):
+class Base(DeclarativeBase):
+    """Базовый класс модели, который инициализирует общие поля.
+
+    Args:
+        time_created (datetime): время создания модели
+        time_updated (datetime): время обновления модели
+    """
+
+    time_created = Column(DateTime(timezone=True), server_default=func.now())
+    time_updated = Column(DateTime(timezone=True), onupdate=func.now())
+
+
+class Chunk(Base):
     """Фрагмент документа из вики-системы
 
     Args:
-        url (str): ссылка на источник
+        confluence_url (str): ссылка на источник
         text (str): текст фрагмента
+        embedding (Vector): векторное представление текста фрагмента
     """
-    id = db.Column(db.Integer, primary_key=True)
-    url = db.Column("confluence_url", db.Text)
-    text = db.Column("text", db.Text)
-    # embedding = db.Column("embedding", db.Vector)
-    # time_crt = db.Column("time_created", db.Timestamp)
-    # time_upd = db.Column("time_updated", db.Timestamp)
+
+    __tablename__ = "chunk"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    confluence_url: Mapped[str] = mapped_column(Text(), index=True)
+    text: Mapped[str] = mapped_column(Text())
+    embedding: Mapped[Vector] = mapped_column(Vector(312))
 
 
-class User(db.Model):
-    """Часть данных о пользователе
+class User(Base):
+    """Пользователь чат-бота
 
     Args:
-        vk_id (int): id пользователя на платформе VK
-        tg_id (int): id пользователя на платформе TG
-        is_sub (bool): флаг подписки на рассылку
+        id (int): id пользователя
+        vk_id (int | None): id пользователя ВКонтакте
+        telegram_id (int | None): id пользователя Telegram
+        vk_id (int | None): id пользователя ВКонтакте
     """
-    id = db.Column(db.Integer, primary_key=True)
-    vk_id = db.Column("vk_id", db.BigInteger)
-    tg_id = db.Column("telegram_id", db.BigInteger)
-    is_sub = db.Column("is_subscribed", db.Boolean)
-    # time_crt = db.Column("time_created", db.Timestamp)
-    # time_upd = db.Column("time_updated", db.Timestamp)
+
+    __tablename__ = "user"
+    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
+    vk_id: Mapped[Optional[int]] = mapped_column(BigInteger, unique=True)
+    telegram_id: Mapped[Optional[int]] = mapped_column(BigInteger, unique=True)
+    is_subscribed: Mapped[bool] = mapped_column()
+
+    question_answers: Mapped[List["QuestionAnswer"]] = relationship(
+        back_populates="user", cascade="all, delete-orphan", order_by="desc(QuestionAnswer.time_created)")
 
 
-class QuestionAnswer(db.Model):
-    """Часть данных о вопросах и ответах
+class QuestionAnswer(Base):
+    """Вопрос пользователя с ответом на него
 
     Args:
-        question (str): содержание вопроса
-        answer (str): содержание ответа на заданный вопрос
-        url (str): ссылка на страницу ответа на вики-систему
-        score (int): 
+        id (int): id ответа
+        question (str): вопрос пользователя
+        answer (str): ответ на вопрос пользователя
+        confluence_url (str): ссылка на страницу в вики-системе, содержащую ответ
+        score (int): оценка пользователем ответа
+        user_id (int): id пользователя, задавшего вопрос
     """
-    id = db.Column(db.Integer, primary_key=True)
-    question = db.Column("question", db.Text)
-    answer = db.Column("answer", db.Text)
-    url = db.Column("confluence_url", db.Text)
-    score = db.Column("score", db.Integer)
-    # user_id = db.relationship("User", backref="user_id")
-    # time_crt = db.Column("time_created", db.Timestamp)
-    # time_upd = db.Column("time_updated", db.Timestamp)
+
+    __tablename__ = "question_answer"
+    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
+    question: Mapped[str] = mapped_column(Text())
+    answer: Mapped[Optional[str]] = mapped_column(Text())
+    confluence_url: Mapped[Optional[str]] = mapped_column(Text(), index=True)
+    score: Mapped[Optional[int]] = mapped_column()
+    user_id: Mapped[int] = mapped_column(ForeignKey("user.id"))
+
+    user: Mapped["User"] = relationship(back_populates="question_answers")

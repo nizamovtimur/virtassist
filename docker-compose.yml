@@ -5,6 +5,8 @@ services:
         image: virtassist/chatbot:latest
         container_name: virtassist-chatbot
         command: sh -c "python database.py && python main.py"
+        ports:
+            - 5000:5000
         env_file:
             - .env.docker
         depends_on:
@@ -16,6 +18,8 @@ services:
         build: ./db
         image: virtassist/db:latest
         container_name: virtassist-db
+        ports:
+            - 5433:5432
         environment:
             - POSTGRES_DB=${POSTGRES_DB}
             - POSTGRES_USER=${POSTGRES_USER}
@@ -29,6 +33,8 @@ services:
         image: virtassist/qa:latest
         container_name: virtassist-qa
         command: sh -c "cron && python database.py && python main.py"
+        ports:
+            - 8080:8080
         env_file:
             - .env.docker
         depends_on:

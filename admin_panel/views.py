@@ -1,62 +1,60 @@
-from config import app
-from models import db, User, Chunk, QuestionAnswer
+import requests
 
 from flask import render_template, request
-import requests
+from sqlalchemy import select
+from sqlalchemy.orm import Session
+
+from config import app
+from models import db, QuestionAnswer
 
 
 @app.route('/')
 def index() -> str:
     """Функция позволяет отрендерить главную страницу веб-сервиса.
 
-    Arguments: 
-        None
-
     Returns:
         str: отрендеренная главная веб-страница.
     """
-    return render_template('main-page.html')
+    reindex = 'Выполнить переиндексацию'
+    return render_template('main-page.html', quest=reindex)
 
 
 @app.route('/reind', methods=['POST'])
-def reindex_qa() -> str:
+def reindex_qa():
     """Функция отправляет POST-запрос на переиндексацию в модуле QA.
-
-    Arguments: 
-        None
 
     Returns:
         str: Статус отправки запроса.
     """
-    response = requests.post(f"http://{app.config['QA_HOST']}/qa/", json={"url": f"http://{app.config['QA_HOST']}/qa/reindex/",
-                                                                          "type": "URL_UPDATED"})
-    if response.status_code == '200':
+
+    response = requests.post(f"http://{app.config['QA_HOST']}/reindex/")
+    quest = "Повторная переиндексация"
+
+    if response.status_code == 200:
         answer = "Переиндексация прошла успешно!"
-        return answer
+        return render_template('main-page.html', quest=quest, answer=answer)
     else:
         answer = "Ошибка переиндексации..."
-        return answer
+        return render_template('main-page.html', quest=quest, answer=answer)
 
 
 @app.route('/broadcast', methods=['POST', 'GET'])
 def broadcast() -> str:
     """Функция позволяет отправить HTML-POST запрос на выполнение массовой рассылки на HOST чатбота.
 
-    Arguments: 
-        None
-
     Returns:
         str: отрендеренная веб-страница с POST-запросом на сервер.
     """
+
     if request.method == 'POST':
         text = request.form.get('name')
         vk_bool = request.form.get('vk')
         tg_bool = request.form.get('telegram')
-        try:
-            response = requests.post(url=f"http://{app.config['CHATBOT_HOST']}/broadcast",
+        response = requests.post(url=f"http://{app.config['CHATBOT_HOST']}/broadcast",
                                      json={"text": text, "to_tg": tg_bool, "to_vk": vk_bool})
+        if response.status_code == 200:
             return render_template('broadcast.html', response=response.text)
-        except:
+        else:
             response = 'Ваше сообщение не доставлено'
             return render_template('broadcast.html', response=response)
     else:
@@ -67,23 +65,23 @@ def broadcast() -> str:
 def questions() -> str:
     """Функция позволяет вывести на экране вопросы, не имеющие ответа.
 
-    Arguments: 
-        None
-
     Returns:
         str: отрендеренная веб-страница с POST-запросом на базу данных.
     """
-    return render_template('questions-wo-ans.html')
+
+    data = select(QuestionAnswer).where(QuestionAnswer.answer == "")
+    # with Session(db.engine) as session:
+    #     for row in session.execute(data):
+    #         print(row)
+    return render_template('questions-wo-ans.html', data=Session(db.engine).execute(data))
 
 
 @app.route('/danger-q')
 def dangers() -> str:
     """Функция позволяет вывести на экране тревожные вопросы.
 
-    Arguments: 
-        None
-
     Returns:
         str: отрендеренная веб-страница с POST-запросом на базу данных.
     """
+
     return render_template('danger-q.html')
