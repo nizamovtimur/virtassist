@@ -4,9 +4,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 </head>
 <body>
-    <table>
-    {% for row in data %}
-        <td {{ row }}> </td>
-    {% endfor %}
-    </table>
+    <h1>Questions Without Answers</h1>
+    <ul>
+        {% for question in questions %}
+            <li>{{ question }}</li>
+        {% endfor %}
+    </ul>
 </body>
