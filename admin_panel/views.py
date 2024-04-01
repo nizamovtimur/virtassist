@@ -69,11 +69,11 @@ def questions() -> str:
         str: отрендеренная веб-страница с POST-запросом на базу данных.
     """
 
-    data = select(QuestionAnswer).where(QuestionAnswer.answer == "")
-    # with Session(db.engine) as session:
-    #     for row in session.execute(data):
-    #         print(row)
-    return render_template('questions-wo-ans.html', data=Session(db.engine).execute(data))
+    data = select(QuestionAnswer.question).where(
+        QuestionAnswer.answer == "").order_by(QuestionAnswer.id)
+    with Session(db.engine) as session:
+        question_texts = [row[0] for row in session.execute(data)]
+    return render_template('questions-wo-ans.html', questions=question_texts)
 
 
 @app.route('/danger-q')
