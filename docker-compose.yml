@@ -21,6 +21,7 @@ services:
         ports:
             - 5433:5432
         environment:
+            - TZ=${TZ}
             - POSTGRES_DB=${POSTGRES_DB}
             - POSTGRES_USER=${POSTGRES_USER}
             - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}

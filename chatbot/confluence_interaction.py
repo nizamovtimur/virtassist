@@ -11,6 +11,14 @@ confluence_main_space = Config.CONFLUENCE_SPACES[0]
 
 @cached(cache=TTLCache(maxsize=100, ttl=3600))
 def make_markup_by_confluence() -> list:
+    """Возвращает справочную структуру пространства в вики-системе
+
+    Проводится часовое кэширование
+
+    Returns:
+        list: список основных страниц из структуры пространства в вики-системе
+    """
+
     homepage_id = confluence.get_space(confluence_main_space,
                                        expand="homepage")["homepage"]["id"]
     pages = confluence.cql(
@@ -20,6 +28,18 @@ def make_markup_by_confluence() -> list:
 
 @cached(cache=TTLCache(maxsize=100, ttl=3600))
 def parse_confluence_by_page_id(id: int | str) -> list | str:
+    """Возвращает текст страницы из структуры пространства в вики-системе
+    или список вложенных страниц по id
+
+    Проводится часовое кэширование
+
+    Args:
+        id (int | str): id страницы
+
+    Returns:
+        list | str: список вложенных страниц или текст страницы
+    """
+
     pages = confluence.cql(f"parent={id} and label=\"справка\"")["results"]
     if len(pages):
         return pages
@@ -36,7 +56,8 @@ def parse_confluence_by_page_id(id: int | str) -> list | str:
         for i in soup.find_all():
             if i.find("ac:parameter"):
                 i.decompose()
-        for i in soup.find_all(["p", "ul"]):
+        for i in soup.find_all(["p", "li"]):
+            if i.name == "li": text += "• "
             text += i.get_text() + "\n\n"
         if len(text) == 0:
             return f"Информация находится по ссылке: {page_link}"
