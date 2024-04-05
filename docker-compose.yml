@@ -4,6 +4,7 @@ services:
         build: ./chatbot
         image: virtassist/chatbot:latest
         container_name: virtassist-chatbot
+        restart: unless-stopped
         command: sh -c "python database.py && python main.py"
         env_file:
             - .env.docker
@@ -16,6 +17,7 @@ services:
         build: ./db
         image: virtassist/db:latest
         container_name: virtassist-db
+        restart: unless-stopped
         environment:
             - TZ=${TZ}
             - POSTGRES_DB=${POSTGRES_DB}
@@ -29,6 +31,7 @@ services:
         build: ./qa
         image: virtassist/qa:latest
         container_name: virtassist-qa
+        restart: unless-stopped
         command: sh -c "cron && python database.py && python main.py"
         env_file:
             - .env.docker
