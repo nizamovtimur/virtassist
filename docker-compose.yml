@@ -42,7 +42,21 @@ services:
             - db
         networks:
             - chatbot-conn
-
+    admin_panel:
+        build: ./admin_panel
+        image: virtassist/admin_panel:latest
+        container_name: virtassist-admin_panel
+        command: python run.py
+        ports:
+            - 80:80
+        env_file:
+            - .env.docker
+        depends_on:
+            - db
+            - qa
+            - chatbot
+        networks:
+            - chatbot-conn
 volumes:
     db-data:
 

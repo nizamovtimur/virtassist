@@ -1,6 +1,9 @@
 flask
 flask_sqlalchemy
 flask_oidc
+pgvector
+psycopg2-binary
 python-dotenv
 pytest
 requests
+sqlalchemy
