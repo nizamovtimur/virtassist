@@ -46,7 +46,7 @@ services:
         build: ./admin_panel
         image: virtassist/admin_panel:latest
         container_name: virtassist-admin_panel
-        command: python run.py
+        command: gunicorn --bind ${ADMIN_PANEL_HOST} wsgi:app
         ports:
             - 80:80
         env_file:
