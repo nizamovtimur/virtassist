@@ -1,3 +1,4 @@
+import logging
 from pgvector.sqlalchemy import Vector
 from sqlalchemy import Text, Column, DateTime, func, text
 from sqlalchemy.orm import DeclarativeBase, Mapped, Session, mapped_column
@@ -38,5 +39,5 @@ if __name__ == "__main__":
             Base.metadata.create_all(engine)
             break
         except Exception as e:
-            print(e)
+            logging.error(e)
             time.sleep(2)
