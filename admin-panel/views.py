@@ -48,7 +48,7 @@ def broadcast() -> str:
             response = 'Ваше сообщение не доставлено'
             return render_template('broadcast.html', response=response)
     else:
-        return render_template('broadcast.html')
+        return render_template('broadcast.html', title='Рассылка')
 
 
 @app.route('/questions-wo-answers')
