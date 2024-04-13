@@ -19,7 +19,7 @@ def index() -> str:
     return render_template('main-page.html', quest=reindex)
 
 
-@app.route('/reind', methods=['POST'])
+@app.route('/reindex', methods=['POST'])
 def reindex_qa():
     """Функция отправляет POST-запрос на переиндексацию в модуле QA.
 
@@ -61,7 +61,7 @@ def broadcast() -> str:
         return render_template('broadcast.html')
 
 
-@app.route('/questions-wo-ans')
+@app.route('/questions-wo-answers')
 def questions() -> str:
     """Функция позволяет вывести на экране вопросы, не имеющие ответа.
 
@@ -73,10 +73,10 @@ def questions() -> str:
         QuestionAnswer.answer == "").order_by(QuestionAnswer.id)
     with Session(db.engine) as session:
         question_texts = [row[0] for row in session.execute(data)]
-    return render_template('questions-wo-ans.html', questions=question_texts)
+    return render_template('questions-wo-answers.html', questions=question_texts)
 
 
-@app.route('/danger-q')
+@app.route('/danger-questions')
 def dangers() -> str:
     """Функция позволяет вывести на экране тревожные вопросы.
 
@@ -84,4 +84,4 @@ def dangers() -> str:
         str: отрендеренная веб-страница с POST-запросом на базу данных.
     """
 
-    return render_template('danger-q.html')
+    return render_template('danger-questions.html')

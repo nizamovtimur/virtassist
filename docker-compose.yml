@@ -5,8 +5,6 @@ services:
         image: virtassist/chatbot:latest
         container_name: virtassist-chatbot
         command: sh -c "python database.py && python main.py"
-        ports:
-            - 5000:5000
         env_file:
             - .env.docker
         depends_on:
@@ -18,8 +16,6 @@ services:
         build: ./db
         image: virtassist/db:latest
         container_name: virtassist-db
-        ports:
-            - 5433:5432
         environment:
             - TZ=${TZ}
             - POSTGRES_DB=${POSTGRES_DB}
@@ -34,19 +30,18 @@ services:
         image: virtassist/qa:latest
         container_name: virtassist-qa
         command: sh -c "cron && python database.py && python main.py"
-        ports:
-            - 8080:8080
         env_file:
             - .env.docker
         depends_on:
             - db
         networks:
             - chatbot-conn
-    admin_panel:
-        build: ./admin_panel
-        image: virtassist/admin_panel:latest
-        container_name: virtassist-admin_panel
-        command: gunicorn --bind localhost:80 wsgi:app
+    admin-panel:
+        build: ./admin-panel
+        image: virtassist/admin-panel:latest
+        container_name: virtassist-admin-panel
+        command: gunicorn --bind 0.0.0.0:80 wsgi:app
+        restart: on-failure
         ports:
             - 80:80
         env_file:

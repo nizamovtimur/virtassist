@@ -10,7 +10,3 @@ app.config["SQLALCHEMY_DATABASE_URI"] = f"postgresql://{os.getenv('POSTGRES_USER
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 app.config["CHATBOT_HOST"] = os.getenv('CHATBOT_HOST')
 app.config["QA_HOST"] = os.getenv('QA_HOST')
-app.config["ADMIN_PANEL_HOST"] = str(
-    os.getenv("ADMIN_PANEL_HOST")).split(':')[0]
-app.config["ADMIN_PANEL_PORT"] = str(
-    os.getenv("ADMIN_PANEL_HOST")).split(':')[1]
