@@ -1,26 +1,48 @@
-<!DOCTYPE html>
-<html>
-    {% block head %}
-    <head>
-        <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='styles.css') }}">
-    </head>
-    {% endblock %}
+{% extends "menu.html" %}
 
-    {% block body %}
-    <body>
-        <div class="broadcast-form">
-            <h2>Введите информацию:</h2>
-            <form id="infoForm" method="POST">
-                <label for="infoInput">Информация:</label>
-                <input type="text" id="name11" name="name">
-                <input type="radio" id="telegram" name="telegram" value="telegram">
-                <label for="telegram">Телеграм</label>
-                <input type="radio" id="vk" name="vk" value="vk">
-                <label for="vk">ВКонтакте</label>
-                <button type="submit">Отправить</button>
+{% block content %}
+<div class="col-12">
+    <h1 class="text-center form-title" style="margin-top: 36px; margin-bottom: 200px;">Рассылка</h1>
+</div>
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-md"></div>
+        <div class="col-md-6">
+            <form class="needs-validation" novalidate>
+                <div class="row" style="margin-bottom: 30px;"">
+                    <div class="col-6">
+                        <div class="form-check">
+                            <label class="form-check-label good_text" for="invalidCheck">
+                                ВКонтакте
+                            </label>
+                            <input class="form-check-input" style="width: 30px; height: 30px;" type="checkbox" value="" id="invalidCheck" required>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="form-check float-end">
+                            <label class="form-check-label good_text" for="invalidCheck">
+                                Telegram
+                            </label>
+                            <input class="form-check-input" style="width: 30px; height: 30px;" type="checkbox" value="" id="invalidCheck" required>
+                        </div>
+                    </div>
+                </div>
+                <div class="row" style="margin-bottom: 30px;">
+                    <div class="col-12">
+                        <input class="form-control text-break" type="text" style="height: 100px;" placeholder="Сообщение" id="validationCustom05" required>
+                        <div class="invalid-feedback">
+                            Поле не должно быть пустым
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-6">
+                        <button class="btn btn-primary " type="submit">Отправить</button>
+                    </div>
+                </div>
             </form>
-            <p> {{ response }} </p>
         </div>
-    </body>
-    {% endblock %}
-</html>
+        <div class="col-md"></div>
+    </div>
+</div>
+{% endblock %}
