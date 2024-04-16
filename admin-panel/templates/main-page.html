@@ -13,9 +13,9 @@
 <nav>
     <ul>
         <li><a href="/">Главная</a></li>
-        <li><a href="broadcast">Вещание</a></li>
-        <li><a href="questions-wo-ans">Вопросы без ответов</a></li>
-        <li><a href="danger-q">Опасные вопросы</a></li>
+        <li><a href="/broadcast">Вещание</a></li>
+        <li><a href="/questions-wo-answers">Вопросы без ответов</a></li>
+        <li><a href="/danger-questions">Опасные вопросы</a></li>
         <li style="float:right"><a href="#">Авторизация</a></li>
     </ul>
 </nav>
@@ -24,15 +24,8 @@
     <h1>Добро пожаловать на главную страницу</h1>
 </header>
 
-<form action='/reind', method='post'>
-    <button type='submit' name='reind'>{{ quest }}</button> 
+<form action='/reindex', method='post'>
+    <button type='submit' name='reindex'>Переиндексировать документы</button> 
 </form>
-
-<div>
-    <p> {{ answer }} </p>
-</div>
-
-<!-- Остальной контент страницы здесь -->
-
 </body>
 </html>
