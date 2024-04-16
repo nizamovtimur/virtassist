@@ -1,8 +1,4 @@
 import requests
-
-import asyncio
-import aiohttp
-
 from flask import render_template, request
 from sqlalchemy import select
 from sqlalchemy.orm import Session
@@ -18,20 +14,17 @@ def index() -> str:
     Returns:
         str: отрендеренная главная веб-страница.
     """
-    reindex = 'Выполнить переиндексацию'
-    return render_template('main-page.html', quest=reindex)
+    return render_template('main-page.html')
 
 
 @app.route('/reindex', methods=['POST'])
-async def reindex_qa():
+def reindex_qa():
     """Функция отправляет POST-запрос на переиндексацию в модуле QA.
 
     Returns:
         str: Статус отправки запроса.
     """
-    async with aiohttp.ClientSession() as session:
-        await session.post(f"http://{app.config['QA_HOST']}/reindex/")
-
+    requests.post(f"http://{app.config['QA_HOST']}/reindex/")
     return render_template('main-page.html')
 
 
