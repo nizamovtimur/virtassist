@@ -9,8 +9,8 @@
         {% endblock %}
         <meta name="description" content="">
         <meta name="viewport" content="width=device-width, initial-scale=1">
-        <link href="/admin_panel/static/bootstrap.css" rel="stylesheet">
-        <link rel="stylesheet" type="text/css" href="/admin_panel/static/styles.css">
+        <link href="{{ url_for('static', filename='bootstrap.css') }}" rel="stylesheet">
+        <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='styles.css') }}">
     </head>
 
     <body>
@@ -18,27 +18,27 @@
             <div class="row mh-100">
                 <div class="col text-white" style="background-color: #34547A;">
                     <div class="text-end" style="margin-bottom: 75px;">
-                        <a href="main-page.html" class="link-light text-end fs-5 fst-italic"
+                        <a href="main-page" class="link-light text-end fs-5 fst-italic"
                         style="text-decoration: none;">Выход</a>
                     </div>
                     <div class="qwa text-center" style="margin-bottom: 30px;">
-                        <a href="questions-wo-ans.html" class="link-light text-end fs-2 fst-italic"
+                        <a href="questions-wo-ans" class="link-light text-end fs-2 fst-italic"
                         style="text-decoration: none;">Вопросы без ответов</a>
                     </div>
                     <div class="text-center" style="margin-bottom: 30px;">
-                        <a href="danger-q.html" class="link-light text-end fs-2 fst-italic"
+                        <a href="danger-q" class="link-light text-end fs-2 fst-italic"
                         style="text-decoration: none;">Тревожные вопросы</a>
                     </div>
                     <div class="text-center" style="margin-bottom: 30px;">
-                        <a href="broadcast.html" class="link-light text-end fs-2 fst-italic"
+                        <a href="broadcast" class="link-light text-end fs-2 fst-italic"
                         style="text-decoration: none;">Рассылка</a>
                     </div>
                     <div class="text-center" style="margin-bottom: 330px;">
-                        <a href="settings.html" class="link-light text-end fs-2 fst-italic"
+                        <a href="settings" class="link-light text-end fs-2 fst-italic"
                         style="text-decoration: none;">Настройки</a>
                     </div>
                     <div class="text-center" style="margin-bottom: 30px;">
-                        <img src="/admin_panel/static/UTMN_logo_rus_wiki.png" alt="UTMN logo" style="width: 210px; height: 127.02px;">
+                        <img src="{{ url_for('static', filename='UTMN_logo_rus_wiki.png') }}" alt="UTMN logo" style="width: 210px; height: 127.02px;">
                     </div>
                 </div>
                 <div class="col-10" style="background-color: #EEEEEE;">
@@ -49,6 +49,6 @@
             </div>
         </div>
 
-        <script src="/admin_panel/static/bootstrap.bundle.min.js"></script>
+        <script src="{{ url_for('static', filename='bootstrap.bundle.min.js') }}"></script>
     </body>
 </html>
