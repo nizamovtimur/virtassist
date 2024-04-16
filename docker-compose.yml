@@ -40,7 +40,10 @@ services:
         build: ./admin-panel
         image: virtassist/admin-panel:latest
         container_name: virtassist-admin-panel
-        command: gunicorn --bind 0.0.0.0:80 wsgi:app
+        environment:
+            - FLASK_ENV=development
+            - PYTHONUNBUFFERED=True
+        command: gunicorn --bind 0.0.0.0:80 --timeout 60 wsgi:app
         restart: on-failure
         ports:
             - 80:80

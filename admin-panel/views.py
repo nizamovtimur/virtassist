@@ -1,5 +1,8 @@
 import requests
 
+import asyncio
+import aiohttp
+
 from flask import render_template, request
 from sqlalchemy import select
 from sqlalchemy.orm import Session
@@ -20,22 +23,16 @@ def index() -> str:
 
 
 @app.route('/reindex', methods=['POST'])
-def reindex_qa():
+async def reindex_qa():
     """Функция отправляет POST-запрос на переиндексацию в модуле QA.
 
     Returns:
         str: Статус отправки запроса.
     """
+    async with aiohttp.ClientSession() as session:
+        await session.post(f"http://{app.config['QA_HOST']}/reindex/")
 
-    response = requests.post(f"http://{app.config['QA_HOST']}/reindex/")
-    quest = "Повторная переиндексация"
-
-    if response.status_code == 200:
-        answer = "Переиндексация прошла успешно!"
-        return render_template('main-page.html', quest=quest, answer=answer)
-    else:
-        answer = "Ошибка переиндексации..."
-        return render_template('main-page.html', quest=quest, answer=answer)
+    return render_template('main-page.html')
 
 
 @app.route('/broadcast', methods=['POST', 'GET'])
@@ -50,8 +47,8 @@ def broadcast() -> str:
         text = request.form.get('name')
         vk_bool = request.form.get('vk')
         tg_bool = request.form.get('telegram')
-        response = requests.post(url=f"http://{app.config['CHATBOT_HOST']}/broadcast",
-                                     json={"text": text, "to_tg": tg_bool, "to_vk": vk_bool})
+        response = requests.post(url=f"http://{app.config['CHATBOT_HOST']}/broadcast/",
+                                 json={"text": text, "tg": tg_bool, "vk": vk_bool})
         if response.status_code == 200:
             return render_template('broadcast.html', response=response.text)
         else:

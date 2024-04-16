@@ -1,4 +1,6 @@
-flask
+aiohttp
+asyncio
+flask[async]
 flask_sqlalchemy
 flask_oidc
 gunicorn
