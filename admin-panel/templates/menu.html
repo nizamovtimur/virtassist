@@ -18,26 +18,29 @@
             <div class="row mh-100">
                 <div class="col text-white" style="background-color: #34547A;">
                     <div class="text-end" style="margin-bottom: 75px;">
-                        <a href="main-page" class="link-light text-end fs-5 fst-italic"
-                        style="text-decoration: none;">Выход</a>
+                        {% comment %} в href надо указывать не в тупую URL, а что-то типа url_for(), чтобы в ситуации, когда рут поменяют, ссылки поменялись автоматом {% endcomment %}
+                        <a href="/main-page" class="link-light text-end fs-5 fst-italic"
+                        style="text-decoration: none;">Вход</a>
                     </div>
                     <div class="qwa text-center" style="margin-bottom: 30px;">
-                        <a href="questions-wo-ans" class="link-light text-end fs-2 fst-italic"
+                        <a href="/questions-wo-answers" class="link-light text-end fs-2 fst-italic"
                         style="text-decoration: none;">Вопросы без ответов</a>
                     </div>
                     <div class="text-center" style="margin-bottom: 30px;">
-                        <a href="danger-q" class="link-light text-end fs-2 fst-italic"
+                        <a href="/danger-questions" class="link-light text-end fs-2 fst-italic"
                         style="text-decoration: none;">Тревожные вопросы</a>
                     </div>
                     <div class="text-center" style="margin-bottom: 30px;">
-                        <a href="broadcast" class="link-light text-end fs-2 fst-italic"
+                        <a href="/broadcast" class="link-light text-end fs-2 fst-italic"
                         style="text-decoration: none;">Рассылка</a>
                     </div>
                     <div class="text-center" style="margin-bottom: 330px;">
-                        <a href="settings" class="link-light text-end fs-2 fst-italic"
+                        <a href="/settings" class="link-light text-end fs-2 fst-italic"
                         style="text-decoration: none;">Настройки</a>
                     </div>
                     <div class="text-center" style="margin-bottom: 30px;">
+                        {% comment %} поменять на SVG (можно стырить у отзывуса + буквы на синем должны быть не черными, а белыми) {% endcomment %}
+                        {% comment %} картинки на сайтах, если возможно, должны быть не растровыми, а векторными {% endcomment %}
                         <img src="{{ url_for('static', filename='UTMN_logo_rus_wiki.png') }}" alt="UTMN logo" style="width: 210px; height: 127.02px;">
                     </div>
                 </div>
