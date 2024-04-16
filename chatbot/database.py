@@ -1,4 +1,5 @@
 from datetime import datetime, timedelta, timezone
+import logging
 from typing import Optional, List
 from sqlalchemy import BigInteger, Column, DateTime, Engine, ForeignKey, Text, func, select
 from sqlalchemy.orm import DeclarativeBase, Mapped, Session, mapped_column, relationship
@@ -63,7 +64,7 @@ if __name__ == "__main__":
             Base.metadata.create_all(engine)
             break
         except Exception as e:
-            print(e)
+            logging.error(e)
             time.sleep(2)
 
 

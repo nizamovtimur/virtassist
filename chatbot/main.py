@@ -1,10 +1,9 @@
 import asyncio
 import json
+import logging
 import math
-import sys
 import threading
 import aiogram as tg
-from loguru import logger
 from sqlalchemy import create_engine
 import vkbottle as vk
 from vkbottle.bot import Message as VKMessage
@@ -418,8 +417,9 @@ def launch_telegram_bot():
 
 
 if __name__ == "__main__":
-    logger.remove()
-    logger.add(sys.stderr, level="WARNING")
+    loggers = [logging.getLogger(name) for name in logging.root.manager.loggerDict]
+    for logger in loggers:
+        logger.setLevel(logging.WARNING)
     thread_vk = threading.Thread(target=launch_vk_bot)
     thread_tg = threading.Thread(target=launch_telegram_bot)
     thread_tg.start()
