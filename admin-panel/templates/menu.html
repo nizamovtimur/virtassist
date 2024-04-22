@@ -3,10 +3,7 @@
     <head>
         <meta charset="utf-8">
         <meta http-equiv="X-UA-Compatible" content="IE=edge">
-        <title>{{ title }}</title>
-        {% block styles %}
-            
-        {% endblock %}
+        <title>{{ page_title }}</title>
         <meta name="description" content="">
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <link href="{{ url_for('static', filename='bootstrap.css') }}" rel="stylesheet">
@@ -15,34 +12,29 @@
 
     <body>
         <div class="container-fluid">
-            <div class="row mh-100">
-                <div class="col text-white" style="background-color: #34547A;">
-                    <div class="text-end" style="margin-bottom: 75px;">
-                        {% comment %} в href надо указывать не в тупую URL, а что-то типа url_for(), чтобы в ситуации, когда рут поменяют, ссылки поменялись автоматом {% endcomment %}
-                        <a href="/main-page" class="link-light text-end fs-5 fst-italic"
-                        style="text-decoration: none;">Вход</a>
-                    </div>
-                    <div class="qwa text-center" style="margin-bottom: 30px;">
-                        <a href="/questions-wo-answers" class="link-light text-end fs-2 fst-italic"
-                        style="text-decoration: none;">Вопросы без ответов</a>
-                    </div>
-                    <div class="text-center" style="margin-bottom: 30px;">
-                        <a href="/danger-questions" class="link-light text-end fs-2 fst-italic"
-                        style="text-decoration: none;">Тревожные вопросы</a>
-                    </div>
-                    <div class="text-center" style="margin-bottom: 30px;">
-                        <a href="/broadcast" class="link-light text-end fs-2 fst-italic"
-                        style="text-decoration: none;">Рассылка</a>
-                    </div>
-                    <div class="text-center" style="margin-bottom: 330px;">
-                        <a href="/settings" class="link-light text-end fs-2 fst-italic"
-                        style="text-decoration: none;">Настройки</a>
-                    </div>
-                    <div class="text-center" style="margin-bottom: 30px;">
-                        {% comment %} поменять на SVG (можно стырить у отзывуса + буквы на синем должны быть не черными, а белыми) {% endcomment %}
-                        {% comment %} картинки на сайтах, если возможно, должны быть не растровыми, а векторными {% endcomment %}
-                        <img src="{{ url_for('static', filename='UTMN_logo_rus_wiki.png') }}" alt="UTMN logo" style="width: 210px; height: 127.02px;">
-                    </div>
+            <div class="row" style="height: 100vh;">
+                <div class="col text-white" style="height: 100%; background-color: #34547A;">
+                    <nav>
+                        <div class="text-center" style="margin-bottom: 30px; margin-top: 153px; {{ 'background-color: #FF7628;' if page_title == 'Главная страница' }}">
+                            <a href="/" class="link-light text-end fs-2 fst-italic"
+                            style="text-decoration: none;">Главная страница</a>
+                        </div>
+                        <div class="text-center" style="margin-bottom: 30px; {{ 'background-color: #FF7628;' if page_title == 'Вопросы без ответов' }}">
+                            <a href="/questions-wo-answers" class="link-light text-end fs-2 fst-italic"
+                            style="text-decoration: none;">Вопросы без ответов</a>
+                        </div>
+                        <div class="text-center" style="margin-bottom: 30px; {{ 'background-color: #FF7628;' if page_title == 'Рассылка' }}">
+                            <a href="/broadcast" class="link-light text-end fs-2 fst-italic"
+                            style="text-decoration: none;">Рассылка</a>
+                        </div>
+                        <div class="text-center" style="margin-bottom: 330px; {{ 'background-color: #FF7628;' if page_title == 'Настройки' }}">
+                            <a href="/settings" class="link-light text-end fs-2 fst-italic"
+                            style="text-decoration: none;">Настройки</a>
+                        </div>
+                        <div class="text-center" style="margin-bottom: 30px;">
+                            <img src="{{ url_for('static', filename='UTMN_logo_rus_wiki.svg') }}" alt="UTMN logo" style="width: 210px; height: 127.02px;">
+                        </div>
+                    </nav>
                 </div>
                 <div class="col-10" style="background-color: #EEEEEE;">
                     {% block content %}

@@ -1,31 +1,7 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Главная страница</title>
-    <style>
-        /* CSS стили здесь */
-    </style>
-</head>
-<body>
+{% extends "menu.html" %}
 
-<nav>
-    <ul>
-        <li><a href="/">Главная</a></li>
-        <li><a href="/broadcast">Вещание</a></li>
-        <li><a href="/questions-wo-answers">Вопросы без ответов</a></li>
-        <li><a href="/danger-questions">Опасные вопросы</a></li>
-        <li style="float:right"><a href="#">Авторизация</a></li>
-    </ul>
-</nav>
-
-<header>
-    <h1>Добро пожаловать на главную страницу</h1>
-</header>
-
+{% block content %}
 <form action='/reindex', method='post'>
     <button type='submit' name='reindex'>Переиндексировать документы</button> 
 </form>
-</body>
-</html>
+{% endblock %}

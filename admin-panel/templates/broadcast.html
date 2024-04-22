@@ -1,65 +1,48 @@
 {% extends "menu.html" %}
 
-{% block styles %}
-<style>
-    body, html{
-        max-width: 100%;
-    }
-    
-    .good_text {
-        width: 200px;
-        height: 30px;
-        font-size: 18px; 
-        margin-left: 10px; 
-        background-color: #FFFFFF;
-        text-align: center;
-    }
-</style>
-{% endblock %}
-
 {% block content %}
 <div class="col-12">
     <h1 class="text-center form-title" style="margin-top: 36px; margin-bottom: 200px;">Рассылка</h1>
 </div>
 <div class="container-fluid">
     <div class="row">
-        <div class="col-md"></div>
-        <div class="col-md-6">
+        <div class="col"></div>
+        <div class="col-8">
             <form class="needs-validation" novalidate>
                 <div class="row" style="margin-bottom: 30px;">
                     <div class="col-6">
                         <div class="form-check">
-                            <label class="form-check-label good_text" for="invalidCheck">
+                            <label class="form-check-label good_text_br" for="VkCheck">
                                 ВКонтакте
                             </label>
-                            <input class="form-check-input" style="width: 30px; height: 30px;" type="checkbox" value="" id="invalidCheck" required>
+                            <input class="form-check-input" style="width: 30px; height: 30px;" type="checkbox" value="" id="VkCheck" required>
                         </div>
                     </div>
                     <div class="col-6">
                         <div class="form-check float-end">
-                            <label class="form-check-label good_text" for="invalidCheck">
+                            <label class="form-check-label good_text_br" for="tgCheck">
                                 Telegram
                             </label>
-                            <input class="form-check-input" style="width: 30px; height: 30px;" type="checkbox" value="" id="invalidCheck" required>
+                            <input class="form-check-input" style="width: 30px; height: 30px;" type="checkbox" value="" id="tgCheck" required>
                         </div>
                     </div>
                 </div>
                 <div class="row" style="margin-bottom: 30px;">
                     <div class="col-12">
-                        <input class="form-control text-break" type="text" style="height: 100px;" placeholder="Сообщение" id="validationCustom05" required>
+                        <textarea cols="30" rows="10" class="form-control" type="text" placeholder="Сообщение" id="validationCustom05" required></textarea>
                         <div class="invalid-feedback">
                             Поле не должно быть пустым
                         </div>
                     </div>
                 </div>
                 <div class="row">
-                    <div class="col-md-6 offset-md-5">
-                        <button class="btn btn-primary " type="submit">Отправить</button>
+                    <div class="col offset-md-5">
+                        <button class="btn btn-primary btn-lg" type="submit">Отправить</button>
                     </div>
                 </div>
             </form>
         </div>
-        <div class="col-md"></div>
+        <div class="col"></div>
     </div>
 </div>
 {% endblock %}

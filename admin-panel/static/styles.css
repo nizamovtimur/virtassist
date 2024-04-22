@@ -7,3 +7,15 @@
     align-items: center;
 }
 
+.good_text_br {
+    width: 200px;
+    height: 30px;
+    font-size: 18px; 
+    margin-left: 10px; 
+    background-color: #FFFFFF;
+    text-align: center;
+}
+
+body, html{
+    max-width: 100%;
+}
