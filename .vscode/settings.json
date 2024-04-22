@@ -3,5 +3,5 @@
     "python.analysis.autoImportCompletions": false,
     "dotnet.enableTelemetry": false,
     "files.insertFinalNewline": true,
-	"files.trimTrailingWhitespace": true,
+    "files.trimTrailingWhitespace": true,
 }
