@@ -41,7 +41,7 @@ def vk_keyboard_choice(notify_text: str) -> str:
     Returns:
         str: JSON-объект, описывающий клавиатуру с шаблонами сообщений
     """
-    
+
     keyboard = (vk.Keyboard()
                 .add(vk.Text(Strings.ConfluenceButton))
                 .row()

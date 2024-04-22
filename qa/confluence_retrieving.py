@@ -12,7 +12,7 @@ from database import Chunk
 
 
 def get_document_content_by_id(confluence: Confluence, page_id: str) -> tuple[str | None, str | None]:
-    """Возвращает содержимое страницы на Confluence 
+    """Возвращает содержимое страницы на Confluence
     после предобработки с помощью PyPDF или BS4 и ссылку на страницу
 
     Args:
@@ -47,7 +47,7 @@ def get_document_content_by_id(confluence: Confluence, page_id: str) -> tuple[st
 
 
 def reindex_confluence(engine: Engine, text_splitter: SentenceTransformersTokenTextSplitter):
-    """Пересоздаёт векторный индекс текстов для ответов на вопросы. 
+    """Пересоздаёт векторный индекс текстов для ответов на вопросы.
     При этом обрабатываются страницы, не имеющие вложенных страниц.
 
     Args:

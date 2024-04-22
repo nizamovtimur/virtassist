@@ -1,4 +1,7 @@
 {
     "python.analysis.typeCheckingMode": "basic",
-    "python.analysis.autoImportCompletions": false
+    "python.analysis.autoImportCompletions": false,
+    "dotnet.enableTelemetry": false,
+    "files.insertFinalNewline": true,
+	"files.trimTrailingWhitespace": true,
 }

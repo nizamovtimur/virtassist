@@ -39,7 +39,7 @@ class TestDBFunctions:
             get_user_id(self.engine, None, None)
 
     def test_subscribing(self):
-        """Тест оформления подписки пользователя на рассылку 
+        """Тест оформления подписки пользователя на рассылку
         """
 
         user_id = get_user_id(self.engine, 1, None)

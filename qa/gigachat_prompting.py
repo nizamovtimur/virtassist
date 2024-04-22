@@ -19,7 +19,7 @@ giga_chain = prompt | giga
 
 
 def get_answer(context: str, question: str) -> str:
-    """Возвращает сгенерированный LLM ответ на вопрос пользователя 
+    """Возвращает сгенерированный LLM ответ на вопрос пользователя
     по заданному документу в соответствии с промтом
 
     Args:
@@ -27,7 +27,7 @@ def get_answer(context: str, question: str) -> str:
         question (str): вопрос пользователя
 
     Returns:
-        str: экземпляр класса Chunk — фрагмент документа    
+        str: экземпляр класса Chunk — фрагмент документа
     """
 
     query = {"context": context,

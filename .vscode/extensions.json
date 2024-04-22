@@ -1,0 +1,7 @@
+{
+	"recommendations": [
+		"donjayamanne.python-extension-pack",
+		"ms-python.autopep8",
+		"njpwerner.autodocstring",
+	]
+}
