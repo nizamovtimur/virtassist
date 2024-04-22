@@ -1,9 +1,33 @@
 {% extends "menu.html" %}
 {% block content %}
-<h1>Questions Without Answers</h1>
-<ul>
-    {% for cluster in clusters %}
-        <li>{{ cluster }}</li>
-    {% endfor %}
-</ul>
+<div class="col-12">
+    <h1 class="text-center" style="margin-top: 36px; margin-bottom: 80px;">Вопросы без ответов</h1>
+</div>
+
+<div class="row">
+    <div class="col"></div>
+    <div class="col-8">
+        <div class="accordion" id="accordionPanelsStayOpenExample">
+        {% for cluster in clusters[:8] %}
+            <div class="accordion-item">
+                <h2 class="accordion-header">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#panelsStayOpen-collapse{{clusters.index(cluster) + 1}}" aria-expanded="false" aria-controls="panelsStayOpen-collapse{{clusters.index(cluster) + 1}}">
+                        {{ ', '.join(cluster[1]) }}
+                    </button>
+                </h2>
+                <div id="panelsStayOpen-collapse{{clusters.index(cluster) + 1}}" class="accordion-collapse collapse">
+                    <div class="accordion-body">
+                        <strong>Вопросы в кластере:</strong><br/>
+                        {% for q in cluster[0] %}
+                            {{ q }}<br/>
+                        {% endfor %}
+                        <strong>Дата последнего вопроса:</strong> {{ cluster[2] }}
+                    </div>
+                </div>
+            </div>
+        {% endfor %}     
+        </div>
+    </div>
+    <div class="col"></div>
+</div>
 {% endblock %}

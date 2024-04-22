@@ -1,7 +1,62 @@
 {% extends "menu.html" %}
 
 {% block content %}
-<form action='/reindex', method='post'>
-    <button type='submit' name='reindex'>Переиндексировать документы</button> 
-</form>
+<div class="col-12">
+    <h1 class="text-center" style="margin-top: 36px; margin-bottom: 60px;">Сводка использования чат-ботов</h1>
+</div>
+
+<div class="row">
+    <div class="col"></div>
+    <div class="col-8">
+        <table class="table table-striped table-hover table-bordered">
+            <thead>
+            <tr>
+                <th scope="col"></th>
+                <th scope="col">ВКонтакте</th>
+                <th scope="col">Telegram</th>
+                <th scope="col">Всего</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr>
+                <th scope="row">Кол-во новых пользователей</th>
+                <td>52</td>
+                <td>85</td>
+                <td>137</td>
+            </tr>
+            <tr>
+                <th scope="row">Кол-во пользователей</th>
+                <td>240</td>
+                <td>167</td>
+                <td>407</td>
+            </tr>
+            <tr>
+                <th scope="row">из них задали вопросы ИИ за период</th>
+                <td>25</td>
+                <td>31</td>
+                <td>56</td>
+            </tr>
+            <tr>
+                <th scope="row">количество вопросов</th>
+                <td>71</td>
+                <td>133</td>
+                <td>204</td>
+            </tr>
+            <tr>
+                <th scope="row">из них с оценкой ОТЛ</th>
+                <td>2</td>
+                <td>15</td>
+                <td>17</td>
+            </tr>
+            <tr>
+                <th scope="row">с оценкой НЕУД</th>
+                <td>3</td>
+                <td>2</td>
+                <td>5</td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+    <div class="col"></div>
+</div>
 {% endblock %}
