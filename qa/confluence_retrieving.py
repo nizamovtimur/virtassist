@@ -11,8 +11,10 @@ from config import Config
 from database import Chunk
 
 
-def get_document_content_by_id(confluence: Confluence, page_id: str) -> tuple[str | None, str | None]:
-    """Возвращает содержимое страницы на Confluence 
+def get_document_content_by_id(
+    confluence: Confluence, page_id: str
+) -> tuple[str | None, str | None]:
+    """Возвращает содержимое страницы на Confluence
     после предобработки с помощью PyPDF или BS4 и ссылку на страницу
 
     Args:
@@ -23,21 +25,25 @@ def get_document_content_by_id(confluence: Confluence, page_id: str) -> tuple[st
         tuple[str | None, str | None]: содержимое страницы, ссылка на страницу
     """
 
-    page = confluence.get_page_by_id(page_id, expand='space,body.export_view')
-    page_link = page['_links']['base'] + page['_links']['webui']
-    page_body = page['body']['export_view']['value']
-    page_download = page['_links']['base'] + \
-        page['_links']['download'] if 'download' in page['_links'].keys() else ''
+    page = confluence.get_page_by_id(page_id, expand="space,body.export_view")
+    page_link = page["_links"]["base"] + page["_links"]["webui"]
+    page_body = page["body"]["export_view"]["value"]
+    page_download = (
+        page["_links"]["base"] + page["_links"]["download"]
+        if "download" in page["_links"].keys()
+        else ""
+    )
     try:
         if len(page_body) > 50:
-            page_body = page['body']['export_view']['value']
-            soup = BeautifulSoup(page_body, 'html.parser')
-            page_body_text = soup.get_text(separator=' ')
+            page_body = page["body"]["export_view"]["value"]
+            soup = BeautifulSoup(page_body, "html.parser")
+            page_body_text = soup.get_text(separator=" ")
             page_content = page_body_text.replace(" \n ", "")
-        elif '.pdf' in page_download.lower():
-            loader = PyPDFLoader(page_download.split('?')[0])
+        elif ".pdf" in page_download.lower():
+            loader = PyPDFLoader(page_download.split("?")[0])
             page_content = " ".join(
-                [page.page_content for page in loader.load_and_split()])
+                [page.page_content for page in loader.load_and_split()]
+            )
         else:
             return None, None
     except Exception as e:
@@ -46,9 +52,11 @@ def get_document_content_by_id(confluence: Confluence, page_id: str) -> tuple[st
     return page_content, page_link
 
 
-def reindex_confluence(engine: Engine, text_splitter: SentenceTransformersTokenTextSplitter):
-    """Пересоздаёт векторный индекс текстов для ответов на вопросы. 
-    При этом не рассматриваются страницы с тегом "навигация"
+def reindex_confluence(
+    engine: Engine, text_splitter: SentenceTransformersTokenTextSplitter
+):
+    """Пересоздаёт векторный индекс текстов для ответов на вопросы.
+    При этом обрабатываются страницы, не имеющие вложенных страниц.
 
     Args:
         engine (Engine): экземпляр подключения к БД
@@ -56,45 +64,55 @@ def reindex_confluence(engine: Engine, text_splitter: SentenceTransformersTokenT
     """
 
     logging.info("START CREATE INDEX")
-    confluence = Confluence(url=Config.CONFLUENCE_HOST,
-                            token=Config.CONFLUENCE_TOKEN)
-    spaces = "(" + \
-        " or ".join(
-            [f"space = {space}" for space in Config.CONFLUENCE_SPACES]) + ")"
+    confluence = Confluence(url=Config.CONFLUENCE_HOST, token=Config.CONFLUENCE_TOKEN)
+    spaces = (
+        "("
+        + " or ".join([f"space = {space}" for space in Config.CONFLUENCE_SPACES])
+        + ")"
+    )
     page_ids = []
     count_start = 0
     limit = 100
-    pages = confluence.cql(f"{spaces} and label != \"навигация\" order by id",
-                           start=count_start, limit=limit)["results"]
+    pages = confluence.cql(f"{spaces} order by id", start=count_start, limit=limit)[
+        "results"
+    ]
     while len(pages) != 0:
-        page_ids = page_ids + [page['content']['id']
-                               for page in pages if 'content' in page.keys()]
+        page_ids = page_ids + [
+            page["content"]["id"] for page in pages if "content" in page.keys()
+        ]
         count_start += limit
-        pages = confluence.cql(f"{spaces} and label != \"навигация\" order by id",
-                               start=count_start, limit=limit)["results"]
+        pages = confluence.cql(f"{spaces} order by id", start=count_start, limit=limit)[
+            "results"
+        ]
     documents = []
     for page_id in page_ids:
-        page_content, page_link = get_document_content_by_id(
-            confluence, page_id)
+        children = confluence.cql(f"parent={page_id}")["results"]
+        if len(children) > 0:
+            continue
+        page_content, page_link = get_document_content_by_id(confluence, page_id)
         if page_content is None:
             continue
-        documents.append(Document(
-            page_content=page_content, metadata={"page_link": page_link}
-        ))
+        documents.append(
+            Document(page_content=page_content, metadata={"page_link": page_link})
+        )
     all_splits = text_splitter.split_documents(documents)
     with Session(engine) as session:
         session.query(Chunk).delete()
         for chunk in all_splits:
-            session.add(Chunk(
-                confluence_url=chunk.metadata["page_link"],
-                text=chunk.page_content,
-                embedding=text_splitter._model.encode(chunk.page_content)
-            ))
+            session.add(
+                Chunk(
+                    confluence_url=chunk.metadata["page_link"],
+                    text=chunk.page_content,
+                    embedding=text_splitter._model.encode(chunk.page_content),
+                )
+            )
         session.commit()
     logging.info("INDEX CREATED")
 
 
-def get_chunk(engine: Engine, model: SentenceTransformer, question: str) -> Chunk | None:
+def get_chunk(
+    engine: Engine, model: SentenceTransformer, question: str
+) -> Chunk | None:
     """Возвращает ближайший к вопросу фрагмент документа Chunk из векторной базы данных
 
     Args:
@@ -107,7 +125,8 @@ def get_chunk(engine: Engine, model: SentenceTransformer, question: str) -> Chun
     """
 
     with Session(engine) as session:
-        return session.scalars(select(Chunk)
-                               .order_by(Chunk.embedding.cosine_distance(
-                                   model.encode(question)
-                               )).limit(1)).first()
+        return session.scalars(
+            select(Chunk)
+            .order_by(Chunk.embedding.cosine_distance(model.encode(question)))
+            .limit(1)
+        ).first()

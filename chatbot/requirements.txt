@@ -4,6 +4,5 @@ psycopg2-binary
 cachetools
 python-dotenv
 vkbottle
-loguru
 aiogram
 atlassian-python-api
