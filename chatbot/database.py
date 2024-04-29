@@ -10,6 +10,7 @@ from sqlalchemy import (
     Text,
     func,
     select,
+    and_,
 )
 from sqlalchemy.orm import DeclarativeBase, Mapped, Session, mapped_column, relationship
 
@@ -257,3 +258,18 @@ def rate_answer(engine: Engine, question_answer_id: int, score: int) -> bool:
         question_answer.score = score
         session.commit()
         return True
+
+
+def get_users() -> dict[str, list[User]]:
+    """Функция для получения словаря пользователей
+
+    Returns:
+        dict: словарь с пользователями `tg_users`, `vk_users`
+    """
+    users = {'tg_users': [], 'vk_users': []}
+    with Session(engine) as session:
+        for user in session.execute(select(User).where(and_(User.vk_id != None, User.is_subscribed))).scalars():
+            users['vk_users'].append(user)
+        for user in session.execute(select(User).where(and_(User.telegram_id != None, User.is_subscribed))).scalars():
+            users["tg_users"].append(user)
+    return users

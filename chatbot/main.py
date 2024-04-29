@@ -4,6 +4,7 @@ import logging
 import math
 import threading
 import aiogram as tg
+from aiohttp import web
 from sqlalchemy import create_engine
 import vkbottle as vk
 from vkbottle.bot import Message as VKMessage
@@ -21,6 +22,7 @@ from database import (
     check_spam,
     add_question_answer,
     rate_answer,
+    get_users,
 )
 from strings import Strings
 
@@ -33,6 +35,7 @@ class Permission(vk.ABCRule[VKMessage]):
         return event.from_id in self.uids
 
 
+routes = web.RouteTableDef()
 engine = create_engine(Config.SQLALCHEMY_DATABASE_URI)
 vk_bot = vk.Bot(token=Config.VK_ACCESS_GROUP_TOKEN)
 vk_bot.labeler.vbml_ignore_case = True
@@ -453,6 +456,25 @@ async def tg_answer(message: tg.types.Message):
     )
 
 
+@routes.post('/broadcast/')
+async def broadcast(request: web.Request) -> web.Response:
+    """Создает рассылку в ВК и/или ТГ
+
+    Args:
+        request (web.Request): запрос, содержащий `text`, булевые `tg`, `vk`
+
+    Returns:
+        web.Response: ответ
+    """
+    try:
+        data = await request.json()
+        print(data)
+        return web.Response(status=200)
+    except Exception as e:
+        return web.Response(text=str(e), status=500)
+
+
+
 def launch_vk_bot():
     """Функция начала работы чат-бота ВКонтакте"""
 
@@ -477,5 +499,8 @@ if __name__ == "__main__":
     thread_tg = threading.Thread(target=launch_telegram_bot)
     thread_tg.start()
     thread_vk.start()
+    app = web.Application()
+    app.add_routes(routes)
+    web.run_app(app, port=5000)
     thread_tg.join()
     thread_vk.join()
