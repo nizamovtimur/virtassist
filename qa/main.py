@@ -14,10 +14,11 @@ from confluence_retrieving import get_chunk, reindex_confluence
 routes = web.RouteTableDef()
 engine = create_engine(Config.SQLALCHEMY_DATABASE_URI)
 text_splitter = SentenceTransformersTokenTextSplitter(
-    model_name="saved_models/rubert-tiny2-wikiutmn")
+    model_name="saved_models/rubert-tiny2-wikiutmn"
+)
 
 
-@routes.post('/qa/')
+@routes.post("/qa/")
 async def qa(request: web.Request) -> web.Response:
     """Возвращает ответ на вопрос пользователя и ссылку на источник
 
@@ -28,7 +29,7 @@ async def qa(request: web.Request) -> web.Response:
         web.Response: ответ
     """
 
-    question = (await request.json())['question']
+    question = (await request.json())["question"]
     chunk = get_chunk(engine, text_splitter._model, question)
     if chunk is None:
         return web.Response(text="Chunk not found", status=404)
@@ -40,13 +41,10 @@ async def qa(request: web.Request) -> web.Response:
         logging.warning(warnings)
     if "stopped" in warnings or "ответ не найден" in answer.lower():
         return web.Response(text="Answer not found", status=404)
-    return web.json_response({
-        "answer": answer,
-        "confluence_url": chunk.confluence_url
-    })
+    return web.json_response({"answer": answer, "confluence_url": chunk.confluence_url})
 
 
-@routes.post('/reindex/')
+@routes.post("/reindex/")
 async def reindex(request: web.Request) -> web.Response:
     """Пересоздаёт векторный индекс текстов для ответов на вопросы
 

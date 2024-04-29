@@ -1,0 +1,7 @@
+{
+	"recommendations": [
+		"donjayamanne.python-extension-pack",
+		"ms-python.black-formatter",
+		"njpwerner.autodocstring"
+	]
+}

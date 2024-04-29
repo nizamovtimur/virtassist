@@ -4,8 +4,7 @@ from cachetools import cached, TTLCache
 from config import Config
 
 
-confluence = Confluence(url=Config.CONFLUENCE_HOST,
-                        token=Config.CONFLUENCE_TOKEN)
+confluence = Confluence(url=Config.CONFLUENCE_HOST, token=Config.CONFLUENCE_TOKEN)
 confluence_main_space = Config.CONFLUENCE_SPACES[0]
 
 
@@ -19,10 +18,10 @@ def make_markup_by_confluence() -> list:
         list: список основных страниц из структуры пространства в вики-системе
     """
 
-    homepage_id = confluence.get_space(confluence_main_space,
-                                       expand="homepage")["homepage"]["id"]
-    pages = confluence.cql(
-        f"parent={homepage_id} and label=\"справка\"")["results"]
+    homepage_id = confluence.get_space(confluence_main_space, expand="homepage")[
+        "homepage"
+    ]["id"]
+    pages = confluence.cql(f'parent={homepage_id} and label="справка"')["results"]
     return pages
 
 
@@ -40,7 +39,7 @@ def parse_confluence_by_page_id(id: int | str) -> list | str:
         list | str: список вложенных страниц или текст страницы
     """
 
-    pages = confluence.cql(f"parent={id} and label=\"справка\"")["results"]
+    pages = confluence.cql(f'parent={id} and label="справка"')["results"]
     if len(pages):
         return pages
     else:
@@ -57,7 +56,8 @@ def parse_confluence_by_page_id(id: int | str) -> list | str:
             if i.find("ac:parameter"):
                 i.decompose()
         for i in soup.find_all(["p", "li"]):
-            if i.name == "li": text += "• "
+            if i.name == "li":
+                text += "• "
             text += i.get_text() + "\n\n"
         if len(text) == 0:
             return f"Информация находится по ссылке: {page_link}"

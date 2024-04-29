@@ -1,7 +1,16 @@
 from datetime import datetime, timedelta, timezone
 import logging
 from typing import Optional, List
-from sqlalchemy import BigInteger, Column, DateTime, Engine, ForeignKey, Text, func, select
+from sqlalchemy import (
+    BigInteger,
+    Column,
+    DateTime,
+    Engine,
+    ForeignKey,
+    Text,
+    func,
+    select,
+)
 from sqlalchemy.orm import DeclarativeBase, Mapped, Session, mapped_column, relationship
 
 
@@ -27,7 +36,10 @@ class User(Base):
     is_subscribed: Mapped[bool] = mapped_column()
 
     question_answers: Mapped[List["QuestionAnswer"]] = relationship(
-        back_populates="user", cascade="all, delete-orphan", order_by="desc(QuestionAnswer.time_created)")
+        back_populates="user",
+        cascade="all, delete-orphan",
+        order_by="desc(QuestionAnswer.time_created)",
+    )
 
 
 class QuestionAnswer(Base):
@@ -58,6 +70,7 @@ if __name__ == "__main__":
     import time
     from sqlalchemy import create_engine
     from config import Config
+
     while True:
         try:
             engine = create_engine(Config.SQLALCHEMY_DATABASE_URI, echo=True)
@@ -68,7 +81,9 @@ if __name__ == "__main__":
             time.sleep(2)
 
 
-def add_user(engine: Engine, vk_id: int | None = None, telegram_id: int | None = None) -> tuple[bool, int]:
+def add_user(
+    engine: Engine, vk_id: int | None = None, telegram_id: int | None = None
+) -> tuple[bool, int]:
     """Функция добавления в БД пользователя виртуального помощника
 
     Args:
@@ -87,21 +102,20 @@ def add_user(engine: Engine, vk_id: int | None = None, telegram_id: int | None =
         if vk_id is not None:
             user = session.scalar(select(User).where(User.vk_id == vk_id))
         elif telegram_id is not None:
-            user = session.scalar(select(User).where(
-                User.telegram_id == telegram_id))
+            user = session.scalar(select(User).where(User.telegram_id == telegram_id))
         else:
-            raise TypeError(
-                "vk_id and telegram_id can't be None at the same time")
+            raise TypeError("vk_id and telegram_id can't be None at the same time")
         if user is None:
-            user = User(vk_id=vk_id, telegram_id=telegram_id,
-                        is_subscribed=True)
+            user = User(vk_id=vk_id, telegram_id=telegram_id, is_subscribed=True)
             session.add(user)
             session.commit()
             return True, user.id
         return False, user.id
 
 
-def get_user_id(engine: Engine, vk_id: int | None = None, telegram_id: int | None = None) -> int | None:
+def get_user_id(
+    engine: Engine, vk_id: int | None = None, telegram_id: int | None = None
+) -> int | None:
     """Функция получения из БД пользователя
 
     Args:
@@ -120,11 +134,9 @@ def get_user_id(engine: Engine, vk_id: int | None = None, telegram_id: int | Non
         if vk_id is not None:
             user = session.scalar(select(User).where(User.vk_id == vk_id))
         elif telegram_id is not None:
-            user = session.scalar(select(User).where(
-                User.telegram_id == telegram_id))
+            user = session.scalar(select(User).where(User.telegram_id == telegram_id))
         else:
-            raise TypeError(
-                "vk_id and telegram_id can't be None at the same time")
+            raise TypeError("vk_id and telegram_id can't be None at the same time")
         if user is None:
             return None
         return user.id
@@ -184,11 +196,17 @@ def check_spam(engine: Engine, user_id: int) -> bool:
         if user is None:
             return False
         if len(user.question_answers) > 3:
-            return datetime.now(timezone.utc).replace(tzinfo=None) - user.question_answers[2].time_created.replace(tzinfo=None) < timedelta(minutes=1)
+            return datetime.now(timezone.utc).replace(
+                tzinfo=None
+            ) - user.question_answers[2].time_created.replace(tzinfo=None) < timedelta(
+                minutes=1
+            )
         return False
 
 
-def add_question_answer(engine: Engine, question: str, answer: str, confluence_url: str | None, user_id: int) -> int:
+def add_question_answer(
+    engine: Engine, question: str, answer: str, confluence_url: str | None, user_id: int
+) -> int:
     """Функция добавления в БД вопроса пользователя с ответом на него
 
     Args:
@@ -207,7 +225,7 @@ def add_question_answer(engine: Engine, question: str, answer: str, confluence_u
             question=question,
             answer=answer,
             confluence_url=confluence_url,
-            user_id=user_id
+            user_id=user_id,
         )
         session.add(question_answer)
         session.flush()
@@ -231,8 +249,9 @@ def rate_answer(engine: Engine, question_answer_id: int, score: int) -> bool:
     """
 
     with Session(engine) as session:
-        question_answer = session.scalars(select(QuestionAnswer).where(
-            QuestionAnswer.id == question_answer_id)).first()
+        question_answer = session.scalars(
+            select(QuestionAnswer).where(QuestionAnswer.id == question_answer_id)
+        ).first()
         if question_answer is None:
             return False
         question_answer.score = score

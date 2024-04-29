@@ -1,6 +1,12 @@
 {
     "python.analysis.typeCheckingMode": "basic",
     "python.analysis.autoImportCompletions": false,
-    "editor.defaultFormatter": "ms-python.autopep8",
-    "editor.formatOnSave": true
+    "files.eol": "\n",
+    "files.insertFinalNewline": true,
+    "files.trimTrailingWhitespace": true,
+    "[python]": {
+        "editor.defaultFormatter": "ms-python.black-formatter",
+        "editor.formatOnSave": true
+    },
+    "autoDocstring.docstringFormat": "google"
 }
