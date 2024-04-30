@@ -260,16 +260,26 @@ def rate_answer(engine: Engine, question_answer_id: int, score: int) -> bool:
         return True
 
 
-def get_users() -> dict[str, list[User]]:
+def get_users(engine: Engine) -> tuple[list[int | None], list[int | None]]:
     """Функция для получения словаря пользователей
 
+    Args:
+        engine (Engine): подключение к БД
+
     Returns:
-        dict: словарь с пользователями `tg_users`, `vk_users`
+        tuple[list[int], list[int]]: кортеж списков с ID пользователей VK и Telegram
     """
-    users = {'tg_users': [], 'vk_users': []}
     with Session(engine) as session:
-        for user in session.execute(select(User).where(and_(User.vk_id != None, User.is_subscribed))).scalars():
-            users['vk_users'].append(user)
-        for user in session.execute(select(User).where(and_(User.telegram_id != None, User.is_subscribed))).scalars():
-            users["tg_users"].append(user)
-    return users
+        vk_users = [
+            user.vk_id
+            for user in session.execute(
+                select(User).where(and_(User.vk_id != None, User.is_subscribed))
+            ).scalars()
+        ]
+        tg_users = [
+            user.telegram_id
+            for user in session.execute(
+                select(User).where(and_(User.telegram_id != None, User.is_subscribed))
+            ).scalars()
+        ]
+    return vk_users, tg_users

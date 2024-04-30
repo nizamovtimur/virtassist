@@ -15,6 +15,7 @@ from confluence_interaction import (
     parse_confluence_by_page_id,
 )
 from database import (
+    User,
     add_user,
     get_user_id,
     subscribe_user,
@@ -81,16 +82,6 @@ def tg_keyboard_choice(notify_text: str) -> tg.types.ReplyKeyboardMarkup:
     keyboard.add(tg.types.KeyboardButton(Strings.ConfluenceButton))
     keyboard.add(tg.types.KeyboardButton(notify_text))
     return keyboard
-
-
-# @vk_bot.on.message(vk.dispatch.rules.base.RegexRule("!send "), permission=Config.VK_SUPERUSER_ID)
-# async def vk_deliver_notifications(message: VKMessage):
-#     with Session(engine) as session:
-#         for user in session.execute(select(User).where(and_(User.vk_id != None, User.is_subscribed))).scalars():
-#             try:
-#                 await vk_bot.api.messages.send(user_id=user.vk_id, message=message.text[6:], random_id=0)
-#             except Exception as e:
-#                 logger.error(e)
 
 
 async def vk_send_confluence_keyboard(message: VKMessage, question_types: list):
@@ -456,8 +447,18 @@ async def tg_answer(message: tg.types.Message):
     )
 
 
-@routes.post('/broadcast/')
-async def broadcast(request: web.Request) -> web.Response:
+# @vk_bot.on.message(vk.dispatch.rules.base.RegexRule("!send "), permission=Config.VK_SUPERUSER_ID)
+# async def vk_deliver_notifications(message: VKMessage):
+#     with Session(engine) as session:
+#         for user in session.execute(select(User).where(and_(User.vk_id != None, User.is_subscribed))).scalars():
+#             try:
+#                 await vk_bot.api.messages.send(user_id=user.vk_id, message=message.text[6:], random_id=0)
+#             except Exception as e:
+#                 logger.error(e)
+
+
+@routes.post("/broadcast/")
+async def broadcast(request: web.Request) -> web.Response:  # type: ignore
     """Создает рассылку в ВК и/или ТГ
 
     Args:
@@ -468,11 +469,20 @@ async def broadcast(request: web.Request) -> web.Response:
     """
     try:
         data = await request.json()
-        print(data)
-        return web.Response(status=200)
+        vk_users, tg_users = get_users(engine)
+        logging.warning(str(vk_users))
+        logging.warning(str(tg_users))
+        logging.warning(str(data))
+        logging.warning(str(data["text"]))
+        for user_id in vk_users:
+            await vk_bot.api.messages.send(
+                user_id=user_id, message=data["text"], random_id=0
+            )
+        for user_id in tg_users:
+            await tg_bot.send_message(chat_id=user_id, text=data["text"])
     except Exception as e:
+        logging.warning(str(e))
         return web.Response(text=str(e), status=500)
-
 
 
 def launch_vk_bot():

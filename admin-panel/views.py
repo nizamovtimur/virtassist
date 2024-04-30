@@ -38,8 +38,8 @@ def broadcast() -> str:
 
     if request.method == 'POST':
         text = request.form.get('name')
-        vk_bool = request.form.get('vk')
-        tg_bool = request.form.get('telegram')
+        vk_bool = bool(request.form.get('vk'))
+        tg_bool = bool(request.form.get('telegram'))
         response = requests.post(url=f"http://{app.config['CHATBOT_HOST']}/broadcast/",
                                  json={"text": text, "tg": tg_bool, "vk": vk_bool})
         if response.status_code == 200:
