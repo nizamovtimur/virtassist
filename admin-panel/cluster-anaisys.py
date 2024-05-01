@@ -1,4 +1,4 @@
-from models import QuestionAnswer
+from models import QuestionAnswer, get_questions_for_clusters
 
 class ClusterAnalisys():
     def __init__(self) -> None:

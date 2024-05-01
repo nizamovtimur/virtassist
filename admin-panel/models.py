@@ -3,7 +3,7 @@ from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime, timedelta, timezone
 from typing import Optional, List
 from sqlalchemy import BigInteger, Column, DateTime, Engine, ForeignKey, Text, func, select
-from sqlalchemy.orm import DeclarativeBase, Mapped, Session, mapped_column, relationship
+from sqlalchemy.orm import DeclarativeBase, Mapped, MappedColumn, Session, mapped_column, relationship
 from pgvector.sqlalchemy import Vector
 
 
@@ -80,3 +80,28 @@ class QuestionAnswer(Base):
     user_id: Mapped[int] = mapped_column(ForeignKey("user.id"))
 
     user: Mapped["User"] = relationship(back_populates="question_answers")
+
+
+def get_questions_for_clusters(time_start: DateTime,
+                               time_end: DateTime,
+                               have_answer: bool = False,
+                               have_score: bool = False) -> list[dict[str, str]]:
+    """Функция для выгрузки вопросов для обработки в классе ClusterAnalisys
+
+    Args:
+        engine (Engine): подключение к бд
+
+    Returns:
+        list[dict[str, str]]: список вопросов - словарей с ключами `text` и `time`
+    """
+
+    with Session(db.engine) as session:
+        query = session.query(QuestionAnswer).filter(
+        QuestionAnswer.time_created.between(time_start, time_end)
+        )
+        if have_answer:
+            query = query.filter(QuestionAnswer.answer != '')
+        if have_score:
+            query = query.filter(QuestionAnswer.score != 0)
+        questions = ({"text": qa.question, "time": qa.time_created.strftime('%H:%M:%S %d-%m-%Y')} for qa in query)
+        return list(questions)
