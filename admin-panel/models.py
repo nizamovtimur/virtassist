@@ -1,9 +1,8 @@
 from config import app
 from flask_sqlalchemy import SQLAlchemy
-from datetime import datetime, timedelta, timezone
 from typing import Optional, List
-from sqlalchemy import BigInteger, Column, DateTime, Engine, ForeignKey, Text, func, select
-from sqlalchemy.orm import DeclarativeBase, Mapped, MappedColumn, Session, mapped_column, relationship
+from sqlalchemy import BigInteger, Column, DateTime, ForeignKey, Text, func
+from sqlalchemy.orm import DeclarativeBase, Mapped, Session, mapped_column, relationship
 from pgvector.sqlalchemy import Vector
 
 
