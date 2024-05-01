@@ -2,6 +2,7 @@ import asyncio
 import json
 import logging
 import math
+from multiprocessing import Process
 import threading
 import aiogram as tg
 from aiohttp import web
@@ -15,7 +16,6 @@ from confluence_interaction import (
     parse_confluence_by_page_id,
 )
 from database import (
-    User,
     add_user,
     get_user_id,
     subscribe_user,
@@ -447,18 +447,8 @@ async def tg_answer(message: tg.types.Message):
     )
 
 
-# @vk_bot.on.message(vk.dispatch.rules.base.RegexRule("!send "), permission=Config.VK_SUPERUSER_ID)
-# async def vk_deliver_notifications(message: VKMessage):
-#     with Session(engine) as session:
-#         for user in session.execute(select(User).where(and_(User.vk_id != None, User.is_subscribed))).scalars():
-#             try:
-#                 await vk_bot.api.messages.send(user_id=user.vk_id, message=message.text[6:], random_id=0)
-#             except Exception as e:
-#                 logger.error(e)
-
-
 @routes.post("/broadcast/")
-async def broadcast(request: web.Request) -> web.Response:  # type: ignore
+async def broadcast(request: web.Request) -> web.Response:
     """Создает рассылку в ВК и/или ТГ
 
     Args:
@@ -467,19 +457,19 @@ async def broadcast(request: web.Request) -> web.Response:  # type: ignore
     Returns:
         web.Response: ответ
     """
+
     try:
         data = await request.json()
         vk_users, tg_users = get_users(engine)
-        logging.warning(str(vk_users))
-        logging.warning(str(tg_users))
-        logging.warning(str(data))
-        logging.warning(str(data["text"]))
-        for user_id in vk_users:
-            await vk_bot.api.messages.send(
-                user_id=user_id, message=data["text"], random_id=0
-            )
-        for user_id in tg_users:
-            await tg_bot.send_message(chat_id=user_id, text=data["text"])
+        if data["vk"] and vk_users != [] and data["text"] != "":
+            for user_id in vk_users:
+                await vk_bot.api.messages.send(
+                    user_id=user_id, message=data["text"], random_id=0
+                )
+        if data["tg"] and tg_users != [] and data["text"] != "":
+            for user_id in tg_users:
+                await tg_bot.send_message(chat_id=user_id, text=data["text"])
+        return web.Response(status=200)
     except Exception as e:
         logging.warning(str(e))
         return web.Response(text=str(e), status=500)
@@ -501,16 +491,23 @@ def launch_telegram_bot():
     tg.executor.start_polling(dispatcher, skip_updates=True)
 
 
+def run_web_app():
+    """Функция запуска сервера для принятия запроса на рассылку"""
+
+    app = web.Application()
+    app.add_routes(routes)
+    web.run_app(app, port=5000)
+
 if __name__ == "__main__":
     loggers = [logging.getLogger(name) for name in logging.root.manager.loggerDict]
     for logger in loggers:
         logger.setLevel(logging.WARNING)
+    web_process = Process(target=run_web_app)
     thread_vk = threading.Thread(target=launch_vk_bot)
     thread_tg = threading.Thread(target=launch_telegram_bot)
+    web_process.start()
     thread_tg.start()
     thread_vk.start()
-    app = web.Application()
-    app.add_routes(routes)
-    web.run_app(app, port=5000)
+    web_process.join()
     thread_tg.join()
     thread_vk.join()
