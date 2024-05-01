@@ -101,6 +101,6 @@ def get_questions_for_clusters(time_start: DateTime,
         if have_answer:
             query = query.filter(QuestionAnswer.answer != '')
         if have_score:
-            query = query.filter(QuestionAnswer.score != 0)
-        questions = ({"text": qa.question, "time": qa.time_created.strftime('%H:%M:%S %d-%m-%Y')} for qa in query)
+            query = query.filter(QuestionAnswer.score != 1)
+        questions = ({"text": qa.question, "time": qa.time_created.strftime('%Y-%m-%d')} for qa in query)
         return list(questions)
