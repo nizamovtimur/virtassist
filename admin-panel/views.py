@@ -4,9 +4,9 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from config import app
-from models import db, QuestionAnswer
+from models import db, QuestionAnswer, get_questions_for_clusters
 
-
+# init ClusterAnalisys()
 @app.route('/')
 def index() -> str:
     """Функция позволяет отрендерить главную страницу веб-сервиса.
@@ -52,17 +52,15 @@ def broadcast() -> str:
 
 
 @app.route('/questions-wo-answers')
-def questions() -> str:
+def questions(methods=['POST', 'GET']) -> str:
     """Функция позволяет вывести на экране вопросы, не имеющие ответа.
 
     Returns:
         str: отрендеренная веб-страница с POST-запросом на базу данных.
     """
-
-    data = select(QuestionAnswer.question).where(
-        QuestionAnswer.answer == "").order_by(QuestionAnswer.id)
-    with Session(db.engine) as session:
-        question_texts = [row[0] for row in session.execute(data)]
+    if request.method == 'POST':
+        #get_questions_for_clusters() -> ClusterAnalisys.get....
+        # list -> render_template()
     return render_template('questions-wo-answers.html', questions=question_texts)
 
 
