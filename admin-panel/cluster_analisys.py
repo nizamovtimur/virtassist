@@ -1,54 +1,48 @@
 import pandas as pd
+import numpy as np
 import pymorphy2
 from sklearn.feature_extraction.text import TfidfVectorizer
 import spacy
 from sklearn.preprocessing import StandardScaler
 from scipy.cluster.hierarchy import linkage, fcluster
+from sklearn.cluster import AgglomerativeClustering
 from string import punctuation
 import nltk
 from rake_nltk import Rake
 
 
 class ClusterAnalisys:
-    """Модуль кластерного анализа
-
-    Args:
-        self.vectors (pandas.core.frame.DataFrame | None): векторные предстовления текстовых данных
-        self.clusters (dict[list[list]] | None): вся информация о кластерах (предложения, даты)
-        self.nlp (spacy.lang.ru.Russian): модель для nlp
-        self.morph (pymorphy2.analyzer.MorphAnalyzer): модуль для оценки слова на осмысленность
-        self.vectorizer (sklearn.feature_extraction.text.TfidfVectorizer): модуль TF-IDF векторизации предложений
-        self.scaler (sklearn.preprocessing._data.StandardScaler): модуль стандартизации
-        self.rake (): модуль выделения ключевых слов
-    """
+    """Модуль кластерного анализа"""
 
     def __init__(self) -> None:
         nltk.download("stopwords")
         nltk.download("punkt")
-        # self.punct = [i for i in punctuation]
         self.nlp = spacy.load("ru_core_news_sm")
         self.morph = pymorphy2.MorphAnalyzer()
         self.vectorizer = TfidfVectorizer(min_df=2)
         self.scaler = StandardScaler()
-        self.rake = Rake(min_length=2, punctuations=punctuation, language="russian")
+        self.rake = Rake(
+            min_length=2, punctuations={i for i in punctuation}, language="russian"
+        )
 
-    def init_dataset(self, questions):
-        """Перевод списка QuestionAnswer`ов в DataFrame
+    def preprocessing(self, df: pd.DataFrame) -> pd.DataFrame:
+        """Метод предобработки данных
 
         Args:
-            questions (list[QuestionAnswer]): список вопросов, подлежащих анализу
+            df (pd.DataFrame): датафрейм содержания и даты появления вопроса
+
+        Returns:
+            pd.DataFrame: тот же датафрейм, но без спецсимволов и мусорных вопросов
         """
 
-        self.df = pd.DataFrame(questions)
-
-    def preprocessing(self):
-        """Модуль предобработки данных"""
-
-        def del_spec_sim(s):
-            """Модуль удаления специальных символов и двойных пробелов
+        def del_spec_sim(s: str) -> str:
+            """Метод удаления специальных символов и двойных пробелов
 
             Args:
                 s (str): пердложение, которое нужно предобработать
+
+            Returns:
+                str: то же предложение, но без спец. символов и двойных пробелов
             """
 
             s = s.replace("\\n", " ").replace("\\t", " ").replace("  ", " ")
@@ -56,30 +50,38 @@ class ClusterAnalisys:
                 s = s.replace("  ", " ")
             return s
 
-        def found_unrus_conves(s):
-            """Модуль, который помечает на удаление предложения, не содержащие русских букв
+        def found_unrus_conves(s: str) -> str | bool:
+            # def found_unrus_conves(s: str):  # type: ignore. Эта фигня только для того, чтобы всё работало (на "|" ругается и вскод и пайчарм)
+            """Метод, который помечает на удаление предложения, не содержащие русских букв
 
             Args:
                 s (str): пердложение, которое нужно предобработать
+
+            Returns:
+                str | bool: то же предложение, если есть русские буквы, иначе False
             """
 
-            rus_alph = "йцукенгшщзхъфывапролджэячсмитьбюё"
+            rus_alph = "".join([chr(i) for i in range(ord("а"), ord("а") + 32)])
             for s1 in s:
                 if s1 in rus_alph:
                     return s
             return False
 
-        def found_trash_words(words):
-            """Модуль, который помечает на удаление предложения, которые по большей части состоят из бессмысленных наборов букв
+        def found_trash_words(words: str) -> str | bool:
+            # def found_trash_words(words: str):  # type: ignore
+            """Метод, который помечает на удаление предложения, которые по большей части состоят из бессмысленных наборов букв
 
             Args:
                 words (str): пердложение, которое нужно предобработать
+
+            Returns:
+                str | bool: то же предложение, если по большей части состоит из осмысленных слов, иначе False
             """
 
             threshold = 0.6  # нижняя граница для того, чтобы считать набор букв словом
             s = ""
 
-            SpecWords = [
+            spec_words = [
                 "тюмгу",
                 "шкн",
                 "игип",
@@ -95,23 +97,20 @@ class ClusterAnalisys:
                 "ед",
                 "шпи",
             ]  # временный костыль для нахождения абривиатур ТюмГУ
-            z = (".", ",", "!", "?")  # набор пунктуации
+            z = {i for i in punctuation}  # набор пунктуации
             for word in words.split(" "):
                 # берём по слову, не нарушая пунктуации
-                if len(word) < 2:
-                    if word == " ":
-                        print(">>>")
                 x = word[-1]
                 if x in z:
                     word = word[:-1]
                 else:
                     x = ""
                 # проверяем слово, на абривиатуру ТюмГУ
-                if word.lower() in SpecWords:
+                if word.lower() in spec_words:
                     score = 1
                 else:
                     p = self.morph.parse(word)
-                    score = p[0].score
+                    score = p[0].score  # type: ignore
                 # добовляем слово в новую строку
                 if score >= threshold:
                     s += " " + word + x
@@ -124,18 +123,26 @@ class ClusterAnalisys:
                 return words
             return False
 
-        self.df["text"] = self.df["text"].apply(del_spec_sim)
-        self.df["text"] = self.df["text"].apply(found_unrus_conves)
-        self.df = self.df[self.df["text"] != False]
-        self.df["text"] = self.df["text"].apply(found_trash_words)
-        self.df = self.df[self.df["text"] != False]
+        df["text"] = df["text"].apply(del_spec_sim)
+        df["text"] = df["text"].apply(found_unrus_conves)
+        df = df[df["text"] != False]
+        df["text"] = df["text"].apply(found_trash_words)
+        df = df[df["text"] != False]
+        return df
 
-    def vectorize(self):
-        """Алгоритм векторизации предложений, подлежащих анализу"""
+    def vectorize(self, df: pd.DataFrame) -> np.ndarray:
+        """Метод векторизации предложений, подлежащих анализу
+
+        Args:
+            df (pd.DataFrame): датафрейм содержания и даты появления вопроса
+
+        Returns:
+            np.ndarray: датафрейм, содержащий в каждой строке векторные представления вопросов
+        """
 
         df1 = pd.DataFrame(columns=["pred"])
-        for i in range(len(self.df)):
-            doc = self.nlp(str(self.df["text"].iloc[i]))
+        for i in range(len(df)):
+            doc = self.nlp(str(df["text"].iloc[i]))
             df1.loc[i] = [
                 " ".join(
                     [
@@ -150,86 +157,76 @@ class ClusterAnalisys:
         self.vectorizer.get_feature_names_out()
 
         vectors = pd.DataFrame(
-            X.toarray().transpose(), self.vectorizer.get_feature_names_out()
+            X.toarray().transpose(), self.vectorizer.get_feature_names_out()  # type: ignore
         )
         self.scaler.fit(vectors)
-        vectors = self.scaler.transform(vectors).transpose()
+        vectors = self.scaler.transform(vectors).transpose()  # type: ignore
         return vectors
 
-    def clustersing(self, vectors):
-        """Модуль кластеризации предложений"""
+    def clustersing(self, vectors: np.ndarray, df: pd.DataFrame) -> dict:
+        """Модуль кластеризации предложений
 
-        def HKA(arr):
-            """Кластеризация векторов, построенных на предложениях
+        Args:
+            vectors (np.ndarray): датафрейм, содержащий в каждой строке векторные представления вопросов
+            df (pd.DataFrame): датафрейм содержания и даты появления вопроса
 
-            Args:
-                arr (pandas.core.frame.DataFrame): датафрэйм векторных представлений каждого предложения
+        Returns:
+            dict: словарь, содержащий предложения по кластерам
+        """
 
-            Returns:
-                klasters (numpy.ndarray): массив, содержащий номера кластеров на позициях, соответствующих позициям предложений в фрейме данных
-            """
+        samples = vectors
+        for i in range(len(samples)):
+            if samples[i].sum() == 0:
+                samples[i][0] = 10 ** (-20)
+        clusters_hier = linkage(samples, method="complete", metric="cosine")
+        clusters_hier = fcluster(clusters_hier, 0.9, criterion="distance")
 
-            samples = arr
-            for i in range(len(samples)):
-                if samples[i].sum() == 0:
-                    samples[i][0] = 10 ** (-20)
-            klasters = linkage(samples, method="complete", metric="cosine")
-            return fcluster(klasters, 0.9, criterion="distance")
-
-        def otchet_IKA(clusters_hier, df_clear):
-            """Формирование кластеров предложений
-
-            Args:
-                clusters_hier (numpy.ndarray): массив, содержащий номера кластеров на позициях, соответствующих позициям предложений в фрейме данных
-                df_clear (pandas.core.frame.DataFrame)
-            """
-
-            clusters = dict()
-            df_clear["index"] = [i for i in range(len(df_clear))]
-            for i in range(len(clusters_hier)):
-                inf = df_clear.loc[df_clear["index"] == i, ["text", "date"]].iloc[0]
-                if clusters_hier[i] in clusters.keys():
-                    clusters[clusters_hier[i]].append([inf["text"], inf["date"]])
-                else:
-                    clusters[clusters_hier[i]] = [[inf["text"], inf["date"]]]
-            clusters[-1] = [1]
-            while True:
-                for i in clusters.keys():
-                    if len(clusters[i]) < 3:
-                        clusters.pop(i)
-                        break
-                if i == -1:
+        clusters = dict()
+        df["index"] = [i for i in range(len(df))]
+        for i in range(len(clusters_hier)):
+            inf = df.loc[df["index"] == i, ["text", "date"]].iloc[0]
+            if clusters_hier[i] in clusters.keys():
+                clusters[clusters_hier[i]].append([inf["text"], inf["date"]])
+            else:
+                clusters[clusters_hier[i]] = [[inf["text"], inf["date"]]]
+        clusters[-1] = [1]
+        while True:
+            for i in clusters.keys():
+                if len(clusters[i]) < 3:
+                    clusters.pop(i)
                     break
-            return clusters
-
-        klasters_HKA = HKA(vectors)
-        clusters = otchet_IKA(klasters_HKA, self.df)
+            if i == -1:
+                break
         return clusters
 
-    def FMW_rake(self, arr):
+    def get_keywords(self, arr: list[str]) -> list[str]:
         """Модуль формирования ключевых слов по списку предложений
 
         Args:
-            arr (list): список предолжений, по которым нужно составить ключевые слова
+            arr (list[str]): список предолжений, по которым нужно составить ключевые слова
 
         Returns:
-            kw (): список ключевых слов
+            list[str]: ключевые слова и выражения
         """
 
         s = ""
         for i in arr:
             s += ". " + i
-        result = ""
+        result = []
         self.rake.extract_keywords_from_text(s)
         for i in self.rake.get_ranked_phrases()[:10]:
-            result += i + ", "
+            result.append(i)
         return result
 
-    def get_data(self, clusters):
+    def get_data(self, clusters: dict) -> list[tuple[list[str] | str]]:
+        # def get_data(self, clusters: dict):
         """Форматирование кластеров для визуализации
 
+        Args:
+            clusters (dict): словарь, содержащий предложения по кластерам
+
         Returns:
-            data (list[tuple]): список кортежей, для каждого: список вопросов, список ключевых слов, дата самого свежего вопроса
+            list[tuple[list[str] | str]]: список кортежей, для каждого: список вопросов, список ключевых слов, дата самого свежего вопроса
         """
 
         data = []
@@ -240,22 +237,26 @@ class ClusterAnalisys:
                 conv.append(j[0])
                 if date < j[1]:
                     date = j[1]
-            data.append((conv, self.FMW_rake(conv), date))
+            print(i)
+            data.append((conv, self.get_keywords(conv), date))
         data = sorted(data, key=lambda dt: len(dt[0]), reverse=True)
         return data
 
-    def get_clusters_keywords(self, questions: list) -> list:  # type: ignore
+    def get_clusters_keywords(
+        self, questions: list[dict[str, str]]
+    ) -> list[tuple[list[str] | str]]:
+        # def get_clusters_keywords(self, questions: list[dict[str, str]]):
         """Логика кластеризации текстовых данных
 
         Args:
-            questions (list[QuestionAnswer]): список вопросов, подлежащих анализу
+            questions (list[dict[str, str]]): список вопросов, подлежащих анализу
 
-        Return:
-            data (list[tuple]): список кортежей, для каждого: список вопросов, список ключевых слов, дата самого свежего вопроса
+        Returns:
+            list[tuple[list[str] | str]]: писок кортежей, для каждого: список вопросов, список ключевых слов, дата самого свежего вопроса
         """
 
-        self.init_dataset(questions)
-        self.preprocessing()
-        vectors = self.vectorize()
-        clusters = self.clustersing(vectors)
+        df = pd.DataFrame(questions)
+        df = self.preprocessing(df)
+        vectors = self.vectorize(df)
+        clusters = self.clustersing(vectors, df)
         return self.get_data(clusters)
