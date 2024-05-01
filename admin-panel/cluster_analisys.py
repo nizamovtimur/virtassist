@@ -50,32 +50,15 @@ class ClusterAnalisys:
                 s = s.replace("  ", " ")
             return s
 
-        def found_unrus_conves(s: str) -> str | bool:
-            # def found_unrus_conves(s: str):  # type: ignore. Эта фигня только для того, чтобы всё работало (на "|" ругается и вскод и пайчарм)
-            """Метод, который помечает на удаление предложения, не содержащие русских букв
-
-            Args:
-                s (str): пердложение, которое нужно предобработать
-
-            Returns:
-                str | bool: то же предложение, если есть русские буквы, иначе False
-            """
-
-            rus_alph = "".join([chr(i) for i in range(ord("а"), ord("а") + 32)])
-            for s1 in s:
-                if s1 in rus_alph:
-                    return s
-            return False
-
-        def found_trash_words(words: str) -> str | bool:
-            # def found_trash_words(words: str):  # type: ignore
+        # def found_trash_words(words: str) -> str | None:
+        def found_trash_words(words: str):  # type: ignore
             """Метод, который помечает на удаление предложения, которые по большей части состоят из бессмысленных наборов букв
 
             Args:
-                words (str): пердложение, которое нужно предобработать
+                words (str): предложение, которое нужно предобработать
 
             Returns:
-                str | bool: то же предложение, если по большей части состоит из осмысленных слов, иначе False
+                str | None: то же предложение, если по большей части состоит из осмысленных слов, иначе None
             """
 
             threshold = 0.6  # нижняя граница для того, чтобы считать набор букв словом
@@ -116,18 +99,16 @@ class ClusterAnalisys:
                     s += " " + word + x
             # возвращаем слово или False
             if s == "":
-                return False
+                return None
             x1 = len(words.split(" ")) / 2
             x2 = len(s.split(" ")) - 1
             if x1 < x2:
                 return words
-            return False
+            return None
 
         df["text"] = df["text"].apply(del_spec_sim)
-        df["text"] = df["text"].apply(found_unrus_conves)
-        df = df[df["text"] != False]
         df["text"] = df["text"].apply(found_trash_words)
-        df = df[df["text"] != False]
+        df = df.dropna()
         return df
 
     def vectorize(self, df: pd.DataFrame) -> np.ndarray:
@@ -189,14 +170,12 @@ class ClusterAnalisys:
                 clusters[clusters_hier[i]].append([inf["text"], inf["date"]])
             else:
                 clusters[clusters_hier[i]] = [[inf["text"], inf["date"]]]
-        clusters[-1] = [1]
-        while True:
-            for i in clusters.keys():
-                if len(clusters[i]) < 3:
-                    clusters.pop(i)
-                    break
-            if i == -1:
-                break
+        arr = []
+        for i in clusters.keys():
+            if len(clusters[i]) < 3:
+                arr.append(i)
+        for i in arr:
+            clusters.pop(i)
         return clusters
 
     def get_keywords(self, arr: list[str]) -> list[str]:
@@ -214,12 +193,10 @@ class ClusterAnalisys:
             s += ". " + i
         result = []
         self.rake.extract_keywords_from_text(s)
-        for i in self.rake.get_ranked_phrases()[:10]:
-            result.append(i)
-        return result
+        return self.rake.get_ranked_phrases()[:10]
 
-    def get_data(self, clusters: dict) -> list[tuple[list[str] | str]]:
-        # def get_data(self, clusters: dict):
+    # def get_data(self, clusters: dict) -> list[tuple[list[str] | str]]:
+    def get_data(self, clusters: dict):
         """Форматирование кластеров для визуализации
 
         Args:
@@ -237,15 +214,12 @@ class ClusterAnalisys:
                 conv.append(j[0])
                 if date < j[1]:
                     date = j[1]
-            print(i)
             data.append((conv, self.get_keywords(conv), date))
         data = sorted(data, key=lambda dt: len(dt[0]), reverse=True)
         return data
 
-    def get_clusters_keywords(
-        self, questions: list[dict[str, str]]
-    ) -> list[tuple[list[str] | str]]:
-        # def get_clusters_keywords(self, questions: list[dict[str, str]]):
+    # def get_clusters_keywords(self, questions: list[dict[str, str]]) -> list[tuple[list[str] | str]]:
+    def get_clusters_keywords(self, questions: list[dict[str, str]]):
         """Логика кластеризации текстовых данных
 
         Args:
