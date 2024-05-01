@@ -1,12 +1,10 @@
 import requests
 from flask import render_template, request
-from sqlalchemy import select
-from sqlalchemy.orm import Session
-
 from config import app
-from models import db, QuestionAnswer, get_questions_for_clusters
+from models import get_questions_for_clusters
+from cluster_analisys import ClusterAnalisys
 
-# init ClusterAnalisys()
+analisys = ClusterAnalisys()
 @app.route('/')
 def index() -> str:
     """Функция позволяет отрендерить главную страницу веб-сервиса.
@@ -59,10 +57,14 @@ def questions(methods=['POST', 'GET']) -> str:
         str: отрендеренная веб-страница с POST-запросом на базу данных.
     """
     if request.method == 'POST':
-        #get_questions_for_clusters() -> ClusterAnalisys.get....
-        # list -> render_template()
-    return render_template('questions-wo-answers.html', questions=question_texts)
-
+        time_start = request.form.get('time_start')
+        time_end = request.form.get('time_end')
+        have_answer = request.form.get('have_answer')
+        have_score = request.form.get('have_score')
+        clusters = analisys.get_clusters_keywords(get_questions_for_clusters(time_start, time_end, have_answer, have_score))
+        return render_template('questions-wo-answers.html', clusters=clusters, page_title='Вопросы без ответов')
+    else:
+        return render_template('questions-wo-answers.html', clusters=[], page_title='Вопросы без ответов')
 
 @app.route('/danger-questions')
 def dangers() -> str:
