@@ -1,6 +1,4 @@
 from string import punctuation
-from typing import Union
-
 import nltk
 import numpy as np
 import pandas as pd
@@ -9,7 +7,7 @@ from rake_nltk import Rake
 from scipy.cluster.hierarchy import linkage, fcluster
 import spacy
 from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.pipeline import Pipeline
+from sklearn.pipeline import make_pipeline
 from sklearn.preprocessing import StandardScaler
 
 
@@ -47,7 +45,6 @@ class ClusterAnalisys:
                 s = s.replace("  ", " ")
             return s
 
-        # def found_trash_words(words: str) -> str | None:
         def found_trash_words(words: str) -> str | None:
             """Метод, который помечает на удаление предложения, которые по большей части состоят из бессмысленных наборов букв
 
@@ -61,7 +58,7 @@ class ClusterAnalisys:
             if words == "":
                 return None
             threshold = 0.6  # нижняя граница для того, чтобы считать набор букв словом
-            s = ""
+            true_words_string = ""
 
             spec_words = [
                 "тюмгу",
@@ -79,28 +76,25 @@ class ClusterAnalisys:
                 "ед",
                 "шпи",
             ]  # временный костыль для нахождения абривиатур ТюмГУ
-            z = {i for i in punctuation}  # набор пунктуации
+            words = words.translate({ord(c): "" for c in punctuation})
             for word in words.split(" "):
                 # берём по слову, не нарушая пунктуации
-                x = word[-1]
-                if x in z:
-                    word = word[:-1]
-                else:
-                    x = ""
+                """x = word[-1]
+                if x in punctuation:
+                    word = word[:-1]"""
                 # проверяем слово, на абривиатуру ТюмГУ
                 if word.lower() in spec_words:
                     score = 1
                 else:
-                    p = self.morph.parse(word)
-                    score = p[0].score
+                    score = self.morph.parse(word)[0].score
                 # добовляем слово в новую строку
                 if score >= threshold:
-                    s += " " + word + x
+                    true_words_string += " " + word
             # возвращаем слово или False
-            if s == "":
+            if true_words_string == "":
                 return None
             x1 = len(words.split(" ")) / 2
-            x2 = len(s.split(" ")) - 1
+            x2 = len(true_words_string.split(" ")) - 1
             if x1 < x2:
                 return words
             return None
@@ -110,7 +104,7 @@ class ClusterAnalisys:
         df = df.dropna()
         return df
 
-    def vectorizing(self, df: pd.DataFrame) -> np.ndarray:
+    def vectorization(self, df: pd.DataFrame) -> np.ndarray:
         """Метод векторизации предложений, подлежащих анализу
 
         Args:
@@ -122,39 +116,21 @@ class ClusterAnalisys:
 
         vectorizer = TfidfVectorizer(min_df=2)
         scaler = StandardScaler()
-
-        def lower_stopword_lemmatize(text: str) -> str:
-            """Возвращает леммы по предложениям
-
-            Args:
-                text (str): исходное предложение
-
-            Returns:
-                str: итоговые леммы
-            """
-
-            doc = self.nlp(str(text))
-            return " ".join(
-                [
-                    token.lemma_
-                    for token in doc
-                    if not token.is_stop and token.pos_ != "PUNCT"
-                ]
-            )
-
-        df["text_lemma"] = df["text"].apply(lower_stopword_lemmatize)
-
-        X = vectorizer.fit_transform(df["text_lemma"])
-        vectorizer.get_feature_names_out()
-
-        vectors = pd.DataFrame(
-            X.toarray().transpose(), vectorizer.get_feature_names_out()
+        lower_stopword_lemmatize = lambda text: " ".join(
+            [
+                token.lemma_
+                for token in self.nlp(str(text))
+                if not token.is_stop and token.pos_ != "PUNCT"
+            ]
         )
-        scaler.fit(vectors)
-        vectors = scaler.transform(vectors).transpose()
+        df["text_lemma"] = df["text"].apply(lower_stopword_lemmatize)
+        vectors = vectorizer.fit_transform(df["text_lemma"])
+        vectors = scaler.fit_transform(vectors.toarray())
         return vectors
 
-    def clustersing(self, vectors: np.ndarray, df: pd.DataFrame) -> dict:
+    def clustersing(
+        self, vectors: np.ndarray, df: pd.DataFrame
+    ) -> dict[int, list[tuple[str, str]]]:
         """Модуль кластеризации предложений
 
         Args:
@@ -162,24 +138,24 @@ class ClusterAnalisys:
             df (pd.DataFrame): датафрейм содержания и даты появления вопроса
 
         Returns:
-            dict: словарь, содержащий предложения по кластерам
+            dict[int, list[tuple[str, str]]]: словарь, содержащий предложения с датами по кластерам
         """
 
-        samples = vectors
-        for i in range(len(samples)):
-            if samples[i].sum() == 0:
-                samples[i][0] = 10 ** (-20)
-        clusters_hier = linkage(samples, method="complete", metric="cosine")
+        for i in range(len(vectors)):
+            if vectors[i].sum() == 0:
+                vectors[i][0] = 10 ** (-20)
+        clusters_hier = linkage(vectors, method="complete", metric="cosine")
         clusters_hier = fcluster(clusters_hier, 0.9, criterion="distance")
 
         clusters = dict()
-        df["index"] = [i for i in range(len(df))]
+        df = df.reset_index(drop=True)
         for i in range(len(clusters_hier)):
-            inf = df.loc[df["index"] == i, ["text", "date"]].iloc[0]
             if clusters_hier[i] in clusters.keys():
-                clusters[clusters_hier[i]].append([inf["text"], inf["date"]])
+                clusters[clusters_hier[i]].append(
+                    (df["text"].iloc[i], df["date"].iloc[i])
+                )
             else:
-                clusters[clusters_hier[i]] = [[inf["text"], inf["date"]]]
+                clusters[clusters_hier[i]] = [(df["text"].iloc[i], df["date"].iloc[i])]
         arr = []
         for i in clusters.keys():
             if len(clusters[i]) < 3:
@@ -188,11 +164,11 @@ class ClusterAnalisys:
             clusters.pop(i)
         return clusters
 
-    def keywords_extracting(self, arr: list[str]) -> list[str]:
+    def keywords_extracting(self, sentences: list[str]) -> list[str]:
         """Модуль формирования ключевых слов по списку предложений
 
         Args:
-            arr (list[str]): список предолжений, по которым нужно составить ключевые слова
+            sentences (list[str]): список предолжений, по которым нужно составить ключевые слова
 
         Returns:
             list[str]: ключевые слова и выражения
@@ -201,10 +177,7 @@ class ClusterAnalisys:
         rake = Rake(
             min_length=2, punctuations={i for i in punctuation}, language="russian"
         )
-        s = ""
-        for i in arr:
-            s += ". " + i
-        rake.extract_keywords_from_text(s)
+        rake.extract_keywords_from_text(". ".join(sentences))
         return rake.get_ranked_phrases()[:10]
 
     def get_clusters_keywords(
@@ -221,18 +194,18 @@ class ClusterAnalisys:
 
         df = pd.DataFrame(questions)
         df = self.preprocessing(df)
-        vectors = self.vectorizing(df)
+        vectors = self.vectorization(df)
         clusters = self.clustersing(vectors, df)
 
         data = []
-        for i in clusters.keys():
-            conv = []
+        for cluster in clusters.values():
+            sentences = []
             date = "2024-01-01"
-            for j in clusters[i]:
-                conv.append(j[0])
-                if date < j[1]:
-                    date = j[1]
-            data.append((conv, self.keywords_extracting(conv), date))
+            for sentence in cluster:
+                sentences.append(sentence[0])
+                if date < sentence[1]:
+                    date = sentence[1]
+            data.append((sentences, self.keywords_extracting(sentences), date))
         data = sorted(data, key=lambda dt: len(dt[0]), reverse=True)
         return data
 
@@ -247,7 +220,7 @@ def Fprint(arr):
         print()
 
 
-def main():
+if __name__ == "__main__":
     arr = []
     with open("database.csv", "r", encoding="utf-8") as f:
         s = f.readline()
@@ -258,7 +231,3 @@ def main():
     CA = ClusterAnalisys()
     data = CA.get_clusters_keywords(arr)
     Fprint(data)
-
-
-if __name__ == "__main__":
-    main()

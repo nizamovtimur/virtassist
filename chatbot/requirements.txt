@@ -1,15 +1,6 @@
 sqlalchemy
-string
-nltk
-numpy
-pandas
-pymorphy2
 pytest
 psycopg2-binary
-rake_nltk
-scipy
-spacy
-sklearn
 cachetools
 python-dotenv
 vkbottle
