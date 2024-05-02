@@ -6,6 +6,9 @@ ENV PYTHONUNBUFFERED 1
 RUN pip install --upgrade pip
 COPY ./requirements.txt .
 RUN pip install -r requirements.txt
+
+COPY ./save_nltk.py .
+RUN python save_nltk.py
 RUN python -m spacy download ru_core_news_sm
 
 COPY . /app

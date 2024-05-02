@@ -2,6 +2,7 @@ flask
 flask_sqlalchemy
 flask_oidc
 gunicorn
+nltk
 numpy
 pandas
 pgvector
