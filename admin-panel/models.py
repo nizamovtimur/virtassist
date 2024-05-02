@@ -1,4 +1,5 @@
 from config import app
+from datetime import date, timedelta
 from flask_sqlalchemy import SQLAlchemy
 from typing import Optional, List
 from sqlalchemy import BigInteger, Column, DateTime, ForeignKey, Text, func
@@ -55,7 +56,10 @@ class User(Base):
     is_subscribed: Mapped[bool] = mapped_column()
 
     question_answers: Mapped[List["QuestionAnswer"]] = relationship(
-        back_populates="user", cascade="all, delete-orphan", order_by="desc(QuestionAnswer.time_created)")
+        back_populates="user",
+        cascade="all, delete-orphan",
+        order_by="desc(QuestionAnswer.time_created)",
+    )
 
 
 class QuestionAnswer(Base):
@@ -81,14 +85,19 @@ class QuestionAnswer(Base):
     user: Mapped["User"] = relationship(back_populates="question_answers")
 
 
-def get_questions_for_clusters(time_start: DateTime,
-                               time_end: DateTime,
-                               have_answer: bool = False,
-                               have_score: bool = False) -> list[dict[str, str]]:
+def get_questions_for_clusters(
+    time_start: str = str(date.today() - timedelta(days=1)),
+    time_end: str = str(date.today()),
+    have_answer: bool = False,
+    have_score: bool = False,
+) -> list[dict[str, str]]:
     """Функция для выгрузки вопросов для обработки в классе ClusterAnalisys
 
     Args:
-        engine (Engine): подключение к бд
+        time_start (str, optional): дата, от которой нужно сортировать вопросы. По-умолчанию, вчерашняя дата.
+        time_end (str, optional): дата, до которой нужно сортировать вопросы. По-умолчанию, сегодняшняя дата.
+        have_answer (bool, optional): имеет ли вопрос ответ. По-умолчанию False.
+        have_score (bool, optional): имеет ли вопрос оценку. По-умолчанию False.
 
     Returns:
         list[dict[str, str]]: список вопросов - словарей с ключами `text` и `time`
@@ -96,11 +105,14 @@ def get_questions_for_clusters(time_start: DateTime,
 
     with Session(db.engine) as session:
         query = session.query(QuestionAnswer).filter(
-        QuestionAnswer.time_created.between(time_start, time_end)
+            QuestionAnswer.time_created.between(time_start, time_end)
         )
         if have_answer:
-            query = query.filter(QuestionAnswer.answer != '')
+            query = query.filter(QuestionAnswer.answer != "")
         if have_score:
             query = query.filter(QuestionAnswer.score != 1)
-        questions = ({"text": qa.question, "time": qa.time_created.strftime('%Y-%m-%d')} for qa in query)
+        questions = (
+            {"text": qa.question, "time": qa.time_created.strftime("%Y-%m-%d")}
+            for qa in query
+        )
         return list(questions)
