@@ -1,14 +1,16 @@
-import pandas as pd
-import numpy as np
-import pymorphy2
-from sklearn.feature_extraction.text import TfidfVectorizer
-import spacy
-from sklearn.preprocessing import StandardScaler
-from scipy.cluster.hierarchy import linkage, fcluster
-from sklearn.cluster import AgglomerativeClustering
 from string import punctuation
+from typing import Union
+
 import nltk
+import numpy as np
+import pandas as pd
+import pymorphy2
 from rake_nltk import Rake
+from scipy.cluster.hierarchy import linkage, fcluster
+import spacy
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.pipeline import Pipeline
+from sklearn.preprocessing import StandardScaler
 
 
 class ClusterAnalisys:
@@ -19,11 +21,6 @@ class ClusterAnalisys:
         nltk.download("punkt")
         self.nlp = spacy.load("ru_core_news_sm")
         self.morph = pymorphy2.MorphAnalyzer()
-        self.vectorizer = TfidfVectorizer(min_df=2)
-        self.scaler = StandardScaler()
-        self.rake = Rake(
-            min_length=2, punctuations={i for i in punctuation}, language="russian"
-        )
 
     def preprocessing(self, df: pd.DataFrame) -> pd.DataFrame:
         """Метод предобработки данных
@@ -51,7 +48,7 @@ class ClusterAnalisys:
             return s
 
         # def found_trash_words(words: str) -> str | None:
-        def found_trash_words(words: str):  # type: ignore
+        def found_trash_words(words: str) -> str | None:
             """Метод, который помечает на удаление предложения, которые по большей части состоят из бессмысленных наборов букв
 
             Args:
@@ -61,6 +58,8 @@ class ClusterAnalisys:
                 str | None: то же предложение, если по большей части состоит из осмысленных слов, иначе None
             """
 
+            if words == "":
+                return None
             threshold = 0.6  # нижняя граница для того, чтобы считать набор букв словом
             s = ""
 
@@ -93,7 +92,7 @@ class ClusterAnalisys:
                     score = 1
                 else:
                     p = self.morph.parse(word)
-                    score = p[0].score  # type: ignore
+                    score = p[0].score
                 # добовляем слово в новую строку
                 if score >= threshold:
                     s += " " + word + x
@@ -111,44 +110,55 @@ class ClusterAnalisys:
         df = df.dropna()
         return df
 
-    def vectorize(self, df: pd.DataFrame) -> np.ndarray:
+    def vectorizing(self, df: pd.DataFrame) -> np.ndarray:
         """Метод векторизации предложений, подлежащих анализу
 
         Args:
             df (pd.DataFrame): датафрейм содержания и даты появления вопроса
 
         Returns:
-            np.ndarray: датафрейм, содержащий в каждой строке векторные представления вопросов
+            np.ndarray: массив, содержащий в каждой строке векторные представления вопросов
         """
 
-        df1 = pd.DataFrame(columns=["pred"])
-        for i in range(len(df)):
-            doc = self.nlp(str(df["text"].iloc[i]))
-            df1.loc[i] = [
-                " ".join(
-                    [
-                        token.lemma_
-                        for token in doc
-                        if not token.is_stop and token.pos_ != "PUNCT"
-                    ]
-                )
-            ]
+        vectorizer = TfidfVectorizer(min_df=2)
+        scaler = StandardScaler()
 
-        X = self.vectorizer.fit_transform(df1["pred"])
-        self.vectorizer.get_feature_names_out()
+        def lower_stopword_lemmatize(text: str) -> str:
+            """Возвращает леммы по предложениям
+
+            Args:
+                text (str): исходное предложение
+
+            Returns:
+                str: итоговые леммы
+            """
+
+            doc = self.nlp(str(text))
+            return " ".join(
+                [
+                    token.lemma_
+                    for token in doc
+                    if not token.is_stop and token.pos_ != "PUNCT"
+                ]
+            )
+
+        df["text_lemma"] = df["text"].apply(lower_stopword_lemmatize)
+
+        X = vectorizer.fit_transform(df["text_lemma"])
+        vectorizer.get_feature_names_out()
 
         vectors = pd.DataFrame(
-            X.toarray().transpose(), self.vectorizer.get_feature_names_out()  # type: ignore
+            X.toarray().transpose(), vectorizer.get_feature_names_out()
         )
-        self.scaler.fit(vectors)
-        vectors = self.scaler.transform(vectors).transpose()  # type: ignore
+        scaler.fit(vectors)
+        vectors = scaler.transform(vectors).transpose()
         return vectors
 
     def clustersing(self, vectors: np.ndarray, df: pd.DataFrame) -> dict:
         """Модуль кластеризации предложений
 
         Args:
-            vectors (np.ndarray): датафрейм, содержащий в каждой строке векторные представления вопросов
+            vectors (np.ndarray): массив, содержащий в каждой строке векторные представления вопросов
             df (pd.DataFrame): датафрейм содержания и даты появления вопроса
 
         Returns:
@@ -178,7 +188,7 @@ class ClusterAnalisys:
             clusters.pop(i)
         return clusters
 
-    def get_keywords(self, arr: list[str]) -> list[str]:
+    def keywords_extracting(self, arr: list[str]) -> list[str]:
         """Модуль формирования ключевых слов по списку предложений
 
         Args:
@@ -188,38 +198,18 @@ class ClusterAnalisys:
             list[str]: ключевые слова и выражения
         """
 
+        rake = Rake(
+            min_length=2, punctuations={i for i in punctuation}, language="russian"
+        )
         s = ""
         for i in arr:
             s += ". " + i
-        result = []
-        self.rake.extract_keywords_from_text(s)
-        return self.rake.get_ranked_phrases()[:10]
+        rake.extract_keywords_from_text(s)
+        return rake.get_ranked_phrases()[:10]
 
-    # def get_data(self, clusters: dict) -> list[tuple[list[str] | str]]:
-    def get_data(self, clusters: dict):
-        """Форматирование кластеров для визуализации
-
-        Args:
-            clusters (dict): словарь, содержащий предложения по кластерам
-
-        Returns:
-            list[tuple[list[str] | str]]: список кортежей, для каждого: список вопросов, список ключевых слов, дата самого свежего вопроса
-        """
-
-        data = []
-        for i in clusters.keys():
-            conv = []
-            date = "2024-01-01"
-            for j in clusters[i]:
-                conv.append(j[0])
-                if date < j[1]:
-                    date = j[1]
-            data.append((conv, self.get_keywords(conv), date))
-        data = sorted(data, key=lambda dt: len(dt[0]), reverse=True)
-        return data
-
-    # def get_clusters_keywords(self, questions: list[dict[str, str]]) -> list[tuple[list[str] | str]]:
-    def get_clusters_keywords(self, questions: list[dict[str, str]]):
+    def get_clusters_keywords(
+        self, questions: list[dict[str, str]]
+    ) -> list[tuple[list[str] | str]]:
         """Логика кластеризации текстовых данных
 
         Args:
@@ -231,6 +221,44 @@ class ClusterAnalisys:
 
         df = pd.DataFrame(questions)
         df = self.preprocessing(df)
-        vectors = self.vectorize(df)
+        vectors = self.vectorizing(df)
         clusters = self.clustersing(vectors, df)
-        return self.get_data(clusters)
+
+        data = []
+        for i in clusters.keys():
+            conv = []
+            date = "2024-01-01"
+            for j in clusters[i]:
+                conv.append(j[0])
+                if date < j[1]:
+                    date = j[1]
+            data.append((conv, self.keywords_extracting(conv), date))
+        data = sorted(data, key=lambda dt: len(dt[0]), reverse=True)
+        return data
+
+
+def Fprint(arr):
+    for a in arr:
+        for i in a[0]:
+            print(i)
+        print("=" * 20)
+        print(a[1])
+        print(a[2])
+        print()
+
+
+def main():
+    arr = []
+    with open("database.csv", "r", encoding="utf-8") as f:
+        s = f.readline()
+        while s:
+            arr.append({"text": s.split(" --- ")[0], "date": s.split(" --- ")[1][:-1]})
+            s = f.readline()
+
+    CA = ClusterAnalisys()
+    data = CA.get_clusters_keywords(arr)
+    Fprint(data)
+
+
+if __name__ == "__main__":
+    main()
