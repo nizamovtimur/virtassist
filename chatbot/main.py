@@ -461,12 +461,12 @@ async def broadcast(request: web.Request) -> web.Response:
     try:
         data = await request.json()
         vk_users, tg_users = get_users(engine)
-        if data["vk"] and vk_users != [] and data["text"] != "":
+        if data["vk"] and len(vk_users) != 0 and len(data["text"]) != 0:
             for user_id in vk_users:
                 await vk_bot.api.messages.send(
                     user_id=user_id, message=data["text"], random_id=0
                 )
-        if data["tg"] and tg_users != [] and data["text"] != "":
+        if data["tg"] and len(tg_users) != 0 and len(data["text"]) != 0:
             for user_id in tg_users:
                 await tg_bot.send_message(chat_id=user_id, text=data["text"])
         return web.Response(status=200)
@@ -498,16 +498,17 @@ def run_web_app():
     app.add_routes(routes)
     web.run_app(app, port=5000)
 
+
 if __name__ == "__main__":
     loggers = [logging.getLogger(name) for name in logging.root.manager.loggerDict]
     for logger in loggers:
         logger.setLevel(logging.WARNING)
     web_process = Process(target=run_web_app)
-    thread_vk = threading.Thread(target=launch_vk_bot)
-    thread_tg = threading.Thread(target=launch_telegram_bot)
+    vk_process = Process(target=launch_vk_bot)
+    tg_process = Process(target=launch_telegram_bot)
     web_process.start()
-    thread_tg.start()
-    thread_vk.start()
+    vk_process.start()
+    tg_process.start()
     web_process.join()
-    thread_tg.join()
-    thread_vk.join()
+    vk_process.join()
+    tg_process.join()
