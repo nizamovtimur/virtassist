@@ -1,5 +1,4 @@
 from string import punctuation
-import nltk
 import numpy as np
 import pandas as pd
 import pymorphy2
@@ -14,8 +13,6 @@ class ClusterAnalisys:
     """Модуль кластерного анализа"""
 
     def __init__(self) -> None:
-        nltk.download("stopwords")
-        nltk.download("punkt")
         self.nlp = spacy.load("ru_core_news_sm")
         self.morph = pymorphy2.MorphAnalyzer()
 
@@ -77,10 +74,6 @@ class ClusterAnalisys:
             ]  # временный костыль для нахождения абривиатур ТюмГУ
             words = words.translate({ord(c): "" for c in punctuation})
             for word in words.split(" "):
-                # берём по слову, не нарушая пунктуации
-                """x = word[-1]
-                if x in punctuation:
-                    word = word[:-1]"""
                 # проверяем слово, на абривиатуру ТюмГУ
                 if word.lower() in spec_words:
                     score = 1
