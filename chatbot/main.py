@@ -3,7 +3,6 @@ import json
 import logging
 import math
 from multiprocessing import Process
-import threading
 import aiogram as tg
 from aiohttp import web
 from sqlalchemy import create_engine
