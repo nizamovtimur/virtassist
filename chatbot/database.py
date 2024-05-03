@@ -189,7 +189,7 @@ def check_spam(engine: Engine, user_id: int) -> bool:
         user_id (int): id пользователя
 
     Returns:
-        bool: пользователь написал 4 сообщения за одну минуту или нет
+        bool: пользователь задал три вопроса за последнюю минуту
     """
 
     with Session(engine) as session:
@@ -197,11 +197,9 @@ def check_spam(engine: Engine, user_id: int) -> bool:
         if user is None:
             return False
         if len(user.question_answers) > 3:
-            return datetime.now(timezone.utc).replace(
-                tzinfo=None
-            ) - user.question_answers[2].time_created.replace(tzinfo=None) < timedelta(
-                minutes=1
-            )
+            minute_ago = datetime.now() - timedelta(minutes=1)
+            third_message_date = user.question_answers[2].time_created
+            return minute_ago < third_message_date.replace(tzinfo=None)
         return False
 
 
@@ -260,14 +258,14 @@ def rate_answer(engine: Engine, question_answer_id: int, score: int) -> bool:
         return True
 
 
-def get_users(engine: Engine) -> tuple[list[int | None], list[int | None]]:
-    """Функция для получения словаря пользователей
+def get_subscribed_users(engine: Engine) -> tuple[list[int | None], list[int | None]]:
+    """Функция для получения подписанных на рассылки пользователей
 
     Args:
         engine (Engine): подключение к БД
 
     Returns:
-        tuple[list[int], list[int]]: кортеж списков с ID пользователей VK и Telegram
+        tuple[list[int], list[int]]: кортеж списков с id пользователей VK и Telegram
     """
     with Session(engine) as session:
         vk_users = [

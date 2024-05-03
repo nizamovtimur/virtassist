@@ -22,7 +22,7 @@ from database import (
     check_spam,
     add_question_answer,
     rate_answer,
-    get_users,
+    get_subscribed_users,
 )
 from strings import Strings
 
@@ -459,7 +459,7 @@ async def broadcast(request: web.Request) -> web.Response:
 
     try:
         data = await request.json()
-        vk_users, tg_users = get_users(engine)
+        vk_users, tg_users = get_subscribed_users(engine)
         if data["vk"] and len(vk_users) != 0 and len(data["text"]) != 0:
             for user_id in vk_users:
                 await vk_bot.api.messages.send(

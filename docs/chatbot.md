@@ -242,7 +242,7 @@
         user_id (int): id пользователя
 
     Returns:
-        bool: пользователь написал 4 сообщения за одну минуту или нет
+        bool: пользователь задал три вопроса за последнюю минуту
 
 ### `add_question_answer(engine: Engine, question: str, answer: str, confluence_url: str | None, user_id: int) -> int`
 Функция добавления в БД вопроса пользователя с ответом на него
@@ -268,14 +268,14 @@
     Returns:
         bool: удалось добавить в БД оценку ответа или нет
 
-### `get_users(engine: Engine) -> tuple[list[int | None], list[int | None]]`
-Функция для получения словаря пользователей
+### `get_subscribed_users(engine: Engine) -> tuple[list[int | None], list[int | None]]`
+Функция для получения подписанных на рассылки пользователей
 
     Args:
         engine (Engine): подключение к БД
 
     Returns:
-        tuple[list[int], list[int]]: кортеж списков с ID пользователей VK и Telegram
+        tuple[list[int], list[int]]: кортеж списков с id пользователей VK и Telegram
 
 ## [tests](../chatbot/tests.py)
 ### `class TestDBFunctions`
