@@ -1,10 +1,10 @@
 import requests
 from flask import render_template, request
-from sqlalchemy import select
-from sqlalchemy.orm import Session
-
 from config import app
-from models import db, QuestionAnswer
+from models import get_questions_for_clusters
+from cluster_analisys import ClusterAnalisys
+
+analisys = ClusterAnalisys()
 
 
 @app.route("/")
@@ -49,26 +49,34 @@ def broadcast() -> str:
         else:
             response = "Ваше сообщение не доставлено"
             return render_template("broadcast.html", response=response)
-    else:
-        return render_template("broadcast.html")
+    return render_template("broadcast.html")
 
 
 @app.route("/questions-wo-answers")
-def questions() -> str:
+def questions(methods=["POST", "GET"]) -> str:
     """Функция позволяет вывести на экране вопросы, не имеющие ответа.
 
     Returns:
         str: отрендеренная веб-страница с POST-запросом на базу данных.
     """
-
-    data = (
-        select(QuestionAnswer.question)
-        .where(QuestionAnswer.answer == "")
-        .order_by(QuestionAnswer.id)
+    if request.method == "POST":
+        time_start = str(request.form.get("time_start"))
+        time_end = str(request.form.get("time_end"))
+        have_not_answer = bool(request.form.get("have_not_answer"))
+        have_low_score = bool(request.form.get("have_low_score"))
+        questions = get_questions_for_clusters(
+            time_start, time_end, have_not_answer, have_low_score
+        )
+        return render_template(
+            "questions-wo-answers.html",
+            clusters=analisys.get_clusters_keywords(questions),
+            page_title="Вопросы без ответов",
+        )
+    return render_template(
+        "questions-wo-answers.html",
+        clusters=analisys.get_clusters_keywords(get_questions_for_clusters()),
+        page_title="Вопросы без ответов",
     )
-    with Session(db.engine) as session:
-        question_texts = [row[0] for row in session.execute(data)]
-    return render_template("questions-wo-answers.html", questions=question_texts)
 
 
 @app.route("/danger-questions")

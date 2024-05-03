@@ -1,8 +1,8 @@
 from config import app
+from datetime import date, timedelta
 from flask_sqlalchemy import SQLAlchemy
-from datetime import datetime, timedelta, timezone
 from typing import Optional, List
-from sqlalchemy import BigInteger, Column, DateTime, Engine, ForeignKey, Text, func, select
+from sqlalchemy import BigInteger, Column, DateTime, ForeignKey, Text, func, or_
 from sqlalchemy.orm import DeclarativeBase, Mapped, Session, mapped_column, relationship
 from pgvector.sqlalchemy import Vector
 
@@ -56,7 +56,10 @@ class User(Base):
     is_subscribed: Mapped[bool] = mapped_column()
 
     question_answers: Mapped[List["QuestionAnswer"]] = relationship(
-        back_populates="user", cascade="all, delete-orphan", order_by="desc(QuestionAnswer.time_created)")
+        back_populates="user",
+        cascade="all, delete-orphan",
+        order_by="desc(QuestionAnswer.time_created)",
+    )
 
 
 class QuestionAnswer(Base):
@@ -80,3 +83,42 @@ class QuestionAnswer(Base):
     user_id: Mapped[int] = mapped_column(ForeignKey("user.id"))
 
     user: Mapped["User"] = relationship(back_populates="question_answers")
+
+
+def get_questions_for_clusters(
+    time_start: str = str(date.today() - timedelta(days=30)),
+    time_end: str = str(date.today() + timedelta(days=1)),
+    have_not_answer: bool = True,
+    have_low_score: bool = False,
+) -> list[dict[str, str]]:
+    """Функция для выгрузки вопросов для обработки в классе ClusterAnalisys
+
+    Args:
+        time_start (str, optional): дата, от которой нужно сортировать вопросы. По-умолчанию, 30 дней назад.
+        time_end (str, optional): дата, до которой нужно сортировать вопросы. По-умолчанию, завтрашняя дата.
+        have_not_answer (bool, optional): вопросы без ответа. По-умолчанию True.
+        have_low_score (bool, optional): вопросы с низкой оценкой. По-умолчанию False.
+
+    Returns:
+        list[dict[str, str]]: список вопросов - словарей с ключами `text` и `date`
+    """
+
+    with Session(db.engine) as session:
+        query = session.query(QuestionAnswer).filter(
+            QuestionAnswer.time_created.between(time_start, time_end)
+        )
+        if have_not_answer and have_low_score:
+            query = query.filter(
+                or_(QuestionAnswer.answer == "", QuestionAnswer.score == 1)
+            )
+        elif have_not_answer:
+            query = query.filter(QuestionAnswer.answer == "")
+        elif have_low_score:
+            query = query.filter(QuestionAnswer.score == 1)
+        else:
+            return []
+        questions = (
+            {"text": qa.question, "date": qa.time_created.strftime("%Y-%m-%d")}
+            for qa in query
+        )
+        return list(questions)
