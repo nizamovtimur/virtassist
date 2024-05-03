@@ -105,6 +105,12 @@
     Args:
         message (VKMessage): сообщение пользователя с вопросом
 
+### `tg_start(message: tg.types.Message)`
+Обработчик события (для чат-бота Telegram), при котором пользователь отправляет команду /start
+
+    Args:
+        message (tg.types.Message): сообщение пользователя
+
 ### `tg_answer(message: tg.types.Message)`
 Обработчик события (для чат-бота Telegram), при котором пользователь задаёт вопрос чат-боту
 
@@ -113,17 +119,23 @@
     Args:
         message (tg.types.Message): сообщение с вопросом пользователя
 
-### `tg_start(message: tg.types.Message)`
-Обработчик события (для чат-бота Telegram), при котором пользователь отправляет команду /start
+### `broadcast(request: web.Request) -> web.Response`
+Создает рассылку в ВК и/или ТГ
 
     Args:
-        message (tg.types.Message): сообщение пользователя
+        request (web.Request): запрос, содержащий `text`, булевые `tg`, `vk`
+
+    Returns:
+        web.Response: ответ
 
 ### `launch_vk_bot()`
 Функция начала работы чат-бота ВКонтакте
 
 ### `launch_telegram_bot()`
 Функция начала работы чат-бота Telegram
+
+### `run_web_app()`
+Функция запуска сервера для принятия запроса на рассылку
 
 ## [confluence_interaction](../chatbot/confluence_interaction.py)
 ### `make_markup_by_confluence() -> list`
@@ -255,6 +267,15 @@
 
     Returns:
         bool: удалось добавить в БД оценку ответа или нет
+
+### `get_users(engine: Engine) -> tuple[list[int | None], list[int | None]]`
+Функция для получения словаря пользователей
+
+    Args:
+        engine (Engine): подключение к БД
+
+    Returns:
+        tuple[list[int], list[int]]: кортеж списков с ID пользователей VK и Telegram
 
 ## [tests](../chatbot/tests.py)
 ### `class TestDBFunctions`
