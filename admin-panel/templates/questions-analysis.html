@@ -1,0 +1,27 @@
+{% extends "menu.html" %}
+{% block content %}
+<div class="col-12">
+    <h1 class="text-center my-5">{{ page_title }}</h1>
+</div>
+
+<div class="accordion" id="accordionPanelsStayOpenExample">
+    {% for cluster in clusters %}
+        <div class="accordion-item">
+            <h2 class="accordion-header">
+                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#panelsStayOpen-collapse{{clusters.index(cluster) + 1}}" aria-expanded="false" aria-controls="panelsStayOpen-collapse{{clusters.index(cluster) + 1}}">
+                    {{ ', '.join(cluster[1]) }}
+                </button>
+            </h2>
+            <div id="panelsStayOpen-collapse{{clusters.index(cluster) + 1}}" class="accordion-collapse collapse">
+                <div class="accordion-body">
+                    <strong>Вопросы в кластере:</strong><br/>
+                    {% for q in cluster[0] %}
+                        {{ q }}<br/>
+                    {% endfor %}
+                    <strong>Дата последнего вопроса:</strong> {{ cluster[2] }}
+                </div>
+            </div>
+        </div>
+    {% endfor %}
+    </div>
+{% endblock %}
