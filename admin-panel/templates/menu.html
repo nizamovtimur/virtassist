@@ -16,16 +16,16 @@
                 <div class="col-lg-2 text-white position-fixed h-100" style="background-color: #34547A;">
                     <nav>
                         <div class="text-center mb-4 mt-5" style="{{ 'background-color: #FF7628;' if page_title == 'Сводка' }}">
-                            <a href="/" class="link-light text-end fs-2 fst-italic text-decoration-none">Сводка</a>
+                            <a href="{{ url_for('index') }}" class="link-light text-end fs-2 fst-italic text-decoration-none">Сводка</a>
                         </div>
                         <div class="text-center mb-4" style="{{ 'background-color: #FF7628;' if page_title == 'Анализ вопросов' }}">
-                            <a href="/questions-wo-answers" class="link-light text-end fs-2 fst-italic text-decoration-none">Анализ вопросов</a>
+                            <a href="{{ url_for('questions_analysis') }}" class="link-light text-end fs-2 fst-italic text-decoration-none">Анализ вопросов</a>
                         </div>
                         <div class="text-center mb-4" style="{{ 'background-color: #FF7628;' if page_title == 'Рассылка' }}">
-                            <a href="/broadcast" class="link-light text-end fs-2 fst-italic text-decoration-none">Рассылка</a>
+                            <a href="{{ url_for('broadcast') }}" class="link-light text-end fs-2 fst-italic text-decoration-none">Рассылка</a>
                         </div>
                         <div class="text-center" style="{{ 'background-color: #FF7628;' if page_title == 'Настройки' }}">
-                            <a href="/settings" class="link-light text-end fs-2 fst-italic text-decoration-none">Настройки</a>
+                            <a href="{{ url_for('settings') }}" class="link-light text-end fs-2 fst-italic text-decoration-none">Настройки</a>
                         </div>
                     </nav>
                     <div class="position-absolute bottom-0 start-50 translate-middle-x mb-5 w-75">
@@ -37,7 +37,7 @@
                         <div class="col"></div>
                         <div class="col-8">
                             {% block content %}
-                    
+
                             {% endblock %}
                         </div>
                         <div class="col"></div>

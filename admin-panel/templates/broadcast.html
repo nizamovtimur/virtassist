@@ -5,14 +5,14 @@
     <h1 class="text-center my-5">{{ page_title }}</h1>
 </div>
 <div class="container-fluid">
-    <form class="needs-validation" novalidate>
+    <form class="needs-validation" method="POST">
         <div class="row mb-4">
             <div class="col-4">
                 <div class="form-check">
                     <label class="form-check-label w-75 h-25 fs-5 ms-3 text-center bg-white" for="VkCheck">
                         ВКонтакте
                     </label>
-                    <input class="form-check-input broadcast-check" type="checkbox" id="VkCheck" name="vk" value=True>
+                    <input class="form-check-input broadcast-check" type="checkbox" id="VkCheck" name="vk" checked>
                 </div>
             </div>
             <div class="col-4"></div>
@@ -21,7 +21,7 @@
                     <label class="form-check-label w-75 h-25 fs-5 ms-3 text-center bg-white" for="tgCheck">
                         Telegram
                     </label>
-                    <input class="form-check-input broadcast-check" type="checkbox" id="tgCheck" name="tg" value=True>
+                    <input class="form-check-input broadcast-check" type="checkbox" id="tgCheck" name="tg" checked>
                 </div>
             </div>
         </div>
