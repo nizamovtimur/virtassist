@@ -12,3 +12,34 @@ tr {
     width: 30px;
     height: 30px;
 }
+
+.bg-dark-blue {
+    background-color: #34547A;
+}
+
+.bg-orange {
+    background-color: #FF7628;
+}
+
+.bg-gray-d9 {
+    background-color: #D9D9D9;
+}
+
+.btn_better_primary {
+    background-color: #34547A;
+    color: white;
+}
+
+.btn_better_primary:hover {
+    background-color: #325786;
+    color: white;
+}
+
+.btn_better_primary:active {
+    background-color: #1a4c8e;
+    color: white;
+}
+
+.bg-gray-e {
+    background-color: #EEEEEE;
+}

@@ -10,7 +10,7 @@
 
 <div class="row mb-4">
     <div class="col-9">
-        <input type="text" class="form-control" style="background: #D9D9D9;">
+        <input type="text" class="form-control bg-gray-d9">
     </div>
     <div class="col-3">
         <button type="button" class="btn w-100 bg-white">Добавить</button>
@@ -19,10 +19,9 @@
 
 <ul class="list-group">
     {% for user in users %}
-        <li class="list-group-item d-flex justify-content-between align-items-center h5 mb-4 py-2"
-        style="background: #D9D9D9;">
+        <li class="list-group-item d-flex justify-content-between align-items-center h5 mb-4 py-2 bg-gray-d9">
             {{ user }}
-            <button type="button" class="btn-close float-end" aria-label="Close" style: "color: #EB0000;"></button>
+            <button type="button" class="btn-close float-end" aria-label="Close"></button>
         </li>
     {% endfor %}
 </ul>
