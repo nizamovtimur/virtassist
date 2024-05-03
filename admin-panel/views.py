@@ -218,7 +218,7 @@ def questions() -> str:
     #     QuestionAnswer.answer == "").order_by(QuestionAnswer.id)
     # with Session(db.engine) as session:
     #     question_texts = [row[0] for row in session.execute(data)]
-    return render_template('questions-wo-answers.html', clusters=clusters, page_title='Вопросы без ответов')
+    return render_template('questions-wo-answers.html', clusters=clusters, page_title='Анализ вопросов')
 
 
 @app.route('/danger-questions')

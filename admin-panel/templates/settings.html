@@ -1,59 +1,41 @@
 {% extends "menu.html" %}
 {% block content %}
 <div class="col-12">
-    <h1 class="text-center" style="margin-top: 36px; margin-bottom: 40px;">Настройки доступа</h1>
-</div>
-
-<div class="row">
-    <div class="col"></div>
-    <div class="col-6">
-        <input type="text" class="form-control" style="background: #D9D9D9;">
-    </div>
-    <div class="col-2">
-        <button type="button" class="btn" style="width: 100%; background: #FFFFFF;">Добавить</button>
-    </div>
-    <div class="col"></div>
+    <h1 class="text-center my-5">{{ page_title }}</h1>
 </div>
 
 <div class="col-12">
-    <h2 class="text-center" style="margin-top: 36px; margin-bottom: 40px;">Список доступа</h1>
+    <h2 class="text-center mb-5">Список администраторов</h1>
 </div>
 
-<div class="row">
-    <div class="col"></div>
-    <div class="col-8">
-        <ul class="list-group">
-            {% for user in users %}
-                <li class="list-group-item d-flex justify-content-between align-items-center h5" 
-                style="margin-bottom: 20px; height: 50px; background: #D9D9D9;">
-                    {{ user }}
-                    <button type="button" class="btn-close float-end" aria-label="Close" style: "color: #EB0000;"></button>
-                </li> 
-            {% endfor %}
-        </ul>
+<div class="row mb-4">
+    <div class="col-9">
+        <input type="text" class="form-control" style="background: #D9D9D9;">
     </div>
-    <div class="col"></div>
+    <div class="col-3">
+        <button type="button" class="btn w-100 bg-white">Добавить</button>
+    </div>
 </div>
 
-<nav class="d-flex justify-content-center" aria-label="Page navigation">
-    <ul class="pagination">
-        <li class="page-item">
-            <a class="page-link" aria-label="Previous" href="#" style="text-decoration: none;">
-                <span aria-hidden="true">&laquo;</span>
-            </a>
-        </li>
-        <li class="page-item active"><a class="page-link" style="text-decoration: none;" href="#">1</a></li>
-        <li class="page-item"><a class="page-link" style="text-decoration: none;" href="#">2</a></li>
-        <li class="page-item"><a class="page-link" style="text-decoration: none;" href="#">3</a></li>
-        <li class="page-item">
-            <a class="page-link" aria-label="Next" href="#" style="text-decoration: none;">
-                <span aria-hidden="true">&raquo;</span>
-            </a>
-        </li>
-    </ul>
-</nav>
+<ul class="list-group">
+    {% for user in users %}
+        <li class="list-group-item d-flex justify-content-between align-items-center h5 mb-4 py-2" 
+        style="background: #D9D9D9;">
+            {{ user }}
+            <button type="button" class="btn-close float-end" aria-label="Close" style: "color: #EB0000;"></button>
+        </li> 
+    {% endfor %}
+</ul>
 
-<div class="d-flex justify-content-center" style="margin-top: 30px">
+<div class="col-12">
+    <h2 class="text-center mt-5 mb-5">Синхронизация с Confluence</h2>
+</div>
+
+<div class="col-12">
+    <h3 class="text-center mb-5">Где-то тут будет стата</h3>
+</div>
+
+<div class="d-flex justify-content-center mb-5">
     <form action='/reindex', method='post'>
         <button type="submit" class="btn btn-primary btn-lg" name="reindex">Переиндексировать документы</button>
     </form>

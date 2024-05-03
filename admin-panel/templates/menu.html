@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ru">
     <head>
         <meta charset="utf-8">
         <meta http-equiv="X-UA-Compatible" content="IE=edge">
@@ -12,34 +12,36 @@
 
     <body>
         <div class="container-fluid">
-            <div class="row" style="height: 100vh;">
-                <div class="col text-white" style="height: 100%; background-color: #34547A;">
+            <div class="row vh-100">
+                <div class="col-lg-2 text-white position-fixed h-100" style="background-color: #34547A;">
                     <nav>
-                        <div class="text-center" style="margin-bottom: 30px; margin-top: 153px; {{ 'background-color: #FF7628;' if page_title == 'Сводка' }}">
-                            <a href="/" class="link-light text-end fs-2 fst-italic"
-                            style="text-decoration: none;">Сводка</a>
+                        <div class="text-center mb-4 mt-5" style="{{ 'background-color: #FF7628;' if page_title == 'Сводка' }}">
+                            <a href="/" class="link-light text-end fs-2 fst-italic text-decoration-none">Сводка</a>
                         </div>
-                        <div class="text-center" style="margin-bottom: 30px; {{ 'background-color: #FF7628;' if page_title == 'Вопросы без ответов' }}">
-                            <a href="/questions-wo-answers" class="link-light text-end fs-2 fst-italic"
-                            style="text-decoration: none;">Вопросы без ответов</a>
+                        <div class="text-center mb-4" style="{{ 'background-color: #FF7628;' if page_title == 'Анализ вопросов' }}">
+                            <a href="/questions-wo-answers" class="link-light text-end fs-2 fst-italic text-decoration-none">Анализ вопросов</a>
                         </div>
-                        <div class="text-center" style="margin-bottom: 30px; {{ 'background-color: #FF7628;' if page_title == 'Рассылка' }}">
-                            <a href="/broadcast" class="link-light text-end fs-2 fst-italic"
-                            style="text-decoration: none;">Рассылка</a>
+                        <div class="text-center mb-4" style="{{ 'background-color: #FF7628;' if page_title == 'Рассылка' }}">
+                            <a href="/broadcast" class="link-light text-end fs-2 fst-italic text-decoration-none">Рассылка</a>
                         </div>
-                        <div class="text-center" style="margin-bottom: 40vh; {{ 'background-color: #FF7628;' if page_title == 'Настройки' }}">
-                            <a href="/settings" class="link-light text-end fs-2 fst-italic"
-                            style="text-decoration: none;">Настройки</a>
-                        </div>
-                        <div class="text-center" style="margin-bottom: 30px;">
-                            <img src="{{ url_for('static', filename='UTMN_logo_rus_wiki.svg') }}" alt="UTMN logo" style="width: 210px; height: 127.02px;">
+                        <div class="text-center" style="{{ 'background-color: #FF7628;' if page_title == 'Настройки' }}">
+                            <a href="/settings" class="link-light text-end fs-2 fst-italic text-decoration-none">Настройки</a>
                         </div>
                     </nav>
+                    <div class="position-absolute bottom-0 start-50 translate-middle-x mb-5 w-75">
+                        <img src="{{ url_for('static', filename='UTMN_logo_rus_wiki.svg') }}" class="w-100" alt="UTMN logo">
+                    </div>
                 </div>
-                <div class="col-10" style="background-color: #EEEEEE;">
-                    {% block content %}
+                <div class="col-lg-10 offset-lg-2" style="background-color: #EEEEEE;">
+                    <div class="row">
+                        <div class="col"></div>
+                        <div class="col-8">
+                            {% block content %}
                     
-                    {% endblock %}
+                            {% endblock %}
+                        </div>
+                        <div class="col"></div>
+                    </div>
                 </div>
             </div>
         </div>

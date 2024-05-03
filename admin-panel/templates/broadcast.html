@@ -2,47 +2,42 @@
 
 {% block content %}
 <div class="col-12">
-    <h1 class="text-center form-title" style="margin-top: 36px; margin-bottom: 200px;">Рассылка</h1>
+    <h1 class="text-center my-5">{{ page_title }}</h1>
 </div>
 <div class="container-fluid">
-    <div class="row">
-        <div class="col"></div>
-        <div class="col-8">
-            <form class="needs-validation" novalidate>
-                <div class="row" style="margin-bottom: 30px;">
-                    <div class="col-6">
-                        <div class="form-check">
-                            <label class="form-check-label good_text_br" for="VkCheck">
-                                ВКонтакте
-                            </label>
-                            <input class="form-check-input" style="width: 30px; height: 30px;" type="checkbox" value="" id="VkCheck" required>
-                        </div>
-                    </div>
-                    <div class="col-6">
-                        <div class="form-check float-end">
-                            <label class="form-check-label good_text_br" for="tgCheck">
-                                Telegram
-                            </label>
-                            <input class="form-check-input" style="width: 30px; height: 30px;" type="checkbox" value="" id="tgCheck" required>
-                        </div>
-                    </div>
+    <form class="needs-validation" novalidate>
+        <div class="row mb-4">
+            <div class="col-4">
+                <div class="form-check">
+                    <label class="form-check-label w-75 h-25 fs-5 ms-3 text-center bg-white" for="VkCheck">
+                        ВКонтакте
+                    </label>
+                    <input class="form-check-input broadcast-check" type="checkbox" value="" id="VkCheck" required>
                 </div>
-                <div class="row" style="margin-bottom: 30px;">
-                    <div class="col-12">
-                        <textarea cols="30" rows="10" class="form-control" type="text" placeholder="Сообщение" id="validationCustom05" required></textarea>
-                        <div class="invalid-feedback">
-                            Поле не должно быть пустым
-                        </div>
-                    </div>
+            </div>
+            <div class="col-4"></div>
+            <div class="col-4">
+                <div class="form-check">
+                    <label class="form-check-label w-75 h-25 fs-5 ms-3 text-center bg-white" for="tgCheck">
+                        Telegram
+                    </label>
+                    <input class="form-check-input broadcast-check" type="checkbox" value="" id="tgCheck" required>
                 </div>
-                <div class="row">
-                    <div class="col offset-md-5">
-                        <button class="btn btn-primary btn-lg" type="submit">Отправить</button>
-                    </div>
-                </div>
-            </form>
+            </div>
         </div>
-        <div class="col"></div>
-    </div>
+        <div class="row mb-4">
+            <div class="col-12">
+                <textarea cols="30" rows="10" class="form-control" type="text" placeholder="Сообщение" id="validationCustom05" required></textarea>
+                <div class="invalid-feedback">
+                    Поле не должно быть пустым
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col offset-md-5">
+                <button class="btn btn-primary btn-lg" type="submit">Отправить</button>
+            </div>
+        </div>
+    </form>
 </div>
 {% endblock %}

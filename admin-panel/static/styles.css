@@ -1,21 +1,3 @@
-.broadcast-form {
-    display: flex;
-    flex-direction: column;
-    flex-wrap: nowrap;
-    align-content: normal;
-    justify-content: center;
-    align-items: center;
-}
-
-.good_text_br {
-    width: 200px;
-    height: 30px;
-    font-size: 18px; 
-    margin-left: 10px; 
-    background-color: #FFFFFF;
-    text-align: center;
-}
-
 body, html{
     max-width: 100%;
 }
@@ -24,4 +6,9 @@ tr {
     line-height: 30px;
     min-height: 30px;
     height: 30px;
- }
+}
+
+.broadcast-check {
+    width: 30px; 
+    height: 30px;
+}
