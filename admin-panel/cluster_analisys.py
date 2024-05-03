@@ -181,25 +181,32 @@ class ClusterAnalisys:
             questions (list[dict[str, str]]): список вопросов, подлежащих анализу
 
         Returns:
-            list[tuple[list[str] | str]]: писок кортежей, для каждого: список вопросов, список ключевых слов, дата самого свежего вопроса
+            list[tuple[list[str] | str]]: список кортежей, для каждого: список вопросов, список ключевых слов, дата самого свежего вопроса
         """
 
-        df = pd.DataFrame(questions)
-        df = self.preprocessing(df)
-        vectors = self.vectorization(df)
-        clusters = self.clustersing(vectors, df)
+        # TODO: refactor
+        if len(questions) < 2:
+            return []
 
-        data = []
-        for cluster in clusters.values():
-            sentences = []
-            date = "2024-01-01"
-            for sentence in cluster:
-                sentences.append(sentence[0])
-                if date < sentence[1]:
-                    date = sentence[1]
-            data.append((sentences, self.keywords_extracting(sentences), date))
-        data = sorted(data, key=lambda dt: len(dt[0]), reverse=True)
-        return data
+        try:
+            df = pd.DataFrame(questions)
+            df = self.preprocessing(df)
+            vectors = self.vectorization(df)
+            clusters = self.clustersing(vectors, df)
+
+            data = []
+            for cluster in clusters.values():
+                sentences = []
+                date = "2024-01-01"
+                for sentence in cluster:
+                    sentences.append(sentence[0])
+                    if date < sentence[1]:
+                        date = sentence[1]
+                data.append((sentences, self.keywords_extracting(sentences), date))
+            data = sorted(data, key=lambda dt: len(dt[0]), reverse=True)
+            return data
+        except:
+            return []
 
 
 def Fprint(arr):

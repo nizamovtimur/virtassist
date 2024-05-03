@@ -63,10 +63,12 @@ def questions(methods=["POST", "GET"]) -> str:
     if request.method == "POST":
         time_start = str(request.form.get("time_start"))
         time_end = str(request.form.get("time_end"))
-        have_answer = bool(request.form.get("have_answer"))
-        have_score = bool(request.form.get("have_score"))
+        have_not_answer = bool(request.form.get("have_not_answer"))
+        have_low_score = bool(request.form.get("have_low_score"))
         clusters = analisys.get_clusters_keywords(
-            get_questions_for_clusters(time_start, time_end, have_answer, have_score)
+            get_questions_for_clusters(
+                time_start, time_end, have_not_answer, have_low_score
+            )
         )
         return render_template(
             "questions-wo-answers.html",
@@ -74,8 +76,12 @@ def questions(methods=["POST", "GET"]) -> str:
             page_title="Вопросы без ответов",
         )
     else:
+        qss = get_questions_for_clusters()
+        print(qss)
         return render_template(
-            "questions-wo-answers.html", clusters=[], page_title="Вопросы без ответов"
+            "questions-wo-answers.html",
+            clusters=analisys.get_clusters_keywords(qss),
+            page_title="Вопросы без ответов",
         )
 
 
