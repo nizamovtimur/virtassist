@@ -2,9 +2,17 @@ flask
 flask_sqlalchemy
 flask_oidc
 gunicorn
+nltk
+numpy
+pandas
 pgvector
 psycopg2-binary
+pymorphy2
 python-dotenv
 pytest
+rake_nltk
 requests
+scipy
+spacy
 sqlalchemy
+scikit-learn

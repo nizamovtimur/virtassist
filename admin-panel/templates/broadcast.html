@@ -12,7 +12,7 @@
                     <label class="form-check-label w-75 h-25 fs-5 ms-3 text-center bg-white" for="VkCheck">
                         ВКонтакте
                     </label>
-                    <input class="form-check-input broadcast-check" type="checkbox" value="" id="VkCheck" required>
+                    <input class="form-check-input broadcast-check" type="checkbox" id="VkCheck" name="vk" value=True>
                 </div>
             </div>
             <div class="col-4"></div>
@@ -21,13 +21,13 @@
                     <label class="form-check-label w-75 h-25 fs-5 ms-3 text-center bg-white" for="tgCheck">
                         Telegram
                     </label>
-                    <input class="form-check-input broadcast-check" type="checkbox" value="" id="tgCheck" required>
+                    <input class="form-check-input broadcast-check" type="checkbox" id="tgCheck" name="tg" value=True>
                 </div>
             </div>
         </div>
         <div class="row mb-4">
             <div class="col-12">
-                <textarea cols="30" rows="10" class="form-control" type="text" placeholder="Сообщение" id="validationCustom05" required></textarea>
+                <textarea cols="30" rows="10" class="form-control" type="text" placeholder="Сообщение" id="validationCustom05" name="name" required></textarea>
                 <div class="invalid-feedback">
                     Поле не должно быть пустым
                 </div>

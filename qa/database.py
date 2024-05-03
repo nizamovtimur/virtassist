@@ -30,11 +30,12 @@ if __name__ == "__main__":
     import time
     from sqlalchemy import create_engine
     from config import Config
+
     while True:
         try:
             engine = create_engine(Config.SQLALCHEMY_DATABASE_URI, echo=True)
             with Session(engine) as session:
-                session.execute(text('CREATE EXTENSION IF NOT EXISTS vector'))
+                session.execute(text("CREATE EXTENSION IF NOT EXISTS vector"))
                 session.commit()
             Base.metadata.create_all(engine)
             break
