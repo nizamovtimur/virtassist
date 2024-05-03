@@ -1,8 +1,8 @@
-import requests
 from flask import render_template, request
+import requests
 from config import app
-from models import get_questions_for_clusters
 from cluster_analisys import ClusterAnalisys
+from models import get_questions_for_clusters
 
 analisys = ClusterAnalisys()
 

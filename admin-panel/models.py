@@ -1,10 +1,10 @@
-from config import app
+from typing import Optional, List
 from datetime import date, timedelta
 from flask_sqlalchemy import SQLAlchemy
-from typing import Optional, List
 from sqlalchemy import BigInteger, Column, DateTime, ForeignKey, Text, func, or_
 from sqlalchemy.orm import DeclarativeBase, Mapped, Session, mapped_column, relationship
 from pgvector.sqlalchemy import Vector
+from config import app
 
 
 db = SQLAlchemy(app)
