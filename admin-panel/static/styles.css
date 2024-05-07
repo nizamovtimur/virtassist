@@ -25,21 +25,27 @@ tr {
     background-color: #D9D9D9;
 }
 
-.btn_better_primary {
-    background-color: #34547A;
-    color: white;
-}
-
-.btn_better_primary:hover {
-    background-color: #325786;
-    color: white;
-}
-
-.btn_better_primary:active {
-    background-color: #1a4c8e;
-    color: white;
-}
-
 .bg-gray-e {
     background-color: #EEEEEE;
+}
+
+/* .btn-blue {
+  color: white;;
+  background-color: #34547A;
+  border-radius: .5rem;
+} */
+
+.btn-blue {
+  --bs-btn-font-weight: 600;
+  --bs-btn-color: #ffffff;
+  --bs-btn-bg: #34547A;
+  --bs-btn-border-color: #34547A;
+  --bs-btn-border-radius: .5rem;
+  --bs-btn-hover-color: #ffffff;
+  --bs-btn-hover-bg: #2b4e7a;
+  --bs-btn-hover-border-color: #2b4e7a;
+  --bs-btn-focus-shadow-rgb: #34547A;
+  --bs-btn-active-color: #ffffff;
+  --bs-btn-active-bg: #1f4a7e;
+  --bs-btn-active-border-color: #1f4a7e;
 }
