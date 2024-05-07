@@ -2,6 +2,7 @@
 import bs4
 from cachetools import cached, TTLCache
 from config import Config
+from strings import Strings
 
 
 confluence = Confluence(url=Config.CONFLUENCE_HOST, token=Config.CONFLUENCE_TOKEN)
@@ -43,7 +44,12 @@ def parse_confluence_by_page_id(id: int | str) -> list | str:
     if len(pages):
         return pages
     else:
-        page = confluence.get_page_by_id(int(id), expand="body.storage")
+        try:
+            page = confluence.get_page_by_id(int(id), expand="body.storage")
+        except Exception:
+            make_markup_by_confluence.cache_clear()
+            parse_confluence_by_page_id.cache_clear()
+            return Strings.NotAvailable
         page_link = page["_links"]["base"] + page["_links"]["webui"]
         page_body = page["body"]["storage"]["value"]
         soup = bs4.BeautifulSoup(page_body, "html.parser")
