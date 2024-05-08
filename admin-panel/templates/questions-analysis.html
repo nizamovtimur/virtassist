@@ -1,7 +1,39 @@
 {% extends "menu.html" %}
 {% block content %}
 <div class="col-12">
-    <h1 class="text-center my-5">{{ page_title }}</h1>
+    <h1 class="text-center mt-5">{{ page_title }}</h1>
+</div>
+
+<div class="col-md-12 my-3">
+    <div class="card">
+        <div class="card-header">
+            Настройки
+        </div>
+        <div class="card-body">
+            <form id="dateRangeForm">
+                <div class="form-check form-check-inline">
+                    <input class="form-check-input" type="checkbox" value="" id="unansweredCheckbox">
+                    <label class="form-check-label" for="unansweredCheckbox">
+                        Вопросы без ответа
+                    </label>
+                </div>
+                <div class="form-check form-check-inline">
+                    <input class="form-check-input" type="checkbox" value="" id="lowRatingCheckbox">
+                    <label class="form-check-label" for="lowRatingCheckbox">
+                        Вопросы с низкой оценкой
+                    </label>
+                </div>
+                <div class="input-group mt-2">
+                    <input type="date" class="form-control" id="start_date" name="start_date">
+                    <span class="input-group-text">до</span>
+                    <input type="date" class="form-control" id="end_date" name="end_date">
+                </div>
+                <div class="text-end mt-2">
+                    <button class="btn btn-blue btn-lg" type="submit">Анализировать</button>
+                </div>
+            </form>
+        </div>
+    </div>
 </div>
 
 <div class="accordion" id="accordionPanelsStayOpenExample">
