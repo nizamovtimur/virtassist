@@ -128,18 +128,32 @@ def get_questions_for_clusters(
 def get_questions_count(
     time_start: str = str(date.today() - timedelta(days=30)),
     time_end: str = str(date.today() + timedelta(days=1)),
-) -> list[list[str] | list[int]]:
-    """Функция подсчёта вопросов по датам для графиков на `main-page.html`
+) -> tuple[list[str], list[int], list[int]]:
+    """Функция подсчёта вопросов, заданных в вк и телеграм, по дням для графиков на `main-page.html`
 
     Args:
-        time_start (str, optional): дата, от которой нужно сортировать вопросы. По-умолчанию, 30 дней назад.
-        time_end (str, optional): дата, до которой нужно сортировать вопросы. По-умолчанию, завтрашняя дата.
+        time_start (str, optional): дата начала. По-умолчанию, 30 дней назад.
+        time_end (str, optional): дата конца. По-умолчанию, завтрашняя дата.
 
     Returns:
-        list[list[str] | list[int]]: список списков из дат вопросов, кол-ва вопросов из вк и тг
+        tuple[list[str], list[int], list[int]]: кортеж из списков дат и количества вопросов по дням в vk и telegram
     """
 
     with Session(db.engine) as session:
+        vk_questions_count = (
+            session.query(
+                func.date_trunc("day", QuestionAnswer.time_created), func.count()
+            )
+            .join(User)
+            .filter(
+                User.vk_id != None,
+                QuestionAnswer.time_created.between(time_start, time_end),
+            )
+            .group_by(func.date_trunc("day", QuestionAnswer.time_created))
+            .all()
+        )
+        print(vk_questions_count)
+
         dates = date_range(time_start, time_end).strftime("%Y-%m-%d").tolist()
         questions_count = [dates, []]
         for date in dates:
