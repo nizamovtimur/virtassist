@@ -1,10 +1,10 @@
 from flask import render_template, redirect, request, url_for
 import requests
 from config import app
-from cluster_analisys import ClusterAnalisys
+from cluster_analysis import ClusterAnalysis
 from models import get_questions_for_clusters
 
-analisys = ClusterAnalisys()
+analysis = ClusterAnalysis()
 
 
 @app.route("/")
@@ -35,12 +35,12 @@ def questions_analysis(methods=["POST", "GET"]) -> str:
         )
         return render_template(
             "questions-analysis.html",
-            clusters=analisys.get_clusters_keywords(questions),
+            clusters=analysis.get_clusters_keywords(questions),
             page_title="Анализ вопросов",
         )
     return render_template(
         "questions-analysis.html",
-        clusters=analisys.get_clusters_keywords(get_questions_for_clusters()),
+        clusters=analysis.get_clusters_keywords(get_questions_for_clusters()),
         page_title="Анализ вопросов",
     )
 
