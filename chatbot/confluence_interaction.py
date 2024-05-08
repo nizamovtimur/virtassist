@@ -1,4 +1,5 @@
-﻿from atlassian import Confluence
+﻿import logging
+from atlassian import Confluence
 import bs4
 from cachetools import cached, TTLCache
 from config import Config
@@ -46,7 +47,8 @@ def parse_confluence_by_page_id(id: int | str) -> list | str:
     else:
         try:
             page = confluence.get_page_by_id(int(id), expand="body.storage")
-        except Exception:
+        except Exception as e:
+            logging.error(e)
             make_markup_by_confluence.cache_clear()
             parse_confluence_by_page_id.cache_clear()
             return Strings.NotAvailable
