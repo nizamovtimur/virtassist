@@ -7,14 +7,16 @@ from scipy.cluster.hierarchy import linkage, fcluster
 import spacy
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.preprocessing import StandardScaler
+from config import app
 
 
-class ClusterAnalisys:
+class ClusterAnalysis:
     """Модуль кластерного анализа"""
 
     def __init__(self) -> None:
         self.nlp = spacy.load("ru_core_news_sm")
         self.morph = pymorphy2.MorphAnalyzer()
+        self.spec_words = app.config["ABBREVIATION_UTMN"]
 
     def preprocessing(self, df: pd.DataFrame) -> pd.DataFrame:
         """Метод предобработки данных
@@ -56,26 +58,10 @@ class ClusterAnalisys:
             threshold = 0.6  # нижняя граница для того, чтобы считать набор букв словом
             true_words_string = ""
 
-            spec_words = [
-                "тюмгу",
-                "шкн",
-                "игип",
-                "фэи",
-                "соцгум",
-                "ипип",
-                "биофак",
-                "инзем",
-                "инхим",
-                "фти",
-                "инбио",
-                "ифк",
-                "ед",
-                "шпи",
-            ]  # временный костыль для нахождения абривиатур ТюмГУ
             words = words.translate({ord(c): "" for c in punctuation})
             for word in words.split(" "):
                 # проверяем слово, на абривиатуру ТюмГУ
-                if word.lower() in spec_words:
+                if word.lower() in self.spec_words:
                     score = 1
                 else:
                     score = self.morph.parse(word)[0].score
@@ -167,7 +153,10 @@ class ClusterAnalisys:
         """
 
         rake = Rake(
-            min_length=2, punctuations={i for i in punctuation}, language="russian"
+            min_length=2,
+            punctuations={i for i in punctuation},
+            language="russian",
+            include_repeated_phrases=False,
         )
         rake.extract_keywords_from_text(". ".join(sentences))
         return rake.get_ranked_phrases()[:10]
@@ -227,6 +216,6 @@ if __name__ == "__main__":
             arr.append({"text": s.split(" --- ")[0], "date": s.split(" --- ")[1][:-1]})
             s = f.readline()
 
-    CA = ClusterAnalisys()
+    CA = ClusterAnalysis()
     data = CA.get_clusters_keywords(arr)
     Fprint(data)

@@ -12,3 +12,4 @@ app.config["SQLALCHEMY_DATABASE_URI"] = (
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 app.config["CHATBOT_HOST"] = os.getenv("CHATBOT_HOST")
 app.config["QA_HOST"] = os.getenv("QA_HOST")
+app.config["ABBREVIATION_UTMN"] = os.getenv("ABBREVIATION_UTMN").split(" ")
