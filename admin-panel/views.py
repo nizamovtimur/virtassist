@@ -2,7 +2,7 @@ from flask import render_template, redirect, request, url_for
 import requests
 from config import app
 from cluster_analisys import ClusterAnalisys
-from models import get_questions_for_clusters
+from models import get_questions_for_clusters, get_questions_count
 
 analisys = ClusterAnalisys()
 
@@ -14,7 +14,20 @@ def index() -> str:
     Returns:
         str: отрендеренная главная веб-страница.
     """
-    return render_template("main-page.html", page_title="Сводка")
+    if request.method == "POST":
+        time_start = str(request.form.get("time_start"))
+        time_end = str(request.form.get("time_end"))
+        question_counts = get_questions_count(time_start, time_end)
+        return render_template(
+            "main-page.html",
+            question_counts=question_counts,
+            page_title="Сводка",
+        )
+    return render_template(
+        "main-page.html",
+        question_counts=[],
+        page_title="Сводка",
+    )
 
 
 @app.route("/questions-analysis")

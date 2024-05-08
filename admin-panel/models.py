@@ -5,6 +5,7 @@ from sqlalchemy import BigInteger, Column, DateTime, ForeignKey, Text, func, or_
 from sqlalchemy.orm import DeclarativeBase, Mapped, Session, mapped_column, relationship
 from pgvector.sqlalchemy import Vector
 from config import app
+from pandas import date_range
 
 
 db = SQLAlchemy(app)
@@ -122,3 +123,28 @@ def get_questions_for_clusters(
             for qa in query
         )
         return list(questions)
+
+
+def get_questions_count(
+    time_start: str = str(date.today() - timedelta(days=30)),
+    time_end: str = str(date.today() + timedelta(days=1)),
+) -> list[list[str] | list[int]]:
+    """Функция подсчёта вопросов по датам для графиков на `main-page.html`
+
+    Args:
+        time_start (str, optional): дата, от которой нужно сортировать вопросы. По-умолчанию, 30 дней назад.
+        time_end (str, optional): дата, до которой нужно сортировать вопросы. По-умолчанию, завтрашняя дата.
+
+    Returns:
+        list[list[str] | list[int]]: список списков из дат вопросов, кол-ва вопросов из вк и тг
+    """
+
+    with Session(db.engine) as session:
+        dates = date_range(time_start, time_end).strftime("%Y-%m-%d").tolist()
+        questions_count = [dates, []]
+        for date in dates:
+            query = session.query(QuestionAnswer).filter(
+                QuestionAnswer.time_created.between(date, date)
+            )
+            questions_count[1].append(sum([1 for qa in query]))
+        return questions_count
