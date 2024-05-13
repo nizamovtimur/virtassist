@@ -1,10 +1,10 @@
 from flask import render_template, redirect, request, url_for
 import requests
 from config import app
-from cluster_analisys import ClusterAnalisys
-from models import get_questions_for_clusters, get_questions_count
+from cluster_analysis import ClusterAnalysis
+from models import get_questions_for_clusters
 
-analisys = ClusterAnalisys()
+analysis = ClusterAnalysis()
 
 
 @app.route("/")
@@ -14,19 +14,7 @@ def index() -> str:
     Returns:
         str: отрендеренная главная веб-страница.
     """
-    time_start = str(request.form.get("time_start"))
-    time_end = str(request.form.get("time_end"))
-    question_counts = get_questions_count()
-    question_counts_lists = (
-        list(question_counts.keys()),
-        [i[0] for i in question_counts.values()],
-        [i[1] for i in question_counts.values()],
-    )
-    return render_template(
-        "main-page.html",
-        question_counts=question_counts_lists,
-        page_title="Сводка",
-    )
+    return render_template("main-page.html", page_title="Сводка")
 
 
 @app.route("/questions-analysis")
@@ -47,14 +35,12 @@ def questions_analysis(methods=["POST", "GET"]) -> str:
         )
         return render_template(
             "questions-analysis.html",
-            clusters=analisys.get_clusters_keywords(questions),
+            clusters=analysis.get_clusters_keywords(questions),
             page_title="Анализ вопросов",
         )
     return render_template(
         "questions-analysis.html",
-        clusters=analisys.get_clusters_keywords(
-            get_questions_for_clusters("2024-02-06", "2024-03-16")
-        ),
+        clusters=analysis.get_clusters_keywords(get_questions_for_clusters()),
         page_title="Анализ вопросов",
     )
 

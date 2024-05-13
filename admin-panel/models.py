@@ -92,7 +92,7 @@ def get_questions_for_clusters(
     have_not_answer: bool = True,
     have_low_score: bool = False,
 ) -> list[dict[str, str]]:
-    """Функция для выгрузки вопросов для обработки в классе ClusterAnalisys
+    """Функция для выгрузки вопросов для обработки в классе ClusterAnalysis
 
     Args:
         time_start (str, optional): дата, от которой нужно сортировать вопросы. По-умолчанию, 30 дней назад.
