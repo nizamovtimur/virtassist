@@ -17,6 +17,8 @@ class Chunk(db.Model):
         confluence_url (str): ссылка на источник
         text (str): текст фрагмента
         embedding (Vector): векторное представление текста фрагмента
+        time_created (datetime): время создания модели
+        time_updated (datetime): время обновления модели
     """
 
     __tablename__ = "chunk"
@@ -36,6 +38,8 @@ class User(db.Model):
         vk_id (int | None): id пользователя ВКонтакте
         telegram_id (int | None): id пользователя Telegram
         vk_id (int | None): id пользователя ВКонтакте
+        time_created (datetime): время создания модели
+        time_updated (datetime): время обновления модели
     """
 
     __tablename__ = "user"
@@ -63,6 +67,8 @@ class QuestionAnswer(db.Model):
         confluence_url (str | None): ссылка на страницу в вики-системе, содержащую ответ
         score (int | None): оценка пользователем ответа
         user_id (int): id пользователя, задавшего вопрос
+        time_created (datetime): время создания модели
+        time_updated (datetime): время обновления модели
     """
 
     __tablename__ = "question_answer"
@@ -88,6 +94,8 @@ class Admin(db.Model):
         last_name (str | None): отчество (опционально)
         email (str): корпоративная электронная почта
         department (str): подразделение
+        time_created (datetime): время создания модели
+        time_updated (datetime): время обновления модели
     """
 
     __tablename__ = "admin"
