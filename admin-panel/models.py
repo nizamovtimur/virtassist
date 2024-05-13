@@ -2,28 +2,15 @@ from typing import Optional, List
 from datetime import date, timedelta
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import BigInteger, Column, DateTime, ForeignKey, Text, func, or_
-from sqlalchemy.orm import DeclarativeBase, Mapped, Session, mapped_column, relationship
+from sqlalchemy.orm import Mapped, Session, mapped_column, relationship
 from pgvector.sqlalchemy import Vector
 from config import app
 
 
 db = SQLAlchemy(app)
-app.app_context().push()
 
 
-class Base(DeclarativeBase):
-    """Базовый класс модели, который инициализирует общие поля.
-
-    Args:
-        time_created (datetime): время создания модели
-        time_updated (datetime): время обновления модели
-    """
-
-    time_created = Column(DateTime(timezone=True), server_default=func.now())
-    time_updated = Column(DateTime(timezone=True), onupdate=func.now())
-
-
-class Chunk(Base):
+class Chunk(db.Model):
     """Фрагмент документа из вики-системы
 
     Args:
@@ -37,9 +24,11 @@ class Chunk(Base):
     confluence_url: Mapped[str] = mapped_column(Text(), index=True)
     text: Mapped[str] = mapped_column(Text())
     embedding: Mapped[Vector] = mapped_column(Vector(312))
+    time_created = Column(DateTime(timezone=True), server_default=func.now())
+    time_updated = Column(DateTime(timezone=True), onupdate=func.now())
 
 
-class User(Base):
+class User(db.Model):
     """Пользователь чат-бота
 
     Args:
@@ -54,6 +43,8 @@ class User(Base):
     vk_id: Mapped[Optional[int]] = mapped_column(BigInteger, unique=True)
     telegram_id: Mapped[Optional[int]] = mapped_column(BigInteger, unique=True)
     is_subscribed: Mapped[bool] = mapped_column()
+    time_created = Column(DateTime(timezone=True), server_default=func.now())
+    time_updated = Column(DateTime(timezone=True), onupdate=func.now())
 
     question_answers: Mapped[List["QuestionAnswer"]] = relationship(
         back_populates="user",
@@ -62,15 +53,15 @@ class User(Base):
     )
 
 
-class QuestionAnswer(Base):
+class QuestionAnswer(db.Model):
     """Вопрос пользователя с ответом на него
 
     Args:
         id (int): id ответа
         question (str): вопрос пользователя
-        answer (str): ответ на вопрос пользователя
-        confluence_url (str): ссылка на страницу в вики-системе, содержащую ответ
-        score (int): оценка пользователем ответа
+        answer (str | None): ответ на вопрос пользователя
+        confluence_url (str | None): ссылка на страницу в вики-системе, содержащую ответ
+        score (int | None): оценка пользователем ответа
         user_id (int): id пользователя, задавшего вопрос
     """
 
@@ -81,8 +72,38 @@ class QuestionAnswer(Base):
     confluence_url: Mapped[Optional[str]] = mapped_column(Text(), index=True)
     score: Mapped[Optional[int]] = mapped_column()
     user_id: Mapped[int] = mapped_column(ForeignKey("user.id"))
+    time_created = Column(DateTime(timezone=True), server_default=func.now())
+    time_updated = Column(DateTime(timezone=True), onupdate=func.now())
 
     user: Mapped["User"] = relationship(back_populates="question_answers")
+
+
+class Admin(db.Model):
+    """Администратор панели
+
+    Args:
+        id (int): id ответа
+        name (str): имя
+        surname (str): фамилия
+        last_name (str | None): отчество (опционально)
+        email (str): корпоративная электронная почта
+        department (str): подразделение
+    """
+
+    __tablename__ = "admin"
+    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
+    name: Mapped[str] = mapped_column(Text())
+    surname: Mapped[str] = mapped_column(Text())
+    last_name: Mapped[Optional[str]] = mapped_column(Text())
+    email: Mapped[str] = mapped_column(Text())
+    department: Mapped[str] = mapped_column(Text())
+    time_created = Column(DateTime(timezone=True), server_default=func.now())
+    time_updated = Column(DateTime(timezone=True), onupdate=func.now())
+
+
+if __name__ == "__main__":
+    with app.app_context():
+        db.create_all()
 
 
 def get_questions_for_clusters(
