@@ -24,6 +24,7 @@
                     </label>
                 </div>
                 <div class="input-group mt-3">
+                    <span class="input-group-text">от</span>
                     <input type="date" class="form-control" id="start_date" name="start_date">
                     <span class="input-group-text">до</span>
                     <input type="date" class="form-control" id="end_date" name="end_date">
@@ -51,7 +52,7 @@
             </h2>
             <div id="panelsStayOpen-collapse{{clusters.index(cluster) + 1}}" class="accordion-collapse collapse">
                 <div class="accordion-body">
-                    <strong>Вопросы в кластере:</strong><br/>
+                    <strong>Вопросы:</strong><br/>
                     {% for q in cluster[0] %}
                         {{ q }}<br/>
                     {% endfor %}

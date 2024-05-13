@@ -2,7 +2,7 @@ from flask import render_template, redirect, request, url_for
 import requests
 from config import app
 from cluster_analysis import ClusterAnalysis
-from models import get_questions_for_clusters
+from models import get_questions_count, get_questions_for_clusters
 
 analysis = ClusterAnalysis()
 
@@ -14,7 +14,19 @@ def index() -> str:
     Returns:
         str: отрендеренная главная веб-страница.
     """
-    return render_template("main-page.html", page_title="Сводка")
+    time_start = str(request.form.get("time_start"))
+    time_end = str(request.form.get("time_end"))
+    question_counts = get_questions_count()
+    question_counts_lists = (
+        list(question_counts.keys()),
+        [i[0] for i in question_counts.values()],
+        [i[1] for i in question_counts.values()],
+    )
+    return render_template(
+        "main-page.html",
+        question_counts=question_counts_lists,
+        page_title="Сводка",
+    )
 
 
 @app.route("/questions-analysis")
@@ -40,7 +52,9 @@ def questions_analysis(methods=["POST", "GET"]) -> str:
         )
     return render_template(
         "questions-analysis.html",
-        clusters=analysis.get_clusters_keywords(get_questions_for_clusters()),
+        clusters=analysis.get_clusters_keywords(
+            get_questions_for_clusters("2024-02-06", "2024-03-16")
+        ),
         page_title="Анализ вопросов",
     )
 

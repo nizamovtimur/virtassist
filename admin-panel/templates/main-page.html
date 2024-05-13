@@ -18,36 +18,82 @@
 <script>
     const ctx = document.getElementById('myChart');
 
+    const plugin = {
+        id: 'customCanvasBackgroundColor',
+        beforeDraw: (chart, args, options) => {
+            const {ctx} = chart;
+            ctx.save();
+            ctx.globalCompositeOperation = 'destination-over';
+            ctx.fillStyle = options.color || '#99ffff';
+            ctx.fillRect(0, 0, chart.width, chart.height);
+            ctx.restore();
+        }
+    };
+
+    const data = {
+        labels: [{% for i in question_counts[0]%}'{{ i }}', {% endfor %}],
+        datasets: [
+        {
+            label: 'Кол-во вопросов в день вк',
+            data: {{ question_counts[1] }},
+            borderWidth: 4,
+            borderDash: [5, 5],
+        },
+        {
+            label: 'Кол-во вопросов в день тг',
+            data: {{ question_counts[2] }},
+            borderWidth: 4,
+            borderDash: [3, 3],
+        },
+        ]
+    };
+
     new Chart(ctx, {
         type: 'line',
-        data:
-        {
-            labels: [{% for i in question_counts[0]%}'{{ i }}', {% endfor %}],
-            datasets: [
-            {
-                label: 'Кол-во вопросов в день вк',
-                data: {{ question_counts[1] }},
-                borderWidth: 4,
-                borderDash: [5, 5],
-            },
-            {
-                label: 'Кол-во вопросов в день тг',
-                data: {{ question_counts[2] }},
-                borderWidth: 4,
-                borderDash: [3, 3],
-            },
-            ]
-        },
+        data: data,
         options: {
             scales: {
                 y: {
-                    beginAtZero: true
+                    beginAtZero: true,
+                    title: {
+                        display: true,
+                        text: 'Кол-во вопросов',
+                        padding: 8,
+                        font: {
+                            size: 24
+                        }
+                    },
+                    ticks: {
+                        stepSize: 1
+                    }
                 },
                 x: {
-                    beginAtZero: true
+                    beginAtZero: true,
+                    title: {
+                        display: true,
+                        text: 'Даты',
+                        padding: 8,
+                        font: {
+                            size: 24
+                        }
+                    }
                   }
+            },
+            plugins: {
+                customCanvasBackgroundColor: {
+                    color: 'white',
+                },
+                legend: {
+                    labels: {
+                        padding: 20,
+                        font: {
+                            size: 16
+                        }
+                    }
+                }
             }
-        }
+        },
+        plugins: [plugin],
     });
 </script>
 {% endblock %}
