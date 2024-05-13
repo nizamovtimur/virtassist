@@ -6,10 +6,10 @@
 </div>
 
 <div class="col-12">
-    <h2 class="text-center mb-5">Список администраторов</h2>
+    <h2 class="text-center mb-5">Вопросы пользователей</h2>
 </div>
 
-<div>
+<div class="w-100">
     <canvas id="myChart" class="mb-5"></canvas>
 </div>
 
@@ -22,12 +22,19 @@
         type: 'line',
         data:
         {
-            labels: {{ question_counts[0] }},
+            labels: [{% for i in question_counts[0]%}'{{ i }}', {% endfor %}],
             datasets: [
             {
-                label: 'Кол-во вопросов в день',
+                label: 'Кол-во вопросов в день вк',
                 data: {{ question_counts[1] }},
-                borderWidth: 3
+                borderWidth: 4,
+                borderDash: [5, 5],
+            },
+            {
+                label: 'Кол-во вопросов в день тг',
+                data: {{ question_counts[2] }},
+                borderWidth: 4,
+                borderDash: [3, 3],
             },
             ]
         },

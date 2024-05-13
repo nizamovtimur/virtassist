@@ -14,18 +14,17 @@ def index() -> str:
     Returns:
         str: отрендеренная главная веб-страница.
     """
-    if request.method == "POST":
-        time_start = str(request.form.get("time_start"))
-        time_end = str(request.form.get("time_end"))
-        question_counts = get_questions_count(time_start, time_end)
-        return render_template(
-            "main-page.html",
-            question_counts=question_counts,
-            page_title="Сводка",
-        )
+    time_start = str(request.form.get("time_start"))
+    time_end = str(request.form.get("time_end"))
+    question_counts = get_questions_count()
+    question_counts_lists = (
+        list(question_counts.keys()),
+        [i[0] for i in question_counts.values()],
+        [i[1] for i in question_counts.values()],
+    )
     return render_template(
         "main-page.html",
-        question_counts=[],
+        question_counts=question_counts_lists,
         page_title="Сводка",
     )
 
@@ -53,7 +52,9 @@ def questions_analysis(methods=["POST", "GET"]) -> str:
         )
     return render_template(
         "questions-analysis.html",
-        clusters=analisys.get_clusters_keywords(get_questions_for_clusters()),
+        clusters=analisys.get_clusters_keywords(
+            get_questions_for_clusters("2024-02-06", "2024-03-16")
+        ),
         page_title="Анализ вопросов",
     )
 

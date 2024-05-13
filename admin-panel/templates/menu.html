@@ -15,9 +15,12 @@
                 <div class="col-lg-2 text-white position-fixed h-100 bg-dark-blue">
                     <nav>
                         <div class="text-end mt-3 fs-5">
-                            Бирверт С.И. (Выйти)
+                            Иванов И.И.
                         </div>
-                        <div class="text-center mb-4 mt-5 {{ 'bg-orange' if page_title == 'Сводка' }}">
+                        <div class="text-center my-5">
+                            <h1 class="fs-3">Виртуальный помощник студента</h1>
+                        </div>
+                        <div class="text-center mb-4 {{ 'bg-orange' if page_title == 'Сводка' }}">
                             <a href="{{ url_for('index') }}" class="link-light text-end fs-2 fst-italic text-decoration-none">Сводка</a>
                         </div>
                         <div class="text-center mb-4 {{ 'bg-orange' if page_title == 'Анализ вопросов' }}">
@@ -37,7 +40,7 @@
                 <div class="col-lg-10 offset-lg-2 bg-gray-e">
                     <div class="row">
                         <div class="col"></div>
-                        <div class="col-8">
+                        <div class="col-10">
                             {% block content %}
 
                             {% endblock %}
