@@ -5,7 +5,9 @@ from langchain_openai import ChatOpenAI
 load_dotenv(dotenv_path="../.env")
 
 openchat = ChatOpenAI(
-    model="openchat_3.5",
+    # model="openchat_3.5",
+    # model="saiga_llama3_8b",
+    model="Vikhr-7B-instruct_0.4",
     openai_api_key="EMPTY",
     openai_api_base=environ.get("OPENCHAT_HOST"),
     temperature=0.7,
