@@ -9,14 +9,16 @@ services:
         env_file:
             - .env.docker
         depends_on:
-            - db
-            - qa
+            db:
+                condition: service_healthy
+            qa:
+                condition: service_healthy
+            db-migrate:
+                condition: service_completed_successfully
         networks:
             - chatbot-conn
     db:
-        build:
-            context: ./db
-            dockerfile: Dockerfile-pgvector
+        build: ./db
         image: virtassist/db:latest
         container_name: virtassist-db
         restart: unless-stopped
@@ -36,12 +38,16 @@ services:
         image: virtassist/db-migrate:latest
         container_name: virtassist-db-migrate
         restart: no
+        command: sh -c "python create_extension.py && alembic upgrade head"
         environment:
             - TZ=${TZ}
             - POSTGRES_HOST=${POSTGRES_HOST}
             - POSTGRES_DB=${POSTGRES_DB}
             - POSTGRES_USER=${POSTGRES_USER}
             - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+        depends_on:
+            db:
+                condition: service_healthy
         networks:
             - chatbot-conn
     qa:
@@ -53,7 +59,10 @@ services:
         env_file:
             - .env.docker
         depends_on:
-            - db
+            db:
+                condition: service_healthy
+            db-migrate:
+                condition: service_completed_successfully
         networks:
             - chatbot-conn
     admin-panel:
@@ -67,9 +76,14 @@ services:
         env_file:
             - .env.docker
         depends_on:
-            - db
-            - qa
-            - chatbot
+            db:
+                condition: service_healthy
+            qa:
+                condition: service_healthy
+            chatbot:
+                condition: service_healthy
+            db-migrate:
+                condition: service_completed_successfully
         networks:
             - chatbot-conn
 volumes:

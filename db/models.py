@@ -1,6 +1,5 @@
 from os import environ
 from typing import Optional, List
-
 from dotenv import load_dotenv
 from pgvector.sqlalchemy import Vector
 from sqlalchemy import (
@@ -8,16 +7,20 @@ from sqlalchemy import (
     BigInteger,
     Column,
     DateTime,
-    Text,
     ForeignKey,
+    Text,
     func,
 )
-from sqlalchemy.orm import Mapped, declarative_base, mapped_column, relationship
+from sqlalchemy.orm import (
+    Mapped,
+    declarative_base,
+    mapped_column,
+    relationship,
+)
 
 load_dotenv(dotenv_path="../.env")
-engine = create_engine(
-    f"postgresql://{environ.get('POSTGRES_USER')}:{environ.get('POSTGRES_PASSWORD')}@{environ.get('POSTGRES_HOST')}/{environ.get('POSTGRES_DB')}"
-)
+database_url = f"postgresql://{environ.get('POSTGRES_USER')}:{environ.get('POSTGRES_PASSWORD')}@{environ.get('POSTGRES_HOST')}/{environ.get('POSTGRES_DB')}"
+engine = create_engine(database_url)
 Base = declarative_base()
 
 
@@ -126,9 +129,3 @@ class Admin(Base):
 
     time_created = Column(DateTime(timezone=True), server_default=func.now())
     time_updated = Column(DateTime(timezone=True), onupdate=func.now())
-
-
-# engine = create_engine(Config.SQLALCHEMY_DATABASE_URI, echo=True)
-#             with Session(engine) as session:
-#                 session.execute(text("CREATE EXTENSION IF NOT EXISTS vector"))
-#                 session.commit()

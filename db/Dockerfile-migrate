@@ -4,4 +4,6 @@ ENV PYTHONUNBUFFERED 1
 RUN pip install --upgrade pip
 COPY ./requirements.txt .
 RUN pip install -r requirements.txt
-COPY ./migrate.py .
+COPY models.py .
+COPY alembic.ini .
+COPY migrations migrations
