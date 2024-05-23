@@ -1,16 +1,27 @@
+from os import environ
 from typing import Optional, List
-from datetime import date, timedelta
-from flask_sqlalchemy import SQLAlchemy
-from sqlalchemy import BigInteger, Column, DateTime, ForeignKey, Text, func, or_
-from sqlalchemy.orm import Mapped, Session, mapped_column, relationship
+
+from dotenv import load_dotenv
 from pgvector.sqlalchemy import Vector
-from config import app
+from sqlalchemy import (
+    create_engine,
+    BigInteger,
+    Column,
+    DateTime,
+    Text,
+    ForeignKey,
+    func,
+)
+from sqlalchemy.orm import Mapped, declarative_base, mapped_column, relationship
+
+load_dotenv(dotenv_path="../.env")
+engine = create_engine(
+    f"postgresql://{environ.get('POSTGRES_USER')}:{environ.get('POSTGRES_PASSWORD')}@{environ.get('POSTGRES_HOST')}/{environ.get('POSTGRES_DB')}"
+)
+Base = declarative_base()
 
 
-db = SQLAlchemy(app)
-
-
-class Chunk(db.Model):
+class Chunk(Base):
     """Фрагмент документа из вики-системы
 
     Args:
@@ -32,7 +43,7 @@ class Chunk(db.Model):
     time_updated = Column(DateTime(timezone=True), onupdate=func.now())
 
 
-class User(db.Model):
+class User(Base):
     """Пользователь чат-бота
 
     Args:
@@ -61,7 +72,7 @@ class User(db.Model):
     time_updated = Column(DateTime(timezone=True), onupdate=func.now())
 
 
-class QuestionAnswer(db.Model):
+class QuestionAnswer(Base):
     """Вопрос пользователя с ответом на него
 
     Args:
@@ -90,7 +101,7 @@ class QuestionAnswer(db.Model):
     time_updated = Column(DateTime(timezone=True), onupdate=func.now())
 
 
-class Admin(db.Model):
+class Admin(Base):
     """Администратор панели
 
     Args:
@@ -117,40 +128,7 @@ class Admin(db.Model):
     time_updated = Column(DateTime(timezone=True), onupdate=func.now())
 
 
-def get_questions_for_clusters(
-    time_start: str = str(date.today() - timedelta(days=30)),
-    time_end: str = str(date.today() + timedelta(days=1)),
-    have_not_answer: bool = True,
-    have_low_score: bool = False,
-) -> list[dict[str, str]]:
-    """Функция для выгрузки вопросов для обработки в классе ClusterAnalysis
-
-    Args:
-        time_start (str, optional): дата, от которой нужно сортировать вопросы. По-умолчанию, 30 дней назад.
-        time_end (str, optional): дата, до которой нужно сортировать вопросы. По-умолчанию, завтрашняя дата.
-        have_not_answer (bool, optional): вопросы без ответа. По-умолчанию True.
-        have_low_score (bool, optional): вопросы с низкой оценкой. По-умолчанию False.
-
-    Returns:
-        list[dict[str, str]]: список вопросов - словарей с ключами `text` и `date`
-    """
-
-    with Session(db.engine) as session:
-        query = session.query(QuestionAnswer).filter(
-            QuestionAnswer.time_created.between(time_start, time_end)
-        )
-        if have_not_answer and have_low_score:
-            query = query.filter(
-                or_(QuestionAnswer.answer == "", QuestionAnswer.score == 1)
-            )
-        elif have_not_answer:
-            query = query.filter(QuestionAnswer.answer == "")
-        elif have_low_score:
-            query = query.filter(QuestionAnswer.score == 1)
-        else:
-            return []
-        questions = (
-            {"text": qa.question, "date": qa.time_created.strftime("%Y-%m-%d")}
-            for qa in query
-        )
-        return list(questions)
+# engine = create_engine(Config.SQLALCHEMY_DATABASE_URI, echo=True)
+#             with Session(engine) as session:
+#                 session.execute(text("CREATE EXTENSION IF NOT EXISTS vector"))
+#                 session.commit()

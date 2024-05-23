@@ -14,7 +14,9 @@ services:
         networks:
             - chatbot-conn
     db:
-        build: ./db
+        build:
+            context: ./db
+            dockerfile: Dockerfile-pgvector
         image: virtassist/db:latest
         container_name: virtassist-db
         restart: unless-stopped
@@ -25,6 +27,21 @@ services:
             - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
         volumes:
             - db-data:/var/lib/postgresql/data
+        networks:
+            - chatbot-conn
+    db-migrate:
+        build:
+            context: ./db
+            dockerfile: Dockerfile-migrate
+        image: virtassist/db-migrate:latest
+        container_name: virtassist-db-migrate
+        restart: no
+        environment:
+            - TZ=${TZ}
+            - POSTGRES_HOST=${POSTGRES_HOST}
+            - POSTGRES_DB=${POSTGRES_DB}
+            - POSTGRES_USER=${POSTGRES_USER}
+            - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
         networks:
             - chatbot-conn
     qa:
@@ -42,7 +59,7 @@ services:
     admin-panel:
         build: ./admin-panel
         image: virtassist/admin-panel:latest
-        container_name: virtassist-admin-panel  
+        container_name: virtassist-admin-panel
         command: gunicorn --bind 0.0.0.0:80 --timeout 60 wsgi:app
         restart: unless-stopped
         ports:

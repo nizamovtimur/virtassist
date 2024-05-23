@@ -1,5 +1,4 @@
-from datetime import datetime, timedelta, timezone
-import logging
+from datetime import datetime, timedelta
 from typing import Optional, List
 from sqlalchemy import (
     BigInteger,
@@ -15,12 +14,7 @@ from sqlalchemy import (
 from sqlalchemy.orm import DeclarativeBase, Mapped, Session, mapped_column, relationship
 
 
-class Base(DeclarativeBase):
-    time_created = Column(DateTime(timezone=True), server_default=func.now())
-    time_updated = Column(DateTime(timezone=True), onupdate=func.now())
-
-
-class User(Base):
+class User(DeclarativeBase):
     """Пользователь чат-бота
 
     Args:
@@ -31,6 +25,7 @@ class User(Base):
     """
 
     __tablename__ = "user"
+
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
     vk_id: Mapped[Optional[int]] = mapped_column(BigInteger, unique=True)
     telegram_id: Mapped[Optional[int]] = mapped_column(BigInteger, unique=True)
@@ -42,8 +37,11 @@ class User(Base):
         order_by="desc(QuestionAnswer.time_created)",
     )
 
+    time_created = Column(DateTime(timezone=True), server_default=func.now())
+    time_updated = Column(DateTime(timezone=True), onupdate=func.now())
 
-class QuestionAnswer(Base):
+
+class QuestionAnswer(DeclarativeBase):
     """Вопрос пользователя с ответом на него
 
     Args:
@@ -56,6 +54,7 @@ class QuestionAnswer(Base):
     """
 
     __tablename__ = "question_answer"
+
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
     question: Mapped[str] = mapped_column(Text())
     answer: Mapped[Optional[str]] = mapped_column(Text())
@@ -65,21 +64,8 @@ class QuestionAnswer(Base):
 
     user: Mapped["User"] = relationship(back_populates="question_answers")
 
-
-# migrations
-if __name__ == "__main__":
-    import time
-    from sqlalchemy import create_engine
-    from config import Config
-
-    while True:
-        try:
-            engine = create_engine(Config.SQLALCHEMY_DATABASE_URI, echo=True)
-            Base.metadata.create_all(engine)
-            break
-        except Exception as e:
-            logging.error(e)
-            time.sleep(2)
+    time_created = Column(DateTime(timezone=True), server_default=func.now())
+    time_updated = Column(DateTime(timezone=True), onupdate=func.now())
 
 
 def add_user(
