@@ -10,7 +10,7 @@ db = SQLAlchemy(app)
 
 
 class Chunk(db.Model):
-    """Фрагмент документа из вики-системы
+    """Фрагмент документа из вики-системы. Соответствует Chunk из /db/schema.py
 
     Args:
         confluence_url (str): ссылка на источник
@@ -32,7 +32,7 @@ class Chunk(db.Model):
 
 
 class User(db.Model):
-    """Пользователь чат-бота
+    """Пользователь чат-бота. Соответствует User из /db/schema.py
 
     Args:
         id (int): id пользователя
@@ -61,7 +61,7 @@ class User(db.Model):
 
 
 class QuestionAnswer(db.Model):
-    """Вопрос пользователя с ответом на него
+    """Вопрос пользователя с ответом на него. Соответствует QuestionAnswer из /db/schema.py
 
     Args:
         id (int): id ответа
@@ -90,7 +90,7 @@ class QuestionAnswer(db.Model):
 
 
 class Admin(db.Model):
-    """Администратор панели
+    """Администратор панели. Соответствует Admin из /db/schema.py
 
     Args:
         id (int): id ответа

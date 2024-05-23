@@ -23,7 +23,7 @@ Base = declarative_base()
 
 
 class User(Base):
-    """Пользователь чат-бота
+    """Пользователь чат-бота. Соответствует User из /db/schema.py
 
     Args:
         id (int): id пользователя
@@ -50,7 +50,7 @@ class User(Base):
 
 
 class QuestionAnswer(Base):
-    """Вопрос пользователя с ответом на него
+    """Вопрос пользователя с ответом на него. Соответствует QuestionAnswer из /db/schema.py
 
     Args:
         id (int): id ответа

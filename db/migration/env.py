@@ -3,11 +3,11 @@ from os import environ
 from logging.config import fileConfig
 
 from sqlalchemy import create_engine
-from sqlalchemy import URL, pool
+from sqlalchemy import pool
 
 from alembic import context
 
-from models import *
+from db.schema import *
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
