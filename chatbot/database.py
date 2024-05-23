@@ -11,10 +11,18 @@ from sqlalchemy import (
     select,
     and_,
 )
-from sqlalchemy.orm import DeclarativeBase, Mapped, Session, mapped_column, relationship
+from sqlalchemy.orm import (
+    Mapped,
+    Session,
+    declarative_base,
+    mapped_column,
+    relationship,
+)
+
+Base = declarative_base()
 
 
-class User(DeclarativeBase):
+class User(Base):
     """Пользователь чат-бота
 
     Args:
@@ -41,7 +49,7 @@ class User(DeclarativeBase):
     time_updated = Column(DateTime(timezone=True), onupdate=func.now())
 
 
-class QuestionAnswer(DeclarativeBase):
+class QuestionAnswer(Base):
     """Вопрос пользователя с ответом на него
 
     Args:

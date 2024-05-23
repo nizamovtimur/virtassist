@@ -1,9 +1,11 @@
 from pgvector.sqlalchemy import Vector
 from sqlalchemy import Text, Column, DateTime, func
-from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
+from sqlalchemy.orm import Mapped, declarative_base, mapped_column
+
+Base = declarative_base()
 
 
-class Chunk(DeclarativeBase):
+class Chunk(Base):
     """Фрагмент документа из вики-системы
 
     Args:

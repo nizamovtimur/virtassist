@@ -1,22 +1,5 @@
 version: '3.8'
 services:
-    chatbot:
-        build: ./chatbot
-        image: virtassist/chatbot:latest
-        container_name: virtassist-chatbot
-        restart: unless-stopped
-        command: sh -c "python database.py && python main.py"
-        env_file:
-            - .env.docker
-        depends_on:
-            db:
-                condition: service_healthy
-            qa:
-                condition: service_healthy
-            db-migrate:
-                condition: service_completed_successfully
-        networks:
-            - chatbot-conn
     db:
         build: ./db
         image: virtassist/db:latest
@@ -31,6 +14,13 @@ services:
             - db-data:/var/lib/postgresql/data
         networks:
             - chatbot-conn
+        healthcheck:
+            test: ["CMD", "pg_isready", "-U", "${POSTGRES_USER}"]
+            interval: 10s
+            timeout: 5s
+            retries: 3
+            start_period: 20s
+            start_interval: 5s
     db-migrate:
         build:
             context: ./db
@@ -39,12 +29,8 @@ services:
         container_name: virtassist-db-migrate
         restart: no
         command: sh -c "python create_extension.py && alembic upgrade head"
-        environment:
-            - TZ=${TZ}
-            - POSTGRES_HOST=${POSTGRES_HOST}
-            - POSTGRES_DB=${POSTGRES_DB}
-            - POSTGRES_USER=${POSTGRES_USER}
-            - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+        env_file:
+            - .env.docker
         depends_on:
             db:
                 condition: service_healthy
@@ -55,12 +41,29 @@ services:
         image: virtassist/qa:latest
         container_name: virtassist-qa
         restart: unless-stopped
-        command: sh -c "cron && python database.py && python main.py"
+        command: sh -c "cron && python main.py"
         env_file:
             - .env.docker
         depends_on:
             db:
                 condition: service_healthy
+            db-migrate:
+                condition: service_completed_successfully
+        networks:
+            - chatbot-conn
+    chatbot:
+        build: ./chatbot
+        image: virtassist/chatbot:latest
+        container_name: virtassist-chatbot
+        restart: unless-stopped
+        command: python main.py
+        env_file:
+            - .env.docker
+        depends_on:
+            db:
+                condition: service_healthy
+            qa:
+                condition: service_started
             db-migrate:
                 condition: service_completed_successfully
         networks:
@@ -79,9 +82,9 @@ services:
             db:
                 condition: service_healthy
             qa:
-                condition: service_healthy
+                condition: service_started
             chatbot:
-                condition: service_healthy
+                condition: service_started
             db-migrate:
                 condition: service_completed_successfully
         networks:

@@ -6,7 +6,6 @@ from sqlalchemy.orm import Mapped, Session, mapped_column, relationship
 from pgvector.sqlalchemy import Vector
 from config import app
 
-
 db = SQLAlchemy(app)
 
 
