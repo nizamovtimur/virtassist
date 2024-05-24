@@ -6,7 +6,6 @@ from sqlalchemy.orm import Mapped, Session, mapped_column, relationship
 from pgvector.sqlalchemy import Vector
 from config import app
 
-
 db = SQLAlchemy(app)
 
 
@@ -22,10 +21,12 @@ class Chunk(db.Model):
     """
 
     __tablename__ = "chunk"
+
     id: Mapped[int] = mapped_column(primary_key=True)
     confluence_url: Mapped[str] = mapped_column(Text(), index=True)
     text: Mapped[str] = mapped_column(Text())
     embedding: Mapped[Vector] = mapped_column(Vector(312))
+
     time_created = Column(DateTime(timezone=True), server_default=func.now())
     time_updated = Column(DateTime(timezone=True), onupdate=func.now())
 
@@ -43,18 +44,20 @@ class User(db.Model):
     """
 
     __tablename__ = "user"
+
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
     vk_id: Mapped[Optional[int]] = mapped_column(BigInteger, unique=True)
     telegram_id: Mapped[Optional[int]] = mapped_column(BigInteger, unique=True)
     is_subscribed: Mapped[bool] = mapped_column()
-    time_created = Column(DateTime(timezone=True), server_default=func.now())
-    time_updated = Column(DateTime(timezone=True), onupdate=func.now())
 
     question_answers: Mapped[List["QuestionAnswer"]] = relationship(
         back_populates="user",
         cascade="all, delete-orphan",
         order_by="desc(QuestionAnswer.time_created)",
     )
+
+    time_created = Column(DateTime(timezone=True), server_default=func.now())
+    time_updated = Column(DateTime(timezone=True), onupdate=func.now())
 
 
 class QuestionAnswer(db.Model):
@@ -72,16 +75,18 @@ class QuestionAnswer(db.Model):
     """
 
     __tablename__ = "question_answer"
+
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
     question: Mapped[str] = mapped_column(Text())
     answer: Mapped[Optional[str]] = mapped_column(Text())
     confluence_url: Mapped[Optional[str]] = mapped_column(Text(), index=True)
     score: Mapped[Optional[int]] = mapped_column()
     user_id: Mapped[int] = mapped_column(ForeignKey("user.id"))
-    time_created = Column(DateTime(timezone=True), server_default=func.now())
-    time_updated = Column(DateTime(timezone=True), onupdate=func.now())
 
     user: Mapped["User"] = relationship(back_populates="question_answers")
+
+    time_created = Column(DateTime(timezone=True), server_default=func.now())
+    time_updated = Column(DateTime(timezone=True), onupdate=func.now())
 
 
 class Admin(db.Model):
@@ -99,19 +104,16 @@ class Admin(db.Model):
     """
 
     __tablename__ = "admin"
+
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
     name: Mapped[str] = mapped_column(Text())
     surname: Mapped[str] = mapped_column(Text())
     last_name: Mapped[Optional[str]] = mapped_column(Text())
     email: Mapped[str] = mapped_column(Text())
     department: Mapped[str] = mapped_column(Text())
+
     time_created = Column(DateTime(timezone=True), server_default=func.now())
     time_updated = Column(DateTime(timezone=True), onupdate=func.now())
-
-
-if __name__ == "__main__":
-    with app.app_context():
-        db.create_all()
 
 
 def get_questions_for_clusters(
