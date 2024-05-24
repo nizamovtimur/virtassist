@@ -1,3 +1,4 @@
+import logging
 from os import environ
 
 from logging.config import fileConfig
@@ -5,7 +6,6 @@ from logging.config import fileConfig
 from dotenv import load_dotenv
 
 from sqlalchemy import create_engine, text
-from sqlalchemy import pool
 
 from alembic import context
 
@@ -27,7 +27,10 @@ try:
     from adminpanel import models
 
     target_metadata = models.db.metadata
-except ImportError:
+except ImportError as e:
+    logging.warning(
+        f"Cannot import models from adminpanel, autogenerate will not work: {e}",
+    )
     BaseDBModel = None
     target_metadata = None
 
@@ -50,8 +53,8 @@ def run_migrations_offline() -> None:
 
     Calls to context.execute() here emit the given string to the
     script output.
-
     """
+
     context.configure(
         url=database_url,
         target_metadata=target_metadata,
@@ -70,9 +73,9 @@ def run_migrations_online() -> None:
     and associate a connection with the context.
 
     """
+
     connectable = create_engine(
         database_url,
-        poolclass=pool.NullPool,
     )
 
     with connectable.connect() as connection:
@@ -81,6 +84,8 @@ def run_migrations_online() -> None:
 
         with context.begin_transaction():
             context.run_migrations()
+
+        connection.commit()
 
 
 if context.is_offline_mode():
