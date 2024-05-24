@@ -168,6 +168,7 @@
 ## [database](../chatbot/database.py)
 ### `class User(Base)`
 Пользователь чат-бота
+
     Args:
         id (int): id пользователя
         vk_id (int | None): id пользователя ВКонтакте
