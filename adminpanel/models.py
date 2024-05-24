@@ -1,6 +1,7 @@
 from typing import Optional, List
 from datetime import date, timedelta
 from flask_sqlalchemy import SQLAlchemy
+from flask_login import UserMixin
 from sqlalchemy import BigInteger, Column, DateTime, ForeignKey, Text, func, or_
 from sqlalchemy.orm import Mapped, Session, mapped_column, relationship
 from pgvector.sqlalchemy import Vector
@@ -89,7 +90,7 @@ class QuestionAnswer(db.Model):
     time_updated = Column(DateTime(timezone=True), onupdate=func.now())
 
 
-class Admin(db.Model):
+class Admin(db.Model, UserMixin):
     """Администратор панели
 
     Args:
@@ -111,6 +112,7 @@ class Admin(db.Model):
     last_name: Mapped[Optional[str]] = mapped_column(Text())
     email: Mapped[str] = mapped_column(Text())
     department: Mapped[str] = mapped_column(Text())
+    password: Mapped[str] = mapped_column(Text())
 
     time_created = Column(DateTime(timezone=True), server_default=func.now())
     time_updated = Column(DateTime(timezone=True), onupdate=func.now())

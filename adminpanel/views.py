@@ -1,21 +1,36 @@
 from flask import render_template, redirect, request, url_for
+from flask_login import login_user, logout_user, login_required
 import requests
 from config import app
 from cluster_analysis import ClusterAnalysis
 from models import get_questions_for_clusters
-from auth import oidc
+from auth import users
 
 analysis = ClusterAnalysis()
 
 
-@app.route("/oidc_callback")
-@oidc.require_login
-def oidc_callback():
-    return redirect(url_for("/"))
+@app.post("/login")
+def login():
+    if request.method == "POST":
+        user = users.get(request.form["email"])
+
+        if user is None or user.password != request.form["password"]:
+            return redirect(url_for("login"))
+
+        login_user(user)
+        return redirect(url_for("protected"))
+    else:
 
 
-@app.route("/")
-@oidc.require_login
+
+@app.route("/logout")
+def logout():
+    logout_user()
+    return "Logged out"
+
+
+@app.route("/protected")
+@login_required
 def index() -> str:
     """Функция позволяет отрендерить главную страницу веб-сервиса.
 
@@ -26,7 +41,7 @@ def index() -> str:
 
 
 @app.route("/questions-analysis")
-@oidc.require_login
+@login_required
 def questions_analysis(methods=["POST", "GET"]) -> str:
     """Функция позволяет вывести на экране вопросы, не имеющие ответа.
 
@@ -55,7 +70,7 @@ def questions_analysis(methods=["POST", "GET"]) -> str:
 
 
 @app.route("/broadcast", methods=["POST", "GET"])
-@oidc.require_login
+@login_required
 def broadcast() -> str:
     """Функция позволяет отправить HTML-POST запрос на выполнение массовой рассылки на HOST чатбота.
 
@@ -95,7 +110,7 @@ def broadcast() -> str:
 
 
 @app.route("/settings")
-@oidc.require_login
+@login_required
 def settings() -> str:
     """Функция позволяет вывести на экране тревожные вопросы.
 
@@ -116,7 +131,7 @@ def settings() -> str:
 
 
 @app.route("/reindex", methods=["POST"])
-@oidc.require_login
+@login_required
 def reindex_qa():
     """Функция отправляет POST-запрос на переиндексацию в модуле QA.
 
