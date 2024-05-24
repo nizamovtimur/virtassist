@@ -2,7 +2,9 @@ from os import environ
 
 from logging.config import fileConfig
 
-from sqlalchemy import create_engine
+from dotenv import load_dotenv
+
+from sqlalchemy import create_engine, text
 from sqlalchemy import pool
 
 from alembic import context
@@ -30,6 +32,7 @@ target_metadata = None
 # my_important_option = config.get_main_option("my_important_option")
 # ... etc.
 
+load_dotenv(dotenv_path="../.env")
 database_url = f"postgresql://{environ.get('POSTGRES_USER')}:{environ.get('POSTGRES_PASSWORD')}@{environ.get('POSTGRES_HOST')}/{environ.get('POSTGRES_DB')}"
 
 
@@ -69,6 +72,7 @@ def run_migrations_online() -> None:
     )
 
     with connectable.connect() as connection:
+        connection.execute(text("CREATE EXTENSION IF NOT EXISTS vector"))
         context.configure(connection=connection, target_metadata=target_metadata)
 
         with context.begin_transaction():

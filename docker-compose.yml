@@ -28,7 +28,7 @@ services:
         image: virtassist/db-migrate:latest
         container_name: virtassist-db-migrate
         restart: no
-        command: sh -c "python create_extension.py && alembic upgrade head"
+        command: alembic upgrade head
         env_file:
             - .env.docker
         depends_on:
