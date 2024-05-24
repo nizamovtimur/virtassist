@@ -167,8 +167,7 @@
 
 ## [database](../chatbot/database.py)
 ### `class User(Base)`
-Пользователь чат-бота. Соответствует User из /db/schema.py
-
+Пользователь чат-бота
     Args:
         id (int): id пользователя
         vk_id (int | None): id пользователя ВКонтакте
@@ -176,7 +175,7 @@
         vk_id (int | None): id пользователя ВКонтакте
 
 ### `class QuestionAnswer(Base)`
-Вопрос пользователя с ответом на него. Соответствует QuestionAnswer из /db/schema.py
+Вопрос пользователя с ответом на него
 
     Args:
         id (int): id ответа

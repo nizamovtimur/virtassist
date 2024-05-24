@@ -36,7 +36,7 @@
 ## [database](../qa/database.py)
 
 ### `class Chunk(Base)`
-Фрагмент документа из вики-системы. Соответствует Chunk из /db/schema.py
+Фрагмент документа из вики-системы
 
     Args:
         confluence_url (str): ссылка на источник

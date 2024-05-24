@@ -11,7 +11,7 @@ from typing import Sequence, Union
 from alembic import op
 import sqlalchemy as sa
 
-import pgvector
+from pgvector.sqlalchemy import Vector
 
 
 # revision identifiers, used by Alembic.
@@ -45,7 +45,7 @@ def upgrade() -> None:
         sa.Column("id", sa.Integer(), nullable=False),
         sa.Column("confluence_url", sa.Text(), nullable=False),
         sa.Column("text", sa.Text(), nullable=False),
-        sa.Column("embedding", pgvector.sqlalchemy.Vector(dim=312), nullable=False),
+        sa.Column("embedding", Vector(dim=312), nullable=False),
         sa.Column(
             "time_created",
             sa.DateTime(timezone=True),

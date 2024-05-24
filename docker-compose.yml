@@ -68,10 +68,10 @@ services:
                 condition: service_completed_successfully
         networks:
             - chatbot-conn
-    admin-panel:
-        build: ./admin-panel
-        image: virtassist/admin-panel:latest
-        container_name: virtassist-admin-panel
+    adminpanel:
+        build: ./adminpanel
+        image: virtassist/adminpanel:latest
+        container_name: virtassist-adminpanel
         command: gunicorn --bind 0.0.0.0:80 --timeout 60 wsgi:app
         restart: unless-stopped
         ports:
