@@ -71,14 +71,21 @@ def questions_analysis() -> str:
     Returns:
         str: отрендеренная веб-страница с POST-запросом на базу данных
     """
-
+    print(get_questions_for_clusters("2024-02-06", "2024-03-16"))
     if request.method == "POST":
         time_start = str(request.form.get("time_start"))
         time_end = str(request.form.get("time_end"))
         have_not_answer = bool(request.form.get("have_not_answer"))
         have_low_score = bool(request.form.get("have_low_score"))
+        have_high_score = bool(request.form.get("have_high_score"))
+        have_not_score = bool(request.form.get("have_not_score"))
         questions = get_questions_for_clusters(
-            time_start, time_end, have_not_answer, have_low_score
+            time_start,
+            time_end,
+            have_not_answer,
+            have_low_score,
+            have_high_score,
+            have_not_score,
         )
         return render_template(
             "questions-analysis.html",
@@ -146,4 +153,3 @@ def reindex_qa():
     """
     requests.post(f"http://{app.config['QA_HOST']}/reindex/")
     return redirect(url_for("settings"))
-

@@ -54,9 +54,9 @@
                 <div class="accordion-body">
                     <strong>Вопросы:</strong><br/>
                     {% for q in cluster[0] %}
-                        {{ q }}<br/>
+                        {{ q[0] }} {{ q[1].name }} {{ q[1].value }}<br/>
                     {% endfor %}
-                    <strong>Дата последнего вопроса:</strong> {{ cluster[2] }}
+                    <strong>Период:</strong> {{ cluster[2] }}
                 </div>
             </div>
         </div>

@@ -7,6 +7,7 @@ from flask_login import UserMixin
 from sqlalchemy import BigInteger, Column, DateTime, ForeignKey, Text, func, or_
 from sqlalchemy.orm import Mapped, Session, mapped_column, relationship
 from pgvector.sqlalchemy import Vector
+from cluster_analysis import mark_of_question
 from config import app
 from pandas import date_range
 
@@ -147,7 +148,9 @@ def get_questions_for_clusters(
     time_end: str = str(date.today() + timedelta(days=1)),
     have_not_answer: bool = True,
     have_low_score: bool = False,
-) -> list[dict[str, str]]:
+    have_high_score: bool = False,
+    have_not_score: bool = False,
+) -> list[dict[str, str | mark_of_question]]:
     """Функция для выгрузки вопросов для обработки в классе ClusterAnalysis
 
     Args:
@@ -155,6 +158,8 @@ def get_questions_for_clusters(
         time_end (str, optional): дата, до которой нужно сортировать вопросы. По-умолчанию, завтрашняя дата
         have_not_answer (bool, optional): вопросы без ответа. По-умолчанию True
         have_low_score (bool, optional): вопросы с низкой оценкой. По-умолчанию False
+        have_high_score (bool, optional): вопросы с высокой оценкой. По-умолчанию False
+        have_not_score (bool, optional): вопросы без оценки. По-умолчанию False
 
     Returns:
         list[dict[str, str]]: список вопросов - словарей с ключами `text` и `date`
@@ -164,21 +169,44 @@ def get_questions_for_clusters(
         query = session.query(QuestionAnswer).filter(
             QuestionAnswer.time_created.between(time_start, time_end)
         )
-        if have_not_answer and have_low_score:
-            query = query.filter(
-                or_(QuestionAnswer.answer == "", QuestionAnswer.score == 1)
-            )
-        elif have_not_answer:
-            query = query.filter(QuestionAnswer.answer == "")
-        elif have_low_score:
-            query = query.filter(QuestionAnswer.score == 1)
-        else:
-            return []
-        questions = (
-            {"text": qa.question, "date": qa.time_created.strftime("%Y-%m-%d")}
-            for qa in query
-        )
-        return list(questions)
+        questions = []
+        if have_not_answer:
+            for qa in query.filter(QuestionAnswer.answer == ""):
+                questions.append(
+                    {
+                        "text": qa.question,
+                        "date": qa.time_created.strftime("%Y-%m-%d"),
+                        "type": mark_of_question.have_not_answer,
+                    }
+                )
+        if have_low_score:
+            for qa in query.filter(QuestionAnswer.score == 1):
+                questions.append(
+                    {
+                        "text": qa.question,
+                        "date": qa.time_created.strftime("%Y-%m-%d"),
+                        "type": mark_of_question.have_low_score,
+                    }
+                )
+        if have_high_score:
+            for qa in query.filter(QuestionAnswer.score == 5):
+                questions.append(
+                    {
+                        "text": qa.question,
+                        "date": qa.time_created.strftime("%Y-%m-%d"),
+                        "type": mark_of_question.have_high_score,
+                    }
+                )
+        if have_not_score:
+            for qa in query.filter(QuestionAnswer.score == None):
+                questions.append(
+                    {
+                        "text": qa.question,
+                        "date": qa.time_created.strftime("%Y-%m-%d"),
+                        "type": mark_of_question.have_not_score,
+                    }
+                )
+        return questions
 
 
 def get_questions_count(
