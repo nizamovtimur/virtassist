@@ -1,3 +1,4 @@
+from enum import Enum
 from string import punctuation
 import numpy as np
 import pandas as pd
@@ -8,6 +9,15 @@ import spacy
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.preprocessing import StandardScaler
 from config import app
+
+from sklearn.metrics import silhouette_score
+
+
+class mark_of_question(Enum):
+    have_not_answer = 0
+    have_low_score = 1
+    have_high_score = 2
+    have_not_score = 3
 
 
 class ClusterAnalysis:
@@ -108,7 +118,7 @@ class ClusterAnalysis:
 
     def clustersing(
         self, vectors: np.ndarray, df: pd.DataFrame
-    ) -> dict[int, list[tuple[str, str]]]:
+    ) -> dict[int, list[tuple[str, str, mark_of_question]]]:
         """Модуль кластеризации предложений
 
         Args:
@@ -123,17 +133,28 @@ class ClusterAnalysis:
             if vectors[i].sum() == 0:
                 vectors[i][0] = 10 ** (-20)
         clusters_hier = linkage(vectors, method="complete", metric="cosine")
-        clusters_hier = fcluster(clusters_hier, 0.9, criterion="distance")
+        range_of_values = np.arange(0.01, clusters_hier[:, 2].max(), 0.01)
+        max_sil = 0
+        threshold_value = 0.59
+        for i in range_of_values:
+            clusters = fcluster(clusters_hier, i, criterion="distance")
+            sil = silhouette_score(vectors, clusters, metric="cosine")
+            if sil > max_sil:
+                max_sil = sil
+                threshold_value = i
+        clusters_hier = fcluster(clusters_hier, threshold_value, criterion="distance")
 
         clusters = dict()
         df = df.reset_index(drop=True)
         for i in range(len(clusters_hier)):
             if clusters_hier[i] in clusters.keys():
                 clusters[clusters_hier[i]].append(
-                    (df["text"].iloc[i], df["date"].iloc[i])
+                    (df["text"].iloc[i], df["date"].iloc[i], df["type"].iloc[i])
                 )
             else:
-                clusters[clusters_hier[i]] = [(df["text"].iloc[i], df["date"].iloc[i])]
+                clusters[clusters_hier[i]] = [
+                    (df["text"].iloc[i], df["date"].iloc[i], df["type"].iloc[i])
+                ]
         arr = []
         for i in clusters.keys():
             if len(clusters[i]) < 3:
@@ -162,15 +183,15 @@ class ClusterAnalysis:
         return rake.get_ranked_phrases()[:10]
 
     def get_clusters_keywords(
-        self, questions: list[dict[str, str]]
-    ) -> list[tuple[list[str] | str]]:
+        self, questions: list[dict[str, str | mark_of_question]]
+    ) -> list[tuple[list[str] | str | mark_of_question]]:  # TODO: refactor
         """Логика кластеризации текстовых данных
 
         Args:
             questions (list[dict[str, str]]): список вопросов, подлежащих анализу
 
         Returns:
-            list[tuple[list[str] | str]]: список кортежей, для каждого: список вопросов, список ключевых слов, дата самого свежего вопроса
+            list[tuple[list[str] | str | mark_of_question]]: список кортежей, для каждого: список вопросов, список ключевых слов, временной промежуток вопросов по кластеру, метка вопроса
         """
 
         # TODO: refactor
@@ -186,12 +207,26 @@ class ClusterAnalysis:
             data = []
             for cluster in clusters.values():
                 sentences = []
-                date = "2024-01-01"
+                types = []
+                date_max = "2024-01-01"
+                date_min = "9999-12-12"
                 for sentence in cluster:
-                    sentences.append(sentence[0])
-                    if date < sentence[1]:
-                        date = sentence[1]
-                data.append((sentences, self.keywords_extracting(sentences), date))
+                    sentences.append(sentence[0])  # TODO: добавить предложениям Enum
+                    types.append(
+                        sentence[2]
+                    )  # TODO: Добавить в sentences (Временный костыль, чтобы у Андрея пока что ничего не сломалось)
+                    if date_max < sentence[1]:
+                        date_max = sentence[1]
+                    if date_min > sentence[1]:
+                        date_min = sentence[1]
+                data.append(
+                    (
+                        sentences,
+                        self.keywords_extracting(sentences),
+                        "с " + date_min + " по " + date_max,
+                        types,  # TODO: Добавить в sentences
+                    )
+                )
             data = sorted(data, key=lambda dt: len(dt[0]), reverse=True)
             return data
         except:
@@ -200,8 +235,8 @@ class ClusterAnalysis:
 
 def Fprint(arr):
     for a in arr:
-        for i in a[0]:
-            print(i)
+        for i in range(len(a[0])):
+            print(a[0][i], "\t", a[3][i].name)
         print("=" * 20)
         print(a[1])
         print(a[2])
@@ -213,7 +248,18 @@ if __name__ == "__main__":
     with open("database.csv", "r", encoding="utf-8") as f:
         s = f.readline()
         while s:
-            arr.append({"text": s.split(" --- ")[0], "date": s.split(" --- ")[1][:-1]})
+            x = int(s.split(" --- ")[2])
+            if x == 0:
+                x = mark_of_question.have_not_answer
+            elif x == 1:
+                x = mark_of_question.have_low_score
+            elif x == 2:
+                x = mark_of_question.have_high_score
+            else:
+                x = mark_of_question.have_not_score
+            arr.append(
+                {"text": s.split(" --- ")[0], "date": s.split(" --- ")[1], "type": x}
+            )
             s = f.readline()
 
     CA = ClusterAnalysis()

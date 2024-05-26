@@ -1,3 +1,4 @@
+enum
 flask
 flask_sqlalchemy
 flask_oidc
