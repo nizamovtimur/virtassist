@@ -20,8 +20,10 @@
 <ul class="list-group">
     {% for user in users %}
         <li class="list-group-item d-flex justify-content-between align-items-center h5 mb-4 py-2 bg-gray-d9">
-            {{ user }}
-            <button type="button" class="btn-close float-end" aria-label="Close"></button>
+
+            {{ user.name }} {% if user.last_name %}{{ user.last_name }} {% endif %}{{ user.surname }} {{ user.email }} {{ user.department }} <!--Андрюха, что насчет еще одного аккордеона???!!!!-->
+
+            <button type="button" class="btn-close float-end" aria-label="Close"></button> <!--Андрий, здесь необхзодим POST REQUEST В ФОРМЕ!!!!-->
         </li>
     {% endfor %}
 </ul>

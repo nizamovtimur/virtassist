@@ -3,7 +3,6 @@ import bs4
 from cachetools import cached, TTLCache
 from config import Config
 
-
 confluence = Confluence(url=Config.CONFLUENCE_HOST, token=Config.CONFLUENCE_TOKEN)
 confluence_main_space = Config.CONFLUENCE_SPACES[0]
 

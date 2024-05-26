@@ -1,6 +1,7 @@
+bcrypt
 flask
 flask_sqlalchemy
-flask_oidc
+flask_login
 gunicorn
 nltk
 numpy

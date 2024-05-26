@@ -10,7 +10,6 @@ from database import Chunk
 from gigachat_prompting import get_answer
 from confluence_retrieving import get_chunk, reindex_confluence
 
-
 routes = web.RouteTableDef()
 engine = create_engine(Config.SQLALCHEMY_DATABASE_URI)
 text_splitter = SentenceTransformersTokenTextSplitter(
