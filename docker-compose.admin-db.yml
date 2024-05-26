@@ -1,3 +1,4 @@
+# docker compose -f docker-compose.admin-db.yml --env-file .env.docker up -d --build
 version: '3.8'
 services:
     db:
@@ -36,38 +37,38 @@ services:
                 condition: service_healthy
         networks:
             - chatbot-conn
-    qa:
-        build: ./qa
-        image: virtassist/qa:latest
-        container_name: virtassist-qa
-        restart: unless-stopped
-        command: sh -c "cron && python main.py"
-        env_file:
-            - .env.docker
-        depends_on:
-            db:
-                condition: service_healthy
-            db-migrate:
-                condition: service_completed_successfully
-        networks:
-            - chatbot-conn
-    chatbot:
-        build: ./chatbot
-        image: virtassist/chatbot:latest
-        container_name: virtassist-chatbot
-        restart: unless-stopped
-        command: python main.py
-        env_file:
-            - .env.docker
-        depends_on:
-            db:
-                condition: service_healthy
-            qa:
-                condition: service_started
-            db-migrate:
-                condition: service_completed_successfully
-        networks:
-            - chatbot-conn
+    # qa:
+    #     build: ./qa
+    #     image: virtassist/qa:latest
+    #     container_name: virtassist-qa
+    #     restart: unless-stopped
+    #     command: sh -c "cron && python main.py"
+    #     env_file:
+    #         - .env.docker
+    #     depends_on:
+    #         db:
+    #             condition: service_healthy
+    #         db-migrate:
+    #             condition: service_completed_successfully
+    #     networks:
+    #         - chatbot-conn
+    # chatbot:
+    #     build: ./chatbot
+    #     image: virtassist/chatbot:latest
+    #     container_name: virtassist-chatbot
+    #     restart: unless-stopped
+    #     command: python main.py
+    #     env_file:
+    #         - .env.docker
+    #     depends_on:
+    #         db:
+    #             condition: service_healthy
+    #         qa:
+    #             condition: service_started
+    #         db-migrate:
+    #             condition: service_completed_successfully
+    #     networks:
+    #         - chatbot-conn
     adminpanel:
         build: ./adminpanel
         image: virtassist/adminpanel:latest
@@ -81,10 +82,10 @@ services:
         depends_on:
             db:
                 condition: service_healthy
-            qa:
-                condition: service_started
-            chatbot:
-                condition: service_started
+            # qa:
+            #     condition: service_started
+            # chatbot:
+            #     condition: service_started
             db-migrate:
                 condition: service_completed_successfully
         networks:
@@ -95,3 +96,4 @@ volumes:
 networks:
     chatbot-conn:
         driver: bridge
+

@@ -3,7 +3,6 @@ from langchain.prompts import PromptTemplate
 from langchain_community.llms import GigaChat
 from config import Config
 
-
 giga = GigaChat(credentials=Config.GIGACHAT_TOKEN, verify_ssl_certs=False)
 prompt_template = """Действуй как Вопрошалыч — виртуальный помощник студента ТюмГУ.
 Используй следующий текст в тройных кавычках, чтобы кратко ответить на вопрос студента.
