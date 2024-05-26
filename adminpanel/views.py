@@ -1,32 +1,41 @@
 from flask import render_template, redirect, request, url_for
-from flask_login import login_user, logout_user, login_required
+from flask_login import LoginManager, login_user, logout_user, login_required
 import requests
 from config import app
 from cluster_analysis import ClusterAnalysis
-from models import get_questions_for_clusters
-from auth import users
+from models import get_questions_for_clusters, Admin
 
+
+login_manager = LoginManager()
+login_manager.init_app(app)
 analysis = ClusterAnalysis()
 
 
-@app.post("/login")
+@login_manager.user_loader
+def load_user(admin_id):
+    return Admin.query.get(int(admin_id))
+
+
+@app.route("/login", methods=["GET", "POST"])
 def login():
     if request.method == "POST":
-        user = users.get(request.form["email"])
-
-        if user is None or user.password != request.form["password"]:
-            return redirect(url_for("login"))
-
-        login_user(user)
-        return redirect(url_for("protected"))
+        email = request.form["email"]
+        password = request.form["password"]
+        admin = Admin.query.filter_by(email=email).first()
+        if admin and admin.check_password(password):
+            login_user(admin)
+            return redirect(url_for("protected"))
+        else:
+            return "Invalid email or password"
     else:
-
+        return redirect(url_for("login"))
 
 
 @app.route("/logout")
+@login_required
 def logout():
     logout_user()
-    return "Logged out"
+    return redirect(url_for("login"))
 
 
 @app.route("/protected")

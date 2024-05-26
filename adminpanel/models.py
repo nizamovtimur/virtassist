@@ -1,4 +1,6 @@
+import base64
 from typing import Optional, List
+from bcrypt import hashpw, gensalt, checkpw
 from datetime import date, timedelta
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import UserMixin
@@ -112,10 +114,31 @@ class Admin(db.Model, UserMixin):
     last_name: Mapped[Optional[str]] = mapped_column(Text())
     email: Mapped[str] = mapped_column(Text())
     department: Mapped[str] = mapped_column(Text())
-    password: Mapped[str] = mapped_column(Text())
+    password_hash: Mapped[str] = mapped_column(Text(), nullable=False)
 
     time_created = Column(DateTime(timezone=True), server_default=func.now())
     time_updated = Column(DateTime(timezone=True), onupdate=func.now())
+
+    def set_password(self, password: str) -> None:
+        """Метод хеширования пароля администратора.
+
+        Args:
+            password (str): пароль администратора.
+        """
+        hashed = hashpw(password.encode("utf-8"), gensalt())
+        self.password_hash = base64.b64encode(hashed).decode("utf-8")
+
+    def check_password(self, password: str) -> bool:
+        """Метод проверки введенного администратором пароля.
+
+        Args:
+            password (str): введенный администратором пароль.
+
+        Returns:
+            bool: проверка, совпадает ли введенный пароль с хешированным паролем.
+        """
+        hashed = base64.b64decode(self.password_hash.encode("utf-8"))
+        return checkpw(password.encode("utf-8"), hashed)
 
 
 def get_questions_for_clusters(
