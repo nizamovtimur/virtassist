@@ -114,7 +114,7 @@ class Admin(db.Model, UserMixin):
     last_name: Mapped[Optional[str]] = mapped_column(Text())
     email: Mapped[str] = mapped_column(Text())
     department: Mapped[str] = mapped_column(Text())
-    password_hash: Mapped[str] = mapped_column(Text(), nullable=False)
+    password_hash: Mapped[str] = mapped_column(Text())
 
     time_created = Column(DateTime(timezone=True), server_default=func.now())
     time_updated = Column(DateTime(timezone=True), onupdate=func.now())
@@ -123,19 +123,19 @@ class Admin(db.Model, UserMixin):
         """Метод хеширования пароля администратора.
 
         Args:
-            password (str): пароль администратора.
+            password (str): пароль администратора
         """
         hashed = hashpw(password.encode("utf-8"), gensalt())
         self.password_hash = base64.b64encode(hashed).decode("utf-8")
 
     def check_password(self, password: str) -> bool:
-        """Метод проверки введенного администратором пароля.
+        """Метод проверки введенного администратором пароля
 
         Args:
-            password (str): введенный администратором пароль.
+            password (str): введенный администратором пароль
 
         Returns:
-            bool: проверка, совпадает ли введенный пароль с хешированным паролем.
+            bool: проверка, совпадает ли введенный пароль с хешированным паролем
         """
         hashed = base64.b64decode(self.password_hash.encode("utf-8"))
         return checkpw(password.encode("utf-8"), hashed)
@@ -150,10 +150,10 @@ def get_questions_for_clusters(
     """Функция для выгрузки вопросов для обработки в классе ClusterAnalysis
 
     Args:
-        time_start (str, optional): дата, от которой нужно сортировать вопросы. По-умолчанию, 30 дней назад.
-        time_end (str, optional): дата, до которой нужно сортировать вопросы. По-умолчанию, завтрашняя дата.
-        have_not_answer (bool, optional): вопросы без ответа. По-умолчанию True.
-        have_low_score (bool, optional): вопросы с низкой оценкой. По-умолчанию False.
+        time_start (str, optional): дата, от которой нужно сортировать вопросы. По-умолчанию, 30 дней назад
+        time_end (str, optional): дата, до которой нужно сортировать вопросы. По-умолчанию, завтрашняя дата
+        have_not_answer (bool, optional): вопросы без ответа. По-умолчанию True
+        have_low_score (bool, optional): вопросы с низкой оценкой. По-умолчанию False
 
     Returns:
         list[dict[str, str]]: список вопросов - словарей с ключами `text` и `date`
@@ -178,3 +178,23 @@ def get_questions_for_clusters(
             for qa in query
         )
         return list(questions)
+
+
+def get_admins() -> list[Admin]:
+    """Функция для выгрузки администраторов из БД
+
+    Returns:
+        list[Admin]: список администраторов
+    """
+    with Session(db.engine) as session:
+        admins = [
+            Admin(
+                name=admin.name,
+                surname=admin.surname,
+                last_name=admin.last_name,
+                email=admin.email,
+                department=admin.department,
+            )
+            for admin in session.query(Admin).all()
+        ]
+    return admins
