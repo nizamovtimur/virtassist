@@ -13,13 +13,3 @@ app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 app.config["CHATBOT_HOST"] = os.getenv("CHATBOT_HOST")
 app.config["QA_HOST"] = os.getenv("QA_HOST")
 app.config["ABBREVIATION_UTMN"] = os.getenv("ABBREVIATION_UTMN").split(" ")
-app.config["OIDC_CLIENT_SECRETS"] = {
-    "web": {
-        "issuer": os.getenv("ISSUER"),
-        "client_id": os.getenv("CLIENT_ID"),
-        "client_secret": os.getenv("CLIENT_SECRET"),
-        # "auth_uri": os.getenv("AUTH_URI"),
-        "userinfo_uri": os.getenv("USERINFO"),
-        "redirect_uris": [os.getenv("REDIRECTS")],
-    }
-}
