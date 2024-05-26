@@ -157,8 +157,8 @@ def get_questions_for_clusters(
         time_end (str, optional): дата, до которой нужно сортировать вопросы. По-умолчанию, завтрашняя дата
         have_not_answer (bool, optional): вопросы без ответа. По-умолчанию True
         have_low_score (bool, optional): вопросы с низкой оценкой. По-умолчанию False
-        have_high_score (bool, optional): вопросы с высокой оценкой False
-        have_not_score (bool, optional): вопросы без оценки False
+        have_high_score (bool, optional): вопросы с высокой оценкой. По-умолчанию False
+        have_not_score (bool, optional): вопросы без оценки. По-умолчанию False
 
     Returns:
         list[dict[str, str]]: список вопросов - словарей с ключами `text` и `date`
