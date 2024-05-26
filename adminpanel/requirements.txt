@@ -1,5 +1,4 @@
 bcrypt
-enum
 flask
 flask_sqlalchemy
 flask_login

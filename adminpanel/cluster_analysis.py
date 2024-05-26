@@ -7,10 +7,9 @@ from rake_nltk import Rake
 from scipy.cluster.hierarchy import linkage, fcluster
 import spacy
 from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.metrics import silhouette_score
 from sklearn.preprocessing import StandardScaler
 from config import app
-
-from sklearn.metrics import silhouette_score
 
 
 class mark_of_question(Enum):
