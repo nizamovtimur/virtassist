@@ -183,14 +183,14 @@ class ClusterAnalysis:
 
     def get_clusters_keywords(
         self, questions: list[dict[str, str | mark_of_question]]
-    ) -> list[tuple[list[str] | str | mark_of_question]]:  # TODO: refactor
+    ) -> list[tuple[list[str | mark_of_question] | str]]:
         """Логика кластеризации текстовых данных
 
         Args:
             questions (list[dict[str, str]]): список вопросов, подлежащих анализу
 
         Returns:
-            list[tuple[list[str] | str | mark_of_question]]: список кортежей, для каждого: список вопросов, список ключевых слов, временной промежуток вопросов по кластеру, метка вопроса
+            list[tuple[list[str | mark_of_question] | str]]: список кортежей, для каждого: список вопросов с метками, список ключевых слов, временной промежуток вопросов по кластеру
         """
 
         # TODO: refactor
@@ -206,14 +206,12 @@ class ClusterAnalysis:
             data = []
             for cluster in clusters.values():
                 sentences = []
-                types = []
+                sent_to_get_kw = []
                 date_max = "2024-01-01"
                 date_min = "9999-12-12"
                 for sentence in cluster:
-                    sentences.append(sentence[0])  # TODO: добавить предложениям Enum
-                    types.append(
-                        sentence[2]
-                    )  # TODO: Добавить в sentences (Временный костыль, чтобы у Андрея пока что ничего не сломалось)
+                    sentences.append((sentence[0], sentence[2]))
+                    sent_to_get_kw.append(sentence[0])
                     if date_max < sentence[1]:
                         date_max = sentence[1]
                     if date_min > sentence[1]:
@@ -221,9 +219,8 @@ class ClusterAnalysis:
                 data.append(
                     (
                         sentences,
-                        self.keywords_extracting(sentences),
+                        self.keywords_extracting(sent_to_get_kw),
                         "с " + date_min + " по " + date_max,
-                        types,  # TODO: Добавить в sentences
                     )
                 )
             data = sorted(data, key=lambda dt: len(dt[0]), reverse=True)
@@ -235,7 +232,7 @@ class ClusterAnalysis:
 def Fprint(arr):
     for a in arr:
         for i in range(len(a[0])):
-            print(a[0][i], "\t", a[3][i].name)
+            print(a[0][i][0])
         print("=" * 20)
         print(a[1])
         print(a[2])
