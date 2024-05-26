@@ -49,9 +49,9 @@ def index() -> str:
     return render_template("main-page.html", page_title="Сводка")
 
 
-@app.route("/questions-analysis")
+@app.route("/questions-analysis", methods=["POST", "GET"])
 @login_required
-def questions_analysis(methods=["POST", "GET"]) -> str:
+def questions_analysis() -> str:
     """Функция позволяет вывести на экране вопросы, не имеющие ответа.
 
     Returns:
