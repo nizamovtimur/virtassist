@@ -112,7 +112,7 @@ class Admin(db.Model, UserMixin):
     name: Mapped[str] = mapped_column(Text())
     surname: Mapped[str] = mapped_column(Text())
     last_name: Mapped[Optional[str]] = mapped_column(Text())
-    email: Mapped[str] = mapped_column(Text())
+    email: Mapped[str] = mapped_column(Text(), unique=True)
     department: Mapped[str] = mapped_column(Text())
     password_hash: Mapped[str] = mapped_column(Text())
 

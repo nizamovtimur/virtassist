@@ -39,6 +39,7 @@ def upgrade() -> None:
         ),
         sa.Column("time_updated", sa.DateTime(timezone=True), nullable=True),
         sa.PrimaryKeyConstraint("id"),
+        sa.UniqueConstraint("email"),
     )
     op.create_table(
         "chunk",
