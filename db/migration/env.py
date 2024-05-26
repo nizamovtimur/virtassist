@@ -29,7 +29,7 @@ try:
     target_metadata = models.db.metadata
 except ImportError as e:
     logging.warning(
-        f"Cannot import models from adminpanel, autogenerate will not work: {e}",
+        f"Cannot import models from adminpanel, autogenerate will not work: {e}. If in Docker – don't worry, be happy",
     )
     BaseDBModel = None
     target_metadata = None
