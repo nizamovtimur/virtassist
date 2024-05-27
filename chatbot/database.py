@@ -1,5 +1,4 @@
-from datetime import datetime, timedelta, timezone
-import logging
+from datetime import datetime, timedelta
 from typing import Optional, List
 from sqlalchemy import (
     BigInteger,
@@ -10,13 +9,17 @@ from sqlalchemy import (
     Text,
     func,
     select,
+    and_,
 )
-from sqlalchemy.orm import DeclarativeBase, Mapped, Session, mapped_column, relationship
+from sqlalchemy.orm import (
+    Mapped,
+    Session,
+    declarative_base,
+    mapped_column,
+    relationship,
+)
 
-
-class Base(DeclarativeBase):
-    time_created = Column(DateTime(timezone=True), server_default=func.now())
-    time_updated = Column(DateTime(timezone=True), onupdate=func.now())
+Base = declarative_base()
 
 
 class User(Base):
@@ -30,6 +33,7 @@ class User(Base):
     """
 
     __tablename__ = "user"
+
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
     vk_id: Mapped[Optional[int]] = mapped_column(BigInteger, unique=True)
     telegram_id: Mapped[Optional[int]] = mapped_column(BigInteger, unique=True)
@@ -40,6 +44,9 @@ class User(Base):
         cascade="all, delete-orphan",
         order_by="desc(QuestionAnswer.time_created)",
     )
+
+    time_created = Column(DateTime(timezone=True), server_default=func.now())
+    time_updated = Column(DateTime(timezone=True), onupdate=func.now())
 
 
 class QuestionAnswer(Base):
@@ -55,6 +62,7 @@ class QuestionAnswer(Base):
     """
 
     __tablename__ = "question_answer"
+
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
     question: Mapped[str] = mapped_column(Text())
     answer: Mapped[Optional[str]] = mapped_column(Text())
@@ -64,21 +72,8 @@ class QuestionAnswer(Base):
 
     user: Mapped["User"] = relationship(back_populates="question_answers")
 
-
-# migrations
-if __name__ == "__main__":
-    import time
-    from sqlalchemy import create_engine
-    from config import Config
-
-    while True:
-        try:
-            engine = create_engine(Config.SQLALCHEMY_DATABASE_URI, echo=True)
-            Base.metadata.create_all(engine)
-            break
-        except Exception as e:
-            logging.error(e)
-            time.sleep(2)
+    time_created = Column(DateTime(timezone=True), server_default=func.now())
+    time_updated = Column(DateTime(timezone=True), onupdate=func.now())
 
 
 def add_user(
@@ -188,7 +183,7 @@ def check_spam(engine: Engine, user_id: int) -> bool:
         user_id (int): id пользователя
 
     Returns:
-        bool: пользователь написал 4 сообщения за одну минуту или нет
+        bool: пользователь задал три вопроса за последнюю минуту
     """
 
     with Session(engine) as session:
@@ -196,11 +191,9 @@ def check_spam(engine: Engine, user_id: int) -> bool:
         if user is None:
             return False
         if len(user.question_answers) > 3:
-            return datetime.now(timezone.utc).replace(
-                tzinfo=None
-            ) - user.question_answers[2].time_created.replace(tzinfo=None) < timedelta(
-                minutes=1
-            )
+            minute_ago = datetime.now() - timedelta(minutes=1)
+            third_message_date = user.question_answers[2].time_created
+            return minute_ago < third_message_date.replace(tzinfo=None)
         return False
 
 
@@ -257,3 +250,28 @@ def rate_answer(engine: Engine, question_answer_id: int, score: int) -> bool:
         question_answer.score = score
         session.commit()
         return True
+
+
+def get_subscribed_users(engine: Engine) -> tuple[list[int | None], list[int | None]]:
+    """Функция для получения подписанных на рассылки пользователей
+
+    Args:
+        engine (Engine): подключение к БД
+
+    Returns:
+        tuple[list[int], list[int]]: кортеж списков с id пользователей VK и Telegram
+    """
+    with Session(engine) as session:
+        vk_users = [
+            user.vk_id
+            for user in session.execute(
+                select(User).where(and_(User.vk_id != None, User.is_subscribed))
+            ).scalars()
+        ]
+        tg_users = [
+            user.telegram_id
+            for user in session.execute(
+                select(User).where(and_(User.telegram_id != None, User.is_subscribed))
+            ).scalars()
+        ]
+    return vk_users, tg_users

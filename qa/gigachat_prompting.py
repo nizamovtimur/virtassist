@@ -3,7 +3,6 @@ from langchain.prompts import PromptTemplate
 from langchain_community.llms import GigaChat
 from config import Config
 
-
 giga = GigaChat(
     model="GigaChat-Plus-preview",
     temperature=1.222,

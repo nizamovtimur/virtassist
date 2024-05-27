@@ -7,9 +7,7 @@ stages:
 build:
   stage: build
   script:
-    - docker build --network host -t virtassist/db:latest ./db
-    - docker build --network host -t virtassist/qa:latest ./qa
-    - docker build --network host -t virtassist/chatbot:latest ./chatbot
+    - docker compose --env-file .env.docker build
   only:
     - main
   tags:

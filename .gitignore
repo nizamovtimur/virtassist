@@ -1,5 +1,5 @@
 .idea
-[v]env
+[.][v]env
 .env*
 !.env.example
 saved_models
@@ -7,3 +7,5 @@ faiss_index
 __pycache__
 cache
 .pytest_cache
+node_modules
+database*.csv

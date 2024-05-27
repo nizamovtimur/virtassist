@@ -2,8 +2,9 @@ import asyncio
 import json
 import logging
 import math
-import threading
+from multiprocessing import Process
 import aiogram as tg
+from aiohttp import web
 from sqlalchemy import create_engine
 import vkbottle as vk
 from vkbottle.bot import Message as VKMessage
@@ -21,6 +22,7 @@ from database import (
     check_spam,
     add_question_answer,
     rate_answer,
+    get_subscribed_users,
 )
 from strings import Strings
 
@@ -33,6 +35,7 @@ class Permission(vk.ABCRule[VKMessage]):
         return event.from_id in self.uids
 
 
+routes = web.RouteTableDef()
 engine = create_engine(Config.SQLALCHEMY_DATABASE_URI)
 vk_bot = vk.Bot(token=Config.VK_ACCESS_GROUP_TOKEN)
 vk_bot.labeler.vbml_ignore_case = True
@@ -78,16 +81,6 @@ def tg_keyboard_choice(notify_text: str) -> tg.types.ReplyKeyboardMarkup:
     keyboard.add(tg.types.KeyboardButton(Strings.ConfluenceButton))
     keyboard.add(tg.types.KeyboardButton(notify_text))
     return keyboard
-
-
-# @vk_bot.on.message(vk.dispatch.rules.base.RegexRule("!send "), permission=Config.VK_SUPERUSER_ID)
-# async def vk_deliver_notifications(message: VKMessage):
-#     with Session(engine) as session:
-#         for user in session.execute(select(User).where(and_(User.vk_id != None, User.is_subscribed))).scalars():
-#             try:
-#                 await vk_bot.api.messages.send(user_id=user.vk_id, message=message.text[6:], random_id=0)
-#             except Exception as e:
-#                 logger.error(e)
 
 
 async def vk_send_confluence_keyboard(message: VKMessage, question_types: list):
@@ -453,6 +446,34 @@ async def tg_answer(message: tg.types.Message):
     )
 
 
+@routes.post("/broadcast/")
+async def broadcast(request: web.Request) -> web.Response:
+    """Создает рассылку в ВК и/или ТГ
+
+    Args:
+        request (web.Request): запрос, содержащий `text`, булевые `tg`, `vk`
+
+    Returns:
+        web.Response: ответ
+    """
+
+    try:
+        data = await request.json()
+        vk_users, tg_users = get_subscribed_users(engine)
+        if data["vk"] and len(vk_users) != 0 and len(data["text"]) != 0:
+            for user_id in vk_users:
+                await vk_bot.api.messages.send(
+                    user_id=user_id, message=data["text"], random_id=0
+                )
+        if data["tg"] and len(tg_users) != 0 and len(data["text"]) != 0:
+            for user_id in tg_users:
+                await tg_bot.send_message(chat_id=user_id, text=data["text"])
+        return web.Response(status=200)
+    except Exception as e:
+        logging.warning(str(e))
+        return web.Response(text=str(e), status=500)
+
+
 def launch_vk_bot():
     """Функция начала работы чат-бота ВКонтакте"""
 
@@ -469,13 +490,24 @@ def launch_telegram_bot():
     tg.executor.start_polling(dispatcher, skip_updates=True)
 
 
+def run_web_app():
+    """Функция запуска сервера для принятия запроса на рассылку"""
+
+    app = web.Application()
+    app.add_routes(routes)
+    web.run_app(app, port=5000)
+
+
 if __name__ == "__main__":
     loggers = [logging.getLogger(name) for name in logging.root.manager.loggerDict]
     for logger in loggers:
         logger.setLevel(logging.WARNING)
-    thread_vk = threading.Thread(target=launch_vk_bot)
-    thread_tg = threading.Thread(target=launch_telegram_bot)
-    thread_tg.start()
-    thread_vk.start()
-    thread_tg.join()
-    thread_vk.join()
+    web_process = Process(target=run_web_app)
+    vk_process = Process(target=launch_vk_bot)
+    tg_process = Process(target=launch_telegram_bot)
+    web_process.start()
+    vk_process.start()
+    tg_process.start()
+    web_process.join()
+    vk_process.join()
+    tg_process.join()

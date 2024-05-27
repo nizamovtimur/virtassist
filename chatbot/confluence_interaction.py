@@ -5,7 +5,6 @@ from cachetools import cached, TTLCache
 from config import Config
 from strings import Strings
 
-
 confluence = Confluence(url=Config.CONFLUENCE_HOST, token=Config.CONFLUENCE_TOKEN)
 confluence_main_space = Config.CONFLUENCE_SPACES[0]
 

@@ -1,0 +1,43 @@
+{% extends "menu.html" %}
+
+{% block content %}
+<div class="col-12">
+    <h1 class="text-center my-5">{{ page_title }}</h1>
+</div>
+<div class="container-fluid">
+    <form class="needs-validation" method="POST">
+        <div class="row mb-4">
+            <div class="col-4">
+                <div class="form-check">
+                    <label class="form-check-label w-75 h-25 fs-5 ms-3 text-center bg-white" for="VkCheck">
+                        ВКонтакте
+                    </label>
+                    <input class="form-check-input broadcast-check" type="checkbox" id="VkCheck" name="vk" checked>
+                </div>
+            </div>
+            <div class="col-4"></div>
+            <div class="col-4">
+                <div class="form-check text-end">
+                    <label class="form-check-label w-75 h-25 fs-5 text-center bg-white" for="tgCheck">
+                        Telegram
+                    </label>
+                    <input class="form-check-input broadcast-check" type="checkbox" id="tgCheck" name="tg" checked>
+                </div>
+            </div>
+        </div>
+        <div class="row mb-4">
+            <div class="col-12">
+                <textarea cols="30" rows="10" class="form-control" type="text" placeholder="Сообщение" id="validationCustom05" name="name" required></textarea>
+                <div class="invalid-feedback">
+                    Поле не должно быть пустым
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col offset-md-5">
+                <button class="btn btn-blue btn-lg" type="submit">Отправить</button>
+            </div>
+        </div>
+    </form>
+</div>
+{% endblock %}
