@@ -33,14 +33,14 @@ def login():
         return render_template("login.html")
 
 
-@app.route("/logout")
+@app.post("/logout")
 @login_required
 def logout():
     logout_user()
     return redirect(url_for("login"))
 
 
-@app.route("/")
+@app.get("/")
 @login_required
 def index() -> str:
     """Функция позволяет отрендерить главную страницу веб-сервиса.
@@ -48,8 +48,6 @@ def index() -> str:
     Returns:
         str: отрендеренная главная веб-страница
     """
-    time_start = str(request.form.get("time_start"))
-    time_end = str(request.form.get("time_end"))
     question_counts = get_questions_count()
     question_counts_lists = (
         list(question_counts.keys()),
@@ -127,7 +125,7 @@ def broadcast() -> str:
     return render_template("broadcast.html", page_title="Рассылка")
 
 
-@app.route("/settings")
+@app.get("/settings")
 @login_required
 def settings() -> str:
     """Функция позволяет вывести на экране тревожные вопросы.
@@ -140,7 +138,7 @@ def settings() -> str:
     return render_template("settings.html", users=users, page_title="Настройки")
 
 
-@app.route("/reindex", methods=["POST"])
+@app.post("/reindex")
 @login_required
 def reindex_qa():
     """Функция отправляет POST-запрос на переиндексацию в модуле QA.
