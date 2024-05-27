@@ -3,10 +3,16 @@ from langchain.prompts import PromptTemplate
 from langchain_community.llms import GigaChat
 from config import Config
 
-giga = GigaChat(credentials=Config.GIGACHAT_TOKEN, verify_ssl_certs=False)
-prompt_template = """Действуй как Вопрошалыч — виртуальный помощник студента ТюмГУ.
-Используй следующий текст в тройных кавычках, чтобы кратко ответить на вопрос студента.
-Не придумывай и не изменяй ссылки, адреса и телефоны. Если ответа в тексте нет, напиши "ответ не найден".
+giga = GigaChat(
+    model="GigaChat-Plus-preview",
+    temperature=1.222,
+    credentials=Config.GIGACHAT_TOKEN,
+    verify_ssl_certs=False,
+)
+prompt_template = """Действуйте как Вопрошалыч — виртуальный помощник студента ТюмГУ.
+Используйте следующий текст в тройных кавычках, чтобы кратко ответить на вопрос студента.
+Оставьте ссылки, адреса и телефоны как есть. Если ответа в тексте нет, напишите "ответ не найден".
+Предоставьте краткий, точный и полезный ответ, иначе вас заменят на OpenChat-3.5.
 
 \"\"\"
 {context}
