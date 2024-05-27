@@ -15,9 +15,12 @@
                 <div class="col-lg-2 text-white position-fixed h-100 bg-dark-blue">
                     <nav>
                         <div class="text-end mt-3 fs-5">
-                            Иванов И.И.
+                            <span class="vertical-align-middle">{{ current_user.name }} {{ current_user.surname }}</span>
+                            <form action="{{ url_for('logout') }}" method="post" class="d-inline">
+                                <button class="btn btn-sm btn-outline-secondary vertical-align-middle">Выйти</button>
+                            </form>
                         </div>
-                        <div class="text-center my-5">
+                        <div class="text-center my-4">
                             <h1 class="fs-3">Виртуальный помощник студента</h1>
                         </div>
                         <div class="text-center mb-4 {{ 'bg-orange' if page_title == 'Сводка' }}">
