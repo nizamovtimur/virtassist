@@ -183,19 +183,19 @@ class ClusterAnalysis:
 
     def get_clusters_keywords(
         self, questions: list[dict[str, str | mark_of_question]]
-    ) -> list[tuple[list[str | mark_of_question] | str]]:
+    ) -> tuple[list[tuple[list[tuple[str, mark_of_question]], list[str], list[str]]], int, int]:
         """Логика кластеризации текстовых данных
 
         Args:
             questions (list[dict[str, str]]): список вопросов, подлежащих анализу
 
         Returns:
-            list[tuple[list[str | mark_of_question] | str]]: список кортежей, для каждого: список вопросов с метками, список ключевых слов, временной промежуток вопросов по кластеру
+            tuple[list[tuple[list[tuple[str, mark_of_question]], list[str], list[str]]], int, int]: картеж, где 1 - список кортежей, для каждого: список вопросов с метками, список ключевых слов, временной промежуток вопросов по кластеру. 2 - Количество вопросов. 3 - Количество кластеров
         """
 
         # TODO: refactor
         if len(questions) < 2:
-            return []
+            return ([], 0, 0)
 
         try:
             df = pd.DataFrame(questions)
@@ -220,13 +220,13 @@ class ClusterAnalysis:
                     (
                         sentences,
                         self.keywords_extracting(sent_to_get_kw),
-                        "с " + date_min + " по " + date_max,
+                        [date_min, date_max],
                     )
                 )
             data = sorted(data, key=lambda dt: len(dt[0]), reverse=True)
-            return data
+            return(data, len(questions), len(data))
         except:
-            return []
+            return ([], 0, 0)
 
 
 def Fprint(arr):
@@ -260,4 +260,5 @@ if __name__ == "__main__":
 
     CA = ClusterAnalysis()
     data = CA.get_clusters_keywords(arr)
+    data = data[0]
     Fprint(data)
