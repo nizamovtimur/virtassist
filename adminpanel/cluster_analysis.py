@@ -173,7 +173,7 @@ class ClusterAnalysis:
         """
 
         rake = Rake(
-            min_length=2,
+            min_length=1,
             punctuations={i for i in punctuation},
             language="russian",
             include_repeated_phrases=False,
