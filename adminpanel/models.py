@@ -1,10 +1,9 @@
 import base64
 from typing import Optional, List
 from bcrypt import hashpw, gensalt, checkpw
-from datetime import date, timedelta
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import UserMixin
-from sqlalchemy import BigInteger, Column, DateTime, ForeignKey, Text, func, or_
+from sqlalchemy import BigInteger, Column, DateTime, ForeignKey, Text, func
 from sqlalchemy.orm import Mapped, Session, mapped_column, relationship
 from pgvector.sqlalchemy import Vector
 from cluster_analysis import mark_of_question
@@ -144,25 +143,25 @@ class Admin(db.Model, UserMixin):
 
 
 def get_questions_for_clusters(
-    time_start: str = str(date.today() - timedelta(days=90)),
-    time_end: str = str(date.today() + timedelta(days=1)),
-    have_not_answer: bool = True,
-    have_low_score: bool = False,
-    have_high_score: bool = False,
-    have_not_score: bool = False,
+    time_start: str,
+    time_end: str,
+    have_not_answer: bool,
+    have_low_score: bool,
+    have_high_score: bool,
+    have_not_score: bool,
 ) -> list[dict[str, str | mark_of_question]]:
     """Функция для выгрузки вопросов для обработки в классе ClusterAnalysis
 
     Args:
-        time_start (str, optional): дата, от которой нужно сортировать вопросы. По-умолчанию, 30 дней назад
-        time_end (str, optional): дата, до которой нужно сортировать вопросы. По-умолчанию, завтрашняя дата
-        have_not_answer (bool, optional): вопросы без ответа. По-умолчанию True
-        have_low_score (bool, optional): вопросы с низкой оценкой. По-умолчанию False
-        have_high_score (bool, optional): вопросы с высокой оценкой. По-умолчанию False
-        have_not_score (bool, optional): вопросы без оценки. По-умолчанию False
+        time_start (str): дата, от которой нужно сортировать вопросы
+        time_end (str): дата, до которой нужно сортировать вопросы
+        have_not_answer (bool): вопросы без ответа
+        have_low_score (bool): вопросы с низкой оценкой
+        have_high_score (bool): вопросы с высокой оценкой
+        have_not_score (bool): вопросы без оценки
 
     Returns:
-        list[dict[str, str]]: список вопросов - словарей с ключами `text` и `date`
+        list[dict[str, str | mark_of_question]]: список вопросов - словарей с ключами `text, `date` и `type`
     """
 
     with Session(db.engine) as session:
@@ -210,14 +209,14 @@ def get_questions_for_clusters(
 
 
 def get_questions_count(
-    time_start: str = str(date.today() - timedelta(days=30)),
-    time_end: str = str(date.today() + timedelta(days=1)),
+    time_start: str,
+    time_end: str,
 ) -> dict[str, list[int]]:
     """Функция подсчёта вопросов, заданных в вк и телеграм, по дням для графиков на `main-page.html`
 
     Args:
-        time_start (str, optional): дата начала. По-умолчанию, 30 дней назад.
-        time_end (str, optional): дата конца. По-умолчанию, завтрашняя дата.
+        time_start (str): дата начала периода
+        time_end (str): дата конца периода
 
     Returns:
         dict[str, list[int]]: словарь из дат с количеством вопросов по дням в vk и telegram

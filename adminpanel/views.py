@@ -1,3 +1,4 @@
+from datetime import date, timedelta
 from flask import render_template, redirect, request, url_for
 from flask_login import LoginManager, login_user, logout_user, login_required
 import requests
@@ -48,7 +49,9 @@ def index() -> str:
     Returns:
         str: отрендеренная главная веб-страница
     """
-    question_counts = get_questions_count()
+    time_start = str(date.today() - timedelta(days=30))
+    time_end = str(date.today() + timedelta(days=1))
+    question_counts = get_questions_count(time_start=time_start, time_end=time_end)
     question_counts_lists = (
         list(question_counts.keys()),
         [i[0] for i in question_counts.values()],
@@ -69,26 +72,37 @@ def questions_analysis() -> str:
     Returns:
         str: отрендеренная веб-страница с POST-запросом на базу данных
     """
-    if len(request.form.keys()) == 0:
-        questions = get_questions_for_clusters()
+    if len(request.values.keys()) == 0:
+        time_start = str(date.today() - timedelta(days=90))
+        time_end = str(date.today() + timedelta(days=1))
+        have_not_answer = True
+        have_low_score = False
+        have_high_score = False
+        have_not_score = False
     else:
-        time_start = str(request.form.get("time_start"))
-        time_end = str(request.form.get("time_end"))
-        have_not_answer = str(request.form.get("have_not_answer")) == "have_not_answer"
-        have_low_score = str(request.form.get("have_low_score")) == "have_low_score"
-        have_high_score = str(request.form.get("have_high_score")) == "have_high_score"
-        have_not_score = str(request.form.get("have_not_score")) == "have_not_score"
-        questions = get_questions_for_clusters(
-            time_start,
-            time_end,
-            have_not_answer,
-            have_low_score,
-            have_high_score,
-            have_not_score,
-        )
+        time_start = str(request.values.get("time_start"))
+        time_end = str(request.values.get("time_end"))
+        have_not_answer = bool(request.values.get("have_not_answer"))
+        have_low_score = bool(request.values.get("have_low_score"))
+        have_high_score = bool(request.values.get("have_high_score"))
+        have_not_score = bool(request.values.get("have_not_score"))
+    questions = get_questions_for_clusters(
+        time_start=time_start,
+        time_end=time_end,
+        have_not_answer=have_not_answer,
+        have_low_score=have_low_score,
+        have_high_score=have_high_score,
+        have_not_score=have_not_score,
+    )
     clusters, questions_len, clusters_len = analysis.get_clusters_keywords(questions)
     return render_template(
         "questions-analysis.html",
+        time_start=time_start,
+        time_end=time_end,
+        have_not_answer=have_not_answer,
+        have_low_score=have_low_score,
+        have_high_score=have_high_score,
+        have_not_score=have_not_score,
         clusters=clusters,
         questions_len=questions_len,
         clusters_len=clusters_len,
