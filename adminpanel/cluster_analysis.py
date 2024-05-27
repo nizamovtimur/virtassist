@@ -183,14 +183,16 @@ class ClusterAnalysis:
 
     def get_clusters_keywords(
         self, questions: list[dict[str, str | mark_of_question]]
-    ) -> tuple[list[tuple[list[tuple[str, mark_of_question]], list[str], list[str]]], int, int]:
+    ) -> tuple[
+        list[tuple[list[tuple[str, mark_of_question]], list[str], tuple[str]]], int, int
+    ]:
         """Логика кластеризации текстовых данных
 
         Args:
             questions (list[dict[str, str]]): список вопросов, подлежащих анализу
 
         Returns:
-            tuple[list[tuple[list[tuple[str, mark_of_question]], list[str], list[str]]], int, int]: картеж, где 1 - список кортежей, для каждого: список вопросов с метками, список ключевых слов, временной промежуток вопросов по кластеру. 2 - Количество вопросов. 3 - Количество кластеров
+            tuple[list[tuple[list[tuple[str, mark_of_question]], list[str], tuple[str]]], int, int]: кортеж, где 0 - список кортежей, для каждого: список вопросов с метками, список ключевых слов, временной промежуток вопросов по кластеру, 1 - количество вопросов, 2 - количество кластеров
         """
 
         # TODO: refactor
@@ -220,11 +222,11 @@ class ClusterAnalysis:
                     (
                         sentences,
                         self.keywords_extracting(sent_to_get_kw),
-                        [date_min, date_max],
+                        (date_min, date_max),
                     )
                 )
             data = sorted(data, key=lambda dt: len(dt[0]), reverse=True)
-            return(data, len(questions), len(data))
+            return (data, len(questions), len(data))
         except:
             return ([], 0, 0)
 

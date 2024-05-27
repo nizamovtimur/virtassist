@@ -63,7 +63,7 @@ def index() -> str:
     )
 
 
-@app.route("/questions-analysis", methods=["POST", "GET"])
+@app.get("/questions-analysis")
 @login_required
 def questions_analysis() -> str:
     """Функция позволяет вывести на экране вопросы, не имеющие ответа.
@@ -71,14 +71,15 @@ def questions_analysis() -> str:
     Returns:
         str: отрендеренная веб-страница с POST-запросом на базу данных
     """
-    print(get_questions_for_clusters("2024-02-06", "2024-03-16"))
-    if request.method == "POST":
+    if len(request.form.keys()) == 0:
+        questions = get_questions_for_clusters()
+    else:
         time_start = str(request.form.get("time_start"))
         time_end = str(request.form.get("time_end"))
-        have_not_answer = bool(request.form.get("have_not_answer"))
-        have_low_score = bool(request.form.get("have_low_score"))
-        have_high_score = bool(request.form.get("have_high_score"))
-        have_not_score = bool(request.form.get("have_not_score"))
+        have_not_answer = str(request.form.get("have_not_answer")) == "have_not_answer"
+        have_low_score = str(request.form.get("have_low_score")) == "have_low_score"
+        have_high_score = str(request.form.get("have_high_score")) == "have_high_score"
+        have_not_score = str(request.form.get("have_not_score")) == "have_not_score"
         questions = get_questions_for_clusters(
             time_start,
             time_end,
@@ -87,16 +88,12 @@ def questions_analysis() -> str:
             have_high_score,
             have_not_score,
         )
-        return render_template(
-            "questions-analysis.html",
-            clusters=analysis.get_clusters_keywords(questions),
-            page_title="Анализ вопросов",
-        )
+    clusters, questions_len, clusters_len = analysis.get_clusters_keywords(questions)
     return render_template(
         "questions-analysis.html",
-        clusters=analysis.get_clusters_keywords(
-            get_questions_for_clusters("2024-02-06", "2024-03-16")
-        ),
+        clusters=clusters,
+        questions_len=questions_len,
+        clusters_len=clusters_len,
         page_title="Анализ вопросов",
     )
 

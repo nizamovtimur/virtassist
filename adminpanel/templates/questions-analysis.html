@@ -10,28 +10,40 @@
             Настройки
         </div>
         <div class="card-body">
-            <form id="dateRangeForm">
+            <form id="dateRangeForm" method="GET">
                 <div class="form-check form-check-inline">
-                    <input class="form-check-input" type="checkbox" value="" id="unansweredCheckbox">
-                    <label class="form-check-label" for="unansweredCheckbox">
+                    <input class="form-check-input" type="checkbox" value="have_not_answer" id="haveNotAnswerCheckbox" name="have_not_answer" checked>
+                    <label class="form-check-label" for="haveNotAnswerCheckbox">
                         Вопросы без ответа
                     </label>
                 </div>
                 <div class="form-check form-check-inline">
-                    <input class="form-check-input" type="checkbox" value="" id="lowRatingCheckbox">
-                    <label class="form-check-label" for="lowRatingCheckbox">
-                        Вопросы с низкой оценкой
+                    <input class="form-check-input" type="checkbox" value="have_low_score" id="haveLowScoreCheckbox" name="have_low_score">
+                    <label class="form-check-label" for="haveLowScoreCheckbox">
+                        Низкая оценка ответа
+                    </label>
+                </div>
+                <div class="form-check form-check-inline">
+                    <input class="form-check-input" type="checkbox" value="have_high_score" id="haveHighScoreCheckbox" name="have_high_score">
+                    <label class="form-check-label" for="haveHighScoreCheckbox">
+                        Высокая оценка ответа
+                    </label>
+                </div>
+                <div class="form-check form-check-inline">
+                    <input class="form-check-input" type="checkbox" value="have_not_score" id="haveNotScoreCheckbox" name="have_not_score">
+                    <label class="form-check-label" for="haveNotScoreCheckbox">
+                        Ответы не оценены
                     </label>
                 </div>
                 <div class="input-group mt-3">
-                    <span class="input-group-text">от</span>
-                    <input type="date" class="form-control" id="start_date" name="start_date">
-                    <span class="input-group-text">до</span>
-                    <input type="date" class="form-control" id="end_date" name="end_date">
+                    <span class="input-group-text">с</span>
+                    <input type="date" class="form-control" id="time_start" name="time_start">
+                    <span class="input-group-text">по</span>
+                    <input type="date" class="form-control" id="time_end" name="time_end">
                 </div>
                 <div class="row mt-3">
                     <div class="col-8 align-self-center">
-                        <span class="fs-5">279 вопросов, 69 групп</span>
+                        <span class="fs-5">Кол-во вопросов: {{ questions_len }}, кол-во групп: {{ clusters_len }}</span>
                     </div>
                     <div class="col-4 text-end">
                         <button class="btn btn-blue btn-lg" type="submit">Анализировать</button>
@@ -52,11 +64,11 @@
             </h2>
             <div id="panelsStayOpen-collapse{{clusters.index(cluster) + 1}}" class="accordion-collapse collapse">
                 <div class="accordion-body">
-                    <strong>Вопросы:</strong><br/>
+                    <strong>Вопросы ({{ cluster[0]|length }}):</strong><br/>
                     {% for q in cluster[0] %}
                         {{ q[0] }} {{ q[1].name }} {{ q[1].value }}<br/>
                     {% endfor %}
-                    <strong>Период:</strong> {{ cluster[2] }}
+                    <strong>Период:</strong> с {{ cluster[2][0] }} по {{ cluster[2][1] }}
                 </div>
             </div>
         </div>
