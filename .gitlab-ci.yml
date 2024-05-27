@@ -7,7 +7,11 @@ stages:
 build:
   stage: build
   script:
-    - docker compose --env-file .env.docker build
+    - docker build --network host -t virtassist/db:latest ./db
+    - docker build --network host --file db/Dockerfile-migrate -t virtassist/db-migrate:latest ./db
+    - docker build --network host -t virtassist/qa:latest ./qa
+    - docker build --network host -t virtassist/chatbot:latest ./chatbot
+    - docker build --network host -t virtassist/adminpanel:latest ./adminpanel
   only:
     - main
   tags:
