@@ -7,7 +7,7 @@ from sqlalchemy import create_engine, select
 from sqlalchemy.orm import Session
 from config import Config
 from database import Chunk
-from gigachat_prompting import get_answer
+from llm_prompting import get_answer
 from confluence_retrieving import get_chunk, reindex_confluence
 
 routes = web.RouteTableDef()

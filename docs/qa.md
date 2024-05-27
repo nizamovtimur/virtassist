@@ -73,7 +73,7 @@
     Returns:
         Chunk | None: экземпляр класса Chunk — фрагмент документа
 
-## [gigachat_prompting](../qa/gigachat_prompting.py)
+## [llm_prompting](../qa/llm_prompting.py)
 
 ### `get_answer(context: str, question: str) -> str`
 Возвращает сгенерированный LLM ответ на вопрос пользователя по заданному документу в соответствии с промтом
@@ -87,8 +87,8 @@
 
 ## [tests](../qa/tests.py)
 
-### `test_gigachat()`
-тест взаимодействия с GigaChat
+### `test_llm()`
+тест взаимодействия с LLM
 
 ### `test_confluence()`
 тест взаимодействия с Confluence

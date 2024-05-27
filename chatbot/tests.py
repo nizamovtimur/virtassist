@@ -111,6 +111,6 @@ class TestDBFunctions:
             for qa in session.execute(
                 select(QuestionAnswer).where(QuestionAnswer.user_id == user_id)
             ).scalars():
-                qa.time_created = qa.time_created.replace(year=2020)
+                qa.created_at = qa.created_at.replace(year=2020)
             session.commit()
         assert check_spam(self.engine, user_id) is False

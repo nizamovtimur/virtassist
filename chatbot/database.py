@@ -42,11 +42,11 @@ class User(Base):
     question_answers: Mapped[List["QuestionAnswer"]] = relationship(
         back_populates="user",
         cascade="all, delete-orphan",
-        order_by="desc(QuestionAnswer.time_created)",
+        order_by="desc(QuestionAnswer.created_at)",
     )
 
-    time_created = Column(DateTime(timezone=True), server_default=func.now())
-    time_updated = Column(DateTime(timezone=True), onupdate=func.now())
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
 
 
 class QuestionAnswer(Base):
@@ -72,8 +72,8 @@ class QuestionAnswer(Base):
 
     user: Mapped["User"] = relationship(back_populates="question_answers")
 
-    time_created = Column(DateTime(timezone=True), server_default=func.now())
-    time_updated = Column(DateTime(timezone=True), onupdate=func.now())
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
 
 
 def add_user(
@@ -192,7 +192,7 @@ def check_spam(engine: Engine, user_id: int) -> bool:
             return False
         if len(user.question_answers) > 3:
             minute_ago = datetime.now() - timedelta(minutes=1)
-            third_message_date = user.question_answers[2].time_created
+            third_message_date = user.question_answers[2].created_at
             return minute_ago < third_message_date.replace(tzinfo=None)
         return False
 

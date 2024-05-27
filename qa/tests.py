@@ -1,11 +1,11 @@
 from atlassian import Confluence
 from config import Config
-from gigachat_prompting import get_answer
+from llm_prompting import get_answer
 from confluence_retrieving import get_document_content_by_id
 
 
-def test_gigachat():
-    """тест взаимодействия с GigaChat"""
+def test_llm():
+    """тест взаимодействия с LLM"""
 
     context = """Чтобы поменять занятия по физической культуре на посещение
     частного фитнес-клуба, необходимо заполнить заявление и обратиться

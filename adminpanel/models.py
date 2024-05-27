@@ -20,8 +20,8 @@ class Chunk(db.Model):
         confluence_url (str): ссылка на источник
         text (str): текст фрагмента
         embedding (Vector): векторное представление текста фрагмента
-        time_created (datetime): время создания модели
-        time_updated (datetime): время обновления модели
+        created_at (datetime): время создания модели
+        updated_at (datetime): время обновления модели
     """
 
     __tablename__ = "chunk"
@@ -31,8 +31,8 @@ class Chunk(db.Model):
     text: Mapped[str] = mapped_column(Text())
     embedding: Mapped[Vector] = mapped_column(Vector(312))
 
-    time_created = Column(DateTime(timezone=True), server_default=func.now())
-    time_updated = Column(DateTime(timezone=True), onupdate=func.now())
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
 
 
 class User(db.Model):
@@ -43,8 +43,8 @@ class User(db.Model):
         vk_id (int | None): id пользователя ВКонтакте
         telegram_id (int | None): id пользователя Telegram
         vk_id (int | None): id пользователя ВКонтакте
-        time_created (datetime): время создания модели
-        time_updated (datetime): время обновления модели
+        created_at (datetime): время создания модели
+        updated_at (datetime): время обновления модели
     """
 
     __tablename__ = "user"
@@ -57,11 +57,11 @@ class User(db.Model):
     question_answers: Mapped[List["QuestionAnswer"]] = relationship(
         back_populates="user",
         cascade="all, delete-orphan",
-        order_by="desc(QuestionAnswer.time_created)",
+        order_by="desc(QuestionAnswer.created_at)",
     )
 
-    time_created = Column(DateTime(timezone=True), server_default=func.now())
-    time_updated = Column(DateTime(timezone=True), onupdate=func.now())
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
 
 
 class QuestionAnswer(db.Model):
@@ -74,8 +74,8 @@ class QuestionAnswer(db.Model):
         confluence_url (str | None): ссылка на страницу в вики-системе, содержащую ответ
         score (int | None): оценка пользователем ответа
         user_id (int): id пользователя, задавшего вопрос
-        time_created (datetime): время создания модели
-        time_updated (datetime): время обновления модели
+        created_at (datetime): время создания модели
+        updated_at (datetime): время обновления модели
     """
 
     __tablename__ = "question_answer"
@@ -89,8 +89,8 @@ class QuestionAnswer(db.Model):
 
     user: Mapped["User"] = relationship(back_populates="question_answers")
 
-    time_created = Column(DateTime(timezone=True), server_default=func.now())
-    time_updated = Column(DateTime(timezone=True), onupdate=func.now())
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
 
 
 class Admin(db.Model, UserMixin):
@@ -103,8 +103,8 @@ class Admin(db.Model, UserMixin):
         last_name (str | None): отчество (опционально)
         email (str): корпоративная электронная почта
         department (str): подразделение
-        time_created (datetime): время создания модели
-        time_updated (datetime): время обновления модели
+        created_at (datetime): время создания модели
+        updated_at (datetime): время обновления модели
     """
 
     __tablename__ = "admin"
@@ -117,8 +117,8 @@ class Admin(db.Model, UserMixin):
     department: Mapped[str] = mapped_column(Text())
     password_hash: Mapped[str] = mapped_column(Text())
 
-    time_created = Column(DateTime(timezone=True), server_default=func.now())
-    time_updated = Column(DateTime(timezone=True), onupdate=func.now())
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
 
     def set_password(self, password: str) -> None:
         """Метод хеширования пароля администратора.
@@ -166,7 +166,7 @@ def get_questions_for_clusters(
 
     with Session(db.engine) as session:
         query = session.query(QuestionAnswer).filter(
-            QuestionAnswer.time_created.between(time_start, time_end)
+            QuestionAnswer.created_at.between(time_start, time_end)
         )
         questions = []
         if have_not_answer:
@@ -174,7 +174,7 @@ def get_questions_for_clusters(
                 questions.append(
                     {
                         "text": qa.question,
-                        "date": qa.time_created.strftime("%Y-%m-%d"),
+                        "date": qa.created_at.strftime("%Y-%m-%d"),
                         "type": mark_of_question.have_not_answer,
                     }
                 )
@@ -183,7 +183,7 @@ def get_questions_for_clusters(
                 questions.append(
                     {
                         "text": qa.question,
-                        "date": qa.time_created.strftime("%Y-%m-%d"),
+                        "date": qa.created_at.strftime("%Y-%m-%d"),
                         "type": mark_of_question.have_low_score,
                     }
                 )
@@ -192,7 +192,7 @@ def get_questions_for_clusters(
                 questions.append(
                     {
                         "text": qa.question,
-                        "date": qa.time_created.strftime("%Y-%m-%d"),
+                        "date": qa.created_at.strftime("%Y-%m-%d"),
                         "type": mark_of_question.have_high_score,
                     }
                 )
@@ -201,7 +201,7 @@ def get_questions_for_clusters(
                 questions.append(
                     {
                         "text": qa.question,
-                        "date": qa.time_created.strftime("%Y-%m-%d"),
+                        "date": qa.created_at.strftime("%Y-%m-%d"),
                         "type": mark_of_question.have_not_score,
                     }
                 )
@@ -225,26 +225,26 @@ def get_questions_count(
     with Session(db.engine) as session:
         vk_questions_count = (
             session.query(
-                func.date_trunc("day", QuestionAnswer.time_created), func.count()
+                func.date_trunc("day", QuestionAnswer.created_at), func.count()
             )
             .join(User)
             .filter(
                 User.vk_id != None,
-                QuestionAnswer.time_created.between(time_start, time_end),
+                QuestionAnswer.created_at.between(time_start, time_end),
             )
-            .group_by(func.date_trunc("day", QuestionAnswer.time_created))
+            .group_by(func.date_trunc("day", QuestionAnswer.created_at))
             .all()
         )
         telegram_questions_count = (
             session.query(
-                func.date_trunc("day", QuestionAnswer.time_created), func.count()
+                func.date_trunc("day", QuestionAnswer.created_at), func.count()
             )
             .join(User)
             .filter(
                 User.telegram_id != None,
-                QuestionAnswer.time_created.between(time_start, time_end),
+                QuestionAnswer.created_at.between(time_start, time_end),
             )
-            .group_by(func.date_trunc("day", QuestionAnswer.time_created))
+            .group_by(func.date_trunc("day", QuestionAnswer.created_at))
             .all()
         )
 
