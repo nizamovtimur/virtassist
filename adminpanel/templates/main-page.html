@@ -4,52 +4,97 @@
 <div class="col-12">
     <h1 class="text-center my-5">Сводка использования чат-ботов</h1>
 </div>
-<table class="table table-striped table-hover table-bordered">
-    <thead>
-    <tr>
-        <th scope="col"></th>
-        <th scope="col">ВКонтакте</th>
-        <th scope="col">Telegram</th>
-        <th scope="col">Всего</th>
-    </tr>
-    </thead>
-    <tbody>
-    <tr>
-        <th scope="row">Кол-во новых пользователей</th>
-        <td>52</td>
-        <td>85</td>
-        <td>137</td>
-    </tr>
-    <tr>
-        <th scope="row">Кол-во пользователей</th>
-        <td>240</td>
-        <td>167</td>
-        <td>407</td>
-    </tr>
-    <tr>
-        <th scope="row">из них задали вопросы ИИ за период</th>
-        <td>25</td>
-        <td>31</td>
-        <td>56</td>
-    </tr>
-    <tr>
-        <th scope="row">количество вопросов</th>
-        <td>71</td>
-        <td>133</td>
-        <td>204</td>
-    </tr>
-    <tr>
-        <th scope="row">из них с оценкой ОТЛ</th>
-        <td>2</td>
-        <td>15</td>
-        <td>17</td>
-    </tr>
-    <tr>
-        <th scope="row">с оценкой НЕУД</th>
-        <td>3</td>
-        <td>2</td>
-        <td>5</td>
-    </tr>
-    </tbody>
-</table>
+
+<div class="col-12">
+    <h2 class="text-center mb-5">Вопросы пользователей</h2>
+</div>
+
+<div class="w-100">
+    <canvas id="myChart" class="mb-5"></canvas>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+    const ctx = document.getElementById('myChart');
+
+    const plugin = {
+        id: 'customCanvasBackgroundColor',
+        beforeDraw: (chart, args, options) => {
+            const {ctx} = chart;
+            ctx.save();
+            ctx.globalCompositeOperation = 'destination-over';
+            ctx.fillStyle = options.color || '#99ffff';
+            ctx.fillRect(0, 0, chart.width, chart.height);
+            ctx.restore();
+        }
+    };
+
+    const data = {
+        labels: [{% for i in question_counts[0]%}'{{ i }}', {% endfor %}],
+        datasets: [
+        {
+            label: 'Кол-во вопросов в день вк',
+            data: {{ question_counts[1] }},
+            borderWidth: 4,
+            borderDash: [5, 5],
+        },
+        {
+            label: 'Кол-во вопросов в день тг',
+            data: {{ question_counts[2] }},
+            borderWidth: 4,
+            borderDash: [3, 3],
+        },
+        ]
+    };
+
+    new Chart(ctx, {
+        type: 'line',
+        data: data,
+        options: {
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    title: {
+                        display: true,
+                        text: 'Кол-во вопросов',
+                        padding: 8,
+                        font: {
+                            size: 24
+                        }
+                    },
+                    ticks: {
+                        stepSize: 1
+                    }
+                },
+                x: {
+                    beginAtZero: true,
+                    title: {
+                        display: true,
+                        text: 'Даты',
+                        padding: 8,
+                        font: {
+                            size: 24
+                        }
+                    }
+                  }
+            },
+            plugins: {
+                customCanvasBackgroundColor: {
+                    color: 'white',
+                },
+                legend: {
+                    labels: {
+                        padding: 20,
+                        font: {
+                            size: 16
+                        }
+                    }
+                }
+            }
+        },
+        plugins: [plugin],
+    });
+</script>
 {% endblock %}
+

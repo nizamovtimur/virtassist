@@ -1,10 +1,60 @@
 {% extends "menu.html" %}
 {% block content %}
 <div class="col-12">
-    <h1 class="text-center my-5">{{ page_title }}</h1>
+    <h1 class="text-center mt-5">{{ page_title }}</h1>
 </div>
 
-<div class="accordion" id="accordionPanelsStayOpenExample">
+<div class="col-md-12 my-3">
+    <div class="card">
+        <div class="card-header">
+            Настройки
+        </div>
+        <div class="card-body">
+            <form id="dateRangeForm" method="GET">
+                <div class="form-check form-check-inline">
+                    <input class="form-check-input" type="checkbox" value="have_not_answer" id="haveNotAnswerCheckbox" name="have_not_answer"{% if have_not_answer %} checked{% endif %}>
+                    <label class="form-check-label" for="haveNotAnswerCheckbox">
+                        Вопросы без ответа
+                    </label>
+                </div>
+                <div class="form-check form-check-inline">
+                    <input class="form-check-input" type="checkbox" value="have_low_score" id="haveLowScoreCheckbox" name="have_low_score"{% if have_low_score %} checked{% endif %}>
+                    <label class="form-check-label" for="haveLowScoreCheckbox">
+                        Низкая оценка ответа
+                    </label>
+                </div>
+                <div class="form-check form-check-inline">
+                    <input class="form-check-input" type="checkbox" value="have_high_score" id="haveHighScoreCheckbox" name="have_high_score"{% if have_high_score %} checked{% endif %}>
+                    <label class="form-check-label" for="haveHighScoreCheckbox">
+                        Высокая оценка ответа
+                    </label>
+                </div>
+                <div class="form-check form-check-inline">
+                    <input class="form-check-input" type="checkbox" value="have_not_score" id="haveNotScoreCheckbox" name="have_not_score"{% if have_not_score %} checked{% endif %}>
+                    <label class="form-check-label" for="haveNotScoreCheckbox">
+                        Ответы не оценены
+                    </label>
+                </div>
+                <div class="input-group mt-3">
+                    <span class="input-group-text">с</span>
+                    <input type="date" value="{{time_start}}" class="form-control" id="time_start" name="time_start">
+                    <span class="input-group-text">по</span>
+                    <input type="date" value="{{time_end}}" class="form-control" id="time_end" name="time_end">
+                </div>
+                <div class="row mt-3">
+                    <div class="col-8 align-self-center">
+                        <span class="fs-5">Кол-во вопросов: {{ questions_len }}, кол-во групп: {{ clusters_len }}</span>
+                    </div>
+                    <div class="col-4 text-end">
+                        <button class="btn btn-blue btn-lg" type="submit">Анализировать</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div class="accordion mb-5" id="accordionPanelsStayOpenExample">
     {% for cluster in clusters %}
         <div class="accordion-item">
             <h2 class="accordion-header">
@@ -14,11 +64,11 @@
             </h2>
             <div id="panelsStayOpen-collapse{{clusters.index(cluster) + 1}}" class="accordion-collapse collapse">
                 <div class="accordion-body">
-                    <strong>Вопросы в кластере:</strong><br/>
+                    <strong>Вопросы ({{ cluster[0]|length }}):</strong><br/>
                     {% for q in cluster[0] %}
-                        {{ q }}<br/>
+                    <span><i>({{ q[1].value }})</i></span> {{ q[0] }}<br/>
                     {% endfor %}
-                    <strong>Дата последнего вопроса:</strong> {{ cluster[2] }}
+                    <strong>Период:</strong> с {{ cluster[2][0] }} по {{ cluster[2][1] }}
                 </div>
             </div>
         </div>
