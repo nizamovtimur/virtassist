@@ -66,7 +66,7 @@
                 <div class="accordion-body">
                     <strong>Вопросы ({{ cluster[0]|length }}):</strong><br/>
                     {% for q in cluster[0] %}
-                        {{ q[0] }} {{ q[1].name }} {{ q[1].value }}<br/>
+                    <span><i>({{ q[1].value }})</i></span> {{ q[0] }}<br/>
                     {% endfor %}
                     <strong>Период:</strong> с {{ cluster[2][0] }} по {{ cluster[2][1] }}
                 </div>

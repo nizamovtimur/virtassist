@@ -73,7 +73,7 @@ def questions_analysis() -> str:
         str: отрендеренная веб-страница с POST-запросом на базу данных
     """
     if len(request.values.keys()) == 0:
-        time_start = str(date.today() - timedelta(days=90))
+        time_start = str(date.today() - timedelta(days=30))
         time_end = str(date.today() + timedelta(days=1))
         have_not_answer = True
         have_low_score = False
