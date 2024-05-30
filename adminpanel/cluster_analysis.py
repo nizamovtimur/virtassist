@@ -154,9 +154,6 @@ class ClusterAnalysis:
                 clusters[clusters_hier[i]] = [
                     (df["text"].iloc[i], df["date"].iloc[i], df["type"].iloc[i])
                 ]
-        arr = []
-        for i in arr:
-            clusters.pop(i)
         return clusters
 
     def keywords_extracting(self, sentences: list[str]) -> list[str]:
