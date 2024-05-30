@@ -47,7 +47,7 @@ class ClusterAnalysis:
                 str: то же предложение, но без спец. символов и двойных пробелов
             """
 
-            s = s.replace("\\n", " ").replace("\\t", " ").replace("  ", " ")
+            s = s.replace("\\n", " ").replace("\\t", " ").replace("\n", " ").replace("\t", " ")
             while "  " in s:
                 s = s.replace("  ", " ")
             return s
@@ -155,9 +155,6 @@ class ClusterAnalysis:
                     (df["text"].iloc[i], df["date"].iloc[i], df["type"].iloc[i])
                 ]
         arr = []
-        for i in clusters.keys():
-            if len(clusters[i]) < 3:
-                arr.append(i)
         for i in arr:
             clusters.pop(i)
         return clusters
@@ -241,7 +238,7 @@ def Fprint(arr):
         print()
 
 
-if __name__ == "__main__":
+def main():
     arr = []
     with open("database.csv", "r", encoding="utf-8") as f:
         s = f.readline()
@@ -264,3 +261,7 @@ if __name__ == "__main__":
     data = CA.get_clusters_keywords(arr)
     data = data[0]
     Fprint(data)
+
+
+if __name__ == "__main__":
+    main()
