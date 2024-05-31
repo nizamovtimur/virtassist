@@ -73,7 +73,7 @@ def reindex_confluence(
     )
     page_ids = []
     count_start = 0
-    limit = 10  # TODO: SET 100 !!
+    limit = 100
     while True:
         query = f"{spaces} order by id"
         pages = confluence.cql(query, start=count_start, limit=limit)["results"]
