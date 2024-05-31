@@ -1,9 +1,9 @@
 import logging
 from atlassian import Confluence
 from bs4 import BeautifulSoup
-from langchain.text_splitter import SentenceTransformersTokenTextSplitter
 from langchain_community.document_loaders import PyPDFLoader
 from langchain_core.documents import Document
+from langchain_text_splitters import TextSplitter
 from sentence_transformers import SentenceTransformer
 from sqlalchemy import Engine, select
 from sqlalchemy.orm import Session
@@ -53,17 +53,18 @@ def get_document_content_by_id(
 
 
 def reindex_confluence(
-    engine: Engine, text_splitter: SentenceTransformersTokenTextSplitter
+    engine: Engine, text_splitter: TextSplitter, encoder_model: SentenceTransformer
 ):
     """Пересоздаёт векторный индекс текстов для ответов на вопросы.
     При этом обрабатываются страницы, не имеющие вложенных страниц.
 
     Args:
         engine (Engine): экземпляр подключения к БД
-        text_splitter (SentenceTransformersTokenTextSplitter): экземпляр SentenceTransformersTokenTextSplitter
+        text_splitter (TextSplitter): разделитель текста на фрагменты
+        encoder_model (SentenceTransformer): модель получения векторных представлений Sentence Transformer
     """
 
-    logging.info("START CREATE INDEX")
+    logging.warning("START CREATE INDEX")
     confluence = Confluence(url=Config.CONFLUENCE_HOST, token=Config.CONFLUENCE_TOKEN)
     spaces = (
         "("
@@ -72,18 +73,16 @@ def reindex_confluence(
     )
     page_ids = []
     count_start = 0
-    limit = 100
-    pages = confluence.cql(f"{spaces} order by id", start=count_start, limit=limit)[
-        "results"
-    ]
-    while len(pages) != 0:
-        page_ids = page_ids + [
+    limit = 10  # TODO: SET 100 !!
+    while True:
+        query = f"{spaces} order by id"
+        pages = confluence.cql(query, start=count_start, limit=limit)["results"]
+        if len(pages) == 0:
+            break
+        page_ids += [
             page["content"]["id"] for page in pages if "content" in page.keys()
         ]
         count_start += limit
-        pages = confluence.cql(f"{spaces} order by id", start=count_start, limit=limit)[
-            "results"
-        ]
     documents = []
     for page_id in page_ids:
         children = confluence.cql(f"parent={page_id}")["results"]
@@ -103,21 +102,21 @@ def reindex_confluence(
                 Chunk(
                     confluence_url=chunk.metadata["page_link"],
                     text=chunk.page_content,
-                    embedding=text_splitter._model.encode(chunk.page_content),
+                    embedding=encoder_model.encode(chunk.page_content),
                 )
             )
         session.commit()
-    logging.info("INDEX CREATED")
+    logging.warning("INDEX CREATED")
 
 
 def get_chunk(
-    engine: Engine, model: SentenceTransformer, question: str
+    engine: Engine, encoder_model: SentenceTransformer, question: str
 ) -> Chunk | None:
     """Возвращает ближайший к вопросу фрагмент документа Chunk из векторной базы данных
 
     Args:
         engine (Engine): экземпляр подключения к БД
-        model (SentenceTransformer): модель SentenceTransformer
+        encoder_model (SentenceTransformer): модель получения векторных представлений SentenceTransformer
         question (str): вопрос пользователя
 
     Returns:
@@ -127,6 +126,6 @@ def get_chunk(
     with Session(engine) as session:
         return session.scalars(
             select(Chunk)
-            .order_by(Chunk.embedding.cosine_distance(model.encode(question)))
+            .order_by(Chunk.embedding.cosine_distance(encoder_model.encode(question)))
             .limit(1)
         ).first()
