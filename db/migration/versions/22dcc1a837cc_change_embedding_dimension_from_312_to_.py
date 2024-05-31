@@ -22,18 +22,38 @@ depends_on: Union[str, Sequence[str], None] = None
 
 
 def upgrade() -> None:
-    op.alter_column(
+    op.drop_table("chunk")
+    op.create_table(
         "chunk",
-        "embedding",
-        existing_type=Vector(312),
-        type_=Vector(1024),
+        sa.Column("id", sa.Integer(), nullable=False),
+        sa.Column("confluence_url", sa.Text(), nullable=False),
+        sa.Column("text", sa.Text(), nullable=False),
+        sa.Column("embedding", Vector(dim=1024), nullable=False),
+        sa.Column(
+            "created_at",
+            sa.DateTime(timezone=True),
+            server_default=sa.text("now()"),
+            nullable=True,
+        ),
+        sa.Column("updated_at", sa.DateTime(timezone=True), nullable=True),
+        sa.PrimaryKeyConstraint("id"),
     )
 
 
 def downgrade() -> None:
-    op.alter_column(
+    op.drop_table("chunk")
+    op.create_table(
         "chunk",
-        "embedding",
-        existing_type=Vector(312),
-        type_=Vector(1024),
+        sa.Column("id", sa.Integer(), nullable=False),
+        sa.Column("confluence_url", sa.Text(), nullable=False),
+        sa.Column("text", sa.Text(), nullable=False),
+        sa.Column("embedding", Vector(dim=312), nullable=False),
+        sa.Column(
+            "created_at",
+            sa.DateTime(timezone=True),
+            server_default=sa.text("now()"),
+            nullable=True,
+        ),
+        sa.Column("updated_at", sa.DateTime(timezone=True), nullable=True),
+        sa.PrimaryKeyConstraint("id"),
     )
