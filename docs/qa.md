@@ -56,20 +56,19 @@
         tuple[str | None, str | None]: содержимое страницы, ссылка на страницу
 
 ### `reindex_confluence(engine: Engine, text_splitter: TextSplitter, encoder_model: SentenceTransformer)`
-Пересоздаёт векторный индекс текстов для ответов на вопросы.
-    При этом обрабатываются страницы, не имеющие вложенных страниц.
+Пересоздаёт векторный индекс текстов для ответов на вопросы. При этом обрабатываются страницы, не имеющие вложенных страниц.
 
     Args:
         engine (Engine): экземпляр подключения к БД
         text_splitter (TextSplitter): разделитель текста на фрагменты
         encoder_model (SentenceTransformer): модель получения векторных представлений Sentence Transformer
 
-### `get_chunk(engine: Engine, model: SentenceTransformer, question: str) -> Chunk | None`
+### `get_chunk(engine: Engine, encoder_model: SentenceTransformer, question: str) -> Chunk | None`
 Возвращает ближайший к вопросу фрагмент документа Chunk из векторной базы данных
 
     Args:
         engine (Engine): экземпляр подключения к БД
-        model (SentenceTransformer): модель SentenceTransformer
+        encoder_model (SentenceTransformer): модель получения векторных представлений SentenceTransformer
         question (str): вопрос пользователя
 
     Returns:
