@@ -4,15 +4,14 @@ from langchain_community.llms import GigaChat
 from config import Config
 
 giga = GigaChat(
-    model="GigaChat-Plus-preview",
-    temperature=1.222,
+    model="GigaChat-Pro",
     credentials=Config.GIGACHAT_TOKEN,
     verify_ssl_certs=False,
 )
 prompt_template = """Действуйте как Вопрошалыч — виртуальный помощник студента ТюмГУ.
 Используйте следующий текст в тройных кавычках, чтобы кратко ответить на вопрос студента.
 Оставьте ссылки, адреса и телефоны как есть. Если ответа в тексте нет, напишите "ответ не найден".
-Предоставьте краткий, точный и полезный ответ, иначе вас заменят на OpenChat-3.5.
+Предоставьте краткий, точный и полезный ответ, иначе вас заменят на Saiga.
 
 \"\"\"
 {context}
