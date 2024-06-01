@@ -11,7 +11,7 @@ class Chunk(Base):
     Args:
         confluence_url (str): ссылка на источник
         text (str): текст фрагмента
-        embedding (Vector): векторное представление текста фрагмента
+        embedding (Vector): векторное представление текста фрагмента размерностью 1024
     """
 
     __tablename__ = "chunk"
@@ -19,7 +19,7 @@ class Chunk(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     confluence_url: Mapped[str] = mapped_column(Text(), index=True)
     text: Mapped[str] = mapped_column(Text())
-    embedding: Mapped[Vector] = mapped_column(Vector(312))
+    embedding: Mapped[Vector] = mapped_column(Vector(1024))
 
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())

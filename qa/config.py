@@ -8,6 +8,7 @@ class Config:
     """Класс с переменными окружения"""
 
     GIGACHAT_TOKEN = environ.get("GIGACHAT_TOKEN")
+    GIGACHAT_MODEL = environ.get("GIGACHAT_MODEL")
     CONFLUENCE_TOKEN = environ.get("CONFLUENCE_TOKEN")
     CONFLUENCE_HOST = environ.get("CONFLUENCE_HOST")
     CONFLUENCE_SPACES = environ.get("CONFLUENCE_SPACES").split()
