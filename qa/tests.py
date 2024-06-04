@@ -12,6 +12,7 @@ def test_llm():
     к курирующему преподавателю"""
     question = "Что нужно сделать, чтобы заменить физру на частный клуб?"
     assert "препод" in get_answer(context, question).lower()
+    assert "не найден" in get_answer(context, "Когда наступит лето?").lower()
 
 
 def test_confluence():
