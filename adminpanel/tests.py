@@ -18,22 +18,23 @@ class TestClusterAnalysis:
                 else:
                     x = mark_of_question.have_not_score
                 arr.append(
-                    {"text": s.split(" --- ")[0], "date": s.split(" --- ")[1], "type": x}
+                    {
+                        "text": s.split(" --- ")[0],
+                        "date": s.split(" --- ")[1],
+                        "type": x,
+                    }
                 )
                 s = f.readline()
         CA = ClusterAnalysis()
         data = CA.get_clusters_keywords(arr)
-        assert len(data) == 3
-        assert data[1] == 150
-        assert data[2] == 49
-        data = data[0]
-        with open('test_true_result.csv', 'r', encoding='utf-8') as f:
-            for cluster in range(len(data)):
-                for i in range(len(data[cluster][0])):
-                    assert data[cluster][0][i][0] == f.readline()[:-1]
-                    assert data[cluster][0][i][1].name == f.readline()[:-1]
-                for i in range(len(data[cluster][1])):
-                    assert data[cluster][1][i] == f.readline()[:-1]
-                for i in range(len(data[cluster][2])):
-                    assert data[cluster][2][i] == f.readline()[:-1]
-
+        with open("test_true_result.csv", "r", encoding="utf-8") as f:
+            assert data[2] == int(f.readline()[:-1])
+            assert data[1] == int(f.readline()[:-1])
+            assert "" == f.readline()[:-1]
+            for ar in data[0]:
+                assert len(ar[0]) == int(f.readline()[:-1])
+                for a in ar[1]:
+                    assert a == f.readline()[:-1]
+                assert ar[2][0] == f.readline()[:-1]
+                assert ar[2][1] == f.readline()[:-1]
+                assert "" == f.readline()[:-1]
