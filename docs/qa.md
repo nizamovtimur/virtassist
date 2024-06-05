@@ -50,7 +50,7 @@
 
     Args:
         confluence (Confluence): экземпляр Confluence
-        page_id (str): ИД страницы
+        page_id (str): ID страницы
 
     Returns:
         tuple[str | None, str | None]: содержимое страницы, ссылка на страницу

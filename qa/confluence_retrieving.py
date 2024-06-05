@@ -19,7 +19,7 @@ def get_document_content_by_id(
 
     Args:
         confluence (Confluence): экземпляр Confluence
-        page_id (str): ИД страницы
+        page_id (str): ID страницы
 
     Returns:
         tuple[str | None, str | None]: содержимое страницы, ссылка на страницу
