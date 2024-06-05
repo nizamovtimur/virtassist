@@ -46,8 +46,13 @@ class ClusterAnalysis:
             Returns:
                 str: то же предложение, но без спец. символов и двойных пробелов
             """
-            
-            s = s.replace("\\n", " ").replace("\\t", " ").replace("\n", " ").replace("\t", " ")
+
+            s = (
+                s.replace("\\n", " ")
+                .replace("\\t", " ")
+                .replace("\n", " ")
+                .replace("\t", " ")
+            )
             while "  " in s:
                 s = s.replace("  ", " ")
             return s

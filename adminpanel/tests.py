@@ -1,4 +1,3 @@
-import pandas as pd
 from cluster_analysis import ClusterAnalysis, mark_of_question
 
 
