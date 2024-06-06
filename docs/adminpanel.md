@@ -65,14 +65,14 @@
     Returns:
         list[str]: ключевые слова и выражения
 
-#### `get_clusters_keywords(questions: list[dict[str, str]]) -> list[tuple[list[str] | str]]`
+#### `get_clusters_keywords(questions: list[dict[str, str]]) -> list[tuple[list[tuple[str, mark_of_question]], list[str], tuple[str, str]]], int, int]`
 Логика кластеризации текстовых данных
 
     Args:
         questions (list[dict[str, str]]): список вопросов, подлежащих анализу
 
     Returns:
-        tuple[list[tuple[list[tuple[str, mark_of_question]], list[str], tuple[str]]], int, int]:  кортеж, где 0 - список кортежей, для каждого: список вопросов с метками, список ключевых слов, временной промежуток вопросов по кластеру, 1 - количество вопросов, 2 - количество кластеров
+        tuple[list[tuple[list[tuple[str, mark_of_question]], list[str], tuple[str, str]]], int, int]: кортеж, где 0 - список кортежей, для каждого: список вопросов с метками, список ключевых слов, временной промежуток вопросов по кластеру, 1 - количество вопросов, 2 - количество кластеров
 
 ## [config](../adminpanel/config.py)
 Файл конфигурации административной панели виртуального помощника
@@ -174,7 +174,12 @@
 Файл, который сохраняет NLTK для кластерного анализа при сборке приложения
 
 ## [tests](../adminpanel/tests.py)
-...
+
+### `class TestClusterAnalysis`
+Класс с функцией тестирования анализа вопросов
+
+#### `test_preprocessing()`
+Тест анализа вопросов
 
 ## [views](../adminpanel/views.py)
 
