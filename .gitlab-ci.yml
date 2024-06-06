@@ -24,7 +24,7 @@ test:
   script:
     - docker run --rm virtassist/chatbot:latest pytest tests.py --verbose
     - docker run --env-file .env.docker --network host --rm virtassist/qa:latest pytest tests.py --verbose
-    - docker run --env-file .env.docker --rm virtassist/adminpanel:latest pytest tests.py --verbose
+    - docker run --rm virtassist/adminpanel:latest pytest tests.py --verbose
   only:
     - main
   tags:

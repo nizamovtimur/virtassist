@@ -1,3 +1,9 @@
+import os
+
+os.environ["ABBREVIATION_UTMN"] = (
+    "тюмгу шкн игип фэи соцгум ипип биофак инзем инхим фти инбио ифк ед шпи шен уиот"
+)
+
 from cluster_analysis import ClusterAnalysis, mark_of_question
 
 
