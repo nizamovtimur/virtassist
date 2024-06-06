@@ -170,5 +170,5 @@ def reindex_qa():
     Returns:
         str: статус отправки запроса
     """
-    requests.post(f"http://{app.config['QA_HOST']}/reindex/")
+    requests.post(f"http://{app.config['QA_HOST']}/reindex/", timeout=600)
     return redirect(url_for("settings"))
