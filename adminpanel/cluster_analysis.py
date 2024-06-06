@@ -183,7 +183,9 @@ class ClusterAnalysis:
     def get_clusters_keywords(
         self, questions: list[dict[str, str | mark_of_question]]
     ) -> tuple[
-        list[tuple[list[tuple[str, mark_of_question]], list[str], tuple[str]]], int, int
+        list[tuple[list[tuple[str, mark_of_question]], list[str], tuple[str, str]]],
+        int,
+        int,
     ]:
         """Логика кластеризации текстовых данных
 
@@ -191,7 +193,7 @@ class ClusterAnalysis:
             questions (list[dict[str, str]]): список вопросов, подлежащих анализу
 
         Returns:
-            tuple[list[tuple[list[tuple[str, mark_of_question]], list[str], tuple[str]]], int, int]: кортеж, где 0 - список кортежей, для каждого: список вопросов с метками, список ключевых слов, временной промежуток вопросов по кластеру, 1 - количество вопросов, 2 - количество кластеров
+            tuple[list[tuple[list[tuple[str, mark_of_question]], list[str], tuple[str, str]]], int, int]: кортеж, где 0 - список кортежей, для каждого: список вопросов с метками, список ключевых слов, временной промежуток вопросов по кластеру, 1 - количество вопросов, 2 - количество кластеров
         """
 
         # TODO: refactor
