@@ -2,7 +2,8 @@ from contextlib import redirect_stderr
 import io
 import logging
 from aiohttp import web
-from langchain.text_splitter import SentenceTransformersTokenTextSplitter
+from langchain_text_splitters import RecursiveCharacterTextSplitter
+from sentence_transformers import SentenceTransformer
 from sqlalchemy import create_engine, select
 from sqlalchemy.orm import Session
 from config import Config
@@ -12,8 +13,14 @@ from confluence_retrieving import get_chunk, reindex_confluence
 
 routes = web.RouteTableDef()
 engine = create_engine(Config.SQLALCHEMY_DATABASE_URI)
-text_splitter = SentenceTransformersTokenTextSplitter(
-    model_name="saved_models/rubert-tiny2-wikiutmn"
+text_splitter = RecursiveCharacterTextSplitter(
+    chunk_size=4096,
+    chunk_overlap=200,
+    length_function=len,
+    is_separator_regex=False,
+)
+encoder_model = SentenceTransformer(
+    "saved_models/multilingual-e5-large-wikiutmn", device="cpu"
 )
 
 
@@ -29,7 +36,7 @@ async def qa(request: web.Request) -> web.Response:
     """
 
     question = (await request.json())["question"]
-    chunk = get_chunk(engine, text_splitter._model, question)
+    chunk = get_chunk(engine=engine, encoder_model=encoder_model, question=question)
     if chunk is None:
         return web.Response(text="Chunk not found", status=404)
     alt_stream = io.StringIO()
@@ -55,7 +62,9 @@ async def reindex(request: web.Request) -> web.Response:
     """
 
     try:
-        reindex_confluence(engine, text_splitter)
+        reindex_confluence(
+            engine=engine, text_splitter=text_splitter, encoder_model=encoder_model
+        )
         return web.Response(status=200)
     except Exception as e:
         return web.Response(text=str(e), status=500)
@@ -65,7 +74,9 @@ if __name__ == "__main__":
     with Session(engine) as session:
         questions = session.scalars(select(Chunk)).first()
         if questions is None:
-            reindex_confluence(engine, text_splitter)
+            reindex_confluence(
+                engine=engine, text_splitter=text_splitter, encoder_model=encoder_model
+            )
     app = web.Application()
     app.add_routes(routes)
     web.run_app(app)
