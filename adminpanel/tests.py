@@ -7,6 +7,7 @@ class TestClusterAnalysis:
     def test_preprocessing(self):
         """Тест анализа вопросов"""
 
+        # Импорт тестовых данных
         arr = []
         with open("test_db.csv", "r", encoding="utf-8") as f:
             s = f.readline()
@@ -28,16 +29,24 @@ class TestClusterAnalysis:
                     }
                 )
                 s = f.readline()
+        # Обработка
         CA = ClusterAnalysis()
         data = CA.get_clusters_keywords(arr)
+        # Сравнение с эталоном
         with open("test_true_result.csv", "r", encoding="utf-8") as f:
-            assert data[2] == int(f.readline()[:-1])
-            assert data[1] == int(f.readline()[:-1])
+            assert data[2] == int(f.readline()[:-1])  # Количество кластеров
+            assert data[1] == int(f.readline()[:-1])  # Количество вопросов
             assert "" == f.readline()[:-1]
-            for ar in data[0]:
-                assert len(ar[0]) == int(f.readline()[:-1])
+            for ar in data[0]:  # Проверяем каждый кластер
+                assert len(ar[0]) == int(f.readline()[:-1])  # Объём кластера
                 for a in ar[1]:
-                    assert a == f.readline()[:-1]
-                assert ar[2][0] == f.readline()[:-1]
-                assert ar[2][1] == f.readline()[:-1]
+                    assert (
+                        a == f.readline()[:-1]
+                    )  # Все ключевые слова и выражения по кластеру
+                assert (
+                    ar[2][0] == f.readline()[:-1]
+                )  # Дата получения чат-ботом первого вопроса в кластере
+                assert (
+                    ar[2][1] == f.readline()[:-1]
+                )  # Дата получения чат-ботом последнего вопроса в кластере
                 assert "" == f.readline()[:-1]
