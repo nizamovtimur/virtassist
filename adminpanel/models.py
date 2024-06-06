@@ -42,7 +42,6 @@ class User(db.Model):
         id (int): id пользователя
         vk_id (int | None): id пользователя ВКонтакте
         telegram_id (int | None): id пользователя Telegram
-        vk_id (int | None): id пользователя ВКонтакте
         created_at (datetime): время создания модели
         updated_at (datetime): время обновления модели
     """
@@ -97,7 +96,7 @@ class Admin(db.Model, UserMixin):
     """Администратор панели
 
     Args:
-        id (int): id ответа
+        id (int): id администратора
         name (str): имя
         surname (str): фамилия
         last_name (str | None): отчество (опционально)
@@ -150,7 +149,7 @@ def get_questions_for_clusters(
     have_high_score: bool,
     have_not_score: bool,
 ) -> list[dict[str, str | mark_of_question]]:
-    """Функция для выгрузки вопросов для обработки в классе ClusterAnalysis
+    """Функция для выгрузки вопросов для обработки в классе `ClusterAnalysis`
 
     Args:
         time_start (str): дата, от которой нужно сортировать вопросы

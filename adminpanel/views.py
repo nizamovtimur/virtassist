@@ -20,6 +20,11 @@ def load_user(id):
 
 @app.route("/login", methods=["GET", "POST"])
 def login():
+    """Функция авторизует пользователя, если данные для входа совпадают
+
+    Returns:
+        str: отрендеренная главная веб-страница сервиса
+    """
     if request.method == "POST":
         email = request.form["email"]
         password = request.form["password"]
@@ -37,6 +42,11 @@ def login():
 @app.post("/logout")
 @login_required
 def logout():
+    """Функция деавторизует пользователя
+
+    Returns:
+        str: отрендеренная веб-страница авторизации
+    """
     logout_user()
     return redirect(url_for("login"))
 
@@ -44,7 +54,7 @@ def logout():
 @app.get("/")
 @login_required
 def index() -> str:
-    """Функция позволяет отрендерить главную страницу веб-сервиса.
+    """Функция рендерит главную страницу веб-сервиса
 
     Returns:
         str: отрендеренная главная веб-страница
@@ -67,7 +77,7 @@ def index() -> str:
 @app.get("/questions-analysis")
 @login_required
 def questions_analysis() -> str:
-    """Функция позволяет вывести на экране вопросы, не имеющие ответа.
+    """Функция выводит на экране вопросы, не имеющие ответа
 
     Returns:
         str: отрендеренная веб-страница с POST-запросом на базу данных
@@ -113,7 +123,7 @@ def questions_analysis() -> str:
 @app.route("/broadcast", methods=["POST", "GET"])
 @login_required
 def broadcast() -> str:
-    """Функция позволяет отправить HTML-POST запрос на выполнение массовой рассылки на HOST чатбота.
+    """Функция отправляет HTML-POST запрос на выполнение массовой рассылки на HOST чат-бота
 
     Returns:
         str: отрендеренная веб-страница с POST-запросом на сервер
@@ -142,10 +152,10 @@ def broadcast() -> str:
 @app.get("/settings")
 @login_required
 def settings() -> str:
-    """Функция позволяет вывести на экране тревожные вопросы.
+    """Функция выводит интерфейс взаимодействия с администраторами панели и с непосредственно модулем QA
 
     Returns:
-        str: отрендеренная веб-страница с POST-запросом на базу данных
+        str: отрендеренная веб-страница настроек администраторов и возможностью провести переиндексацию
     """
     users = get_admins()
 
@@ -155,10 +165,10 @@ def settings() -> str:
 @app.post("/reindex")
 @login_required
 def reindex_qa():
-    """Функция отправляет POST-запрос на переиндексацию в модуле QA.
+    """Функция отправляет POST-запрос на переиндексацию в модуле QA
 
     Returns:
-        str: Статус отправки запроса
+        str: статус отправки запроса
     """
     requests.post(f"http://{app.config['QA_HOST']}/reindex/")
     return redirect(url_for("settings"))
