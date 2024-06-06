@@ -31,21 +31,13 @@ class TestClusterAnalysis:
         CA = ClusterAnalysis()
         data = CA.get_clusters_keywords(arr)
         with open("test_true_result.csv", "r", encoding="utf-8") as f:
-            assert data[2] == int(f.readline()[:-1])  # Количество кластеров
-            assert data[1] == int(f.readline()[:-1])  # Количество вопросов
+            assert data[2] == int(f.readline()[:-1])
+            assert data[1] == int(f.readline()[:-1])
             assert "" == f.readline()[:-1]
             for ar in data[0]:
-                assert len(ar[0]) == int(
-                    f.readline()[:-1]
-                )  # Количество вопросов в кластере
+                assert len(ar[0]) == int(f.readline()[:-1])
                 for a in ar[1]:
-                    assert (
-                        a == f.readline()[:-1]
-                    )  # Все ключевые слова и выражения по кластеру
-                assert (
-                    ar[2][0] == f.readline()[:-1]
-                )  # Дата получения чатботом первого вопроса в кластере
-                assert (
-                    ar[2][1] == f.readline()[:-1]
-                )  # Дата последнего вопроса в кластере
+                    assert a == f.readline()[:-1]
+                assert ar[2][0] == f.readline()[:-1]
+                assert ar[2][1] == f.readline()[:-1]
                 assert "" == f.readline()[:-1]
