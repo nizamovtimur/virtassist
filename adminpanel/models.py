@@ -42,6 +42,7 @@ class User(db.Model):
         id (int): id пользователя
         vk_id (int | None): id пользователя ВКонтакте
         telegram_id (int | None): id пользователя Telegram
+        is_subscribed (bool): состояние подписки пользователя
         created_at (datetime): время создания модели
         updated_at (datetime): время обновления модели
     """
@@ -271,6 +272,6 @@ def get_admins() -> list[Admin]:
                 email=admin.email,
                 department=admin.department,
             )
-            for admin in session.query(Admin).all()
+            for admin in session.query(Admin).order_by(Admin.id).all()
         ]
     return admins

@@ -30,6 +30,7 @@ class User(Base):
         vk_id (int | None): id пользователя ВКонтакте
         telegram_id (int | None): id пользователя Telegram
         vk_id (int | None): id пользователя ВКонтакте
+        is_subscribed (bool): состояние подписки пользователя
     """
 
     __tablename__ = "user"
