@@ -15,62 +15,66 @@ from models import *
 from datetime import datetime, timedelta
 
 
-# class TestClusterAnalysis:
-#     """Класс с функцией тестирования анализа вопросов"""
+class TestClusterAnalysis:
+    """Класс с функцией тестирования анализа вопросов"""
 
-#     def test_preprocessing(self):
-#         """Тест анализа вопросов"""
+    def test_preprocessing(self):
+        """Функция тестирует анализ вопросов"""
 
-#         # Импорт тестовых данных
-#         arr = []
-#         with open("test_db.csv", "r", encoding="utf-8") as f:
-#             s = f.readline()
-#             while s:
-#                 x = int(s.split(" --- ")[2])
-#                 if x == 0:
-#                     x = mark_of_question.have_not_answer
-#                 elif x == 1:
-#                     x = mark_of_question.have_low_score
-#                 elif x == 2:
-#                     x = mark_of_question.have_high_score
-#                 else:
-#                     x = mark_of_question.have_not_score
-#                 arr.append(
-#                     {
-#                         "text": s.split(" --- ")[0],
-#                         "date": s.split(" --- ")[1],
-#                         "type": x,
-#                     }
-#                 )
-#                 s = f.readline()
-#         # Обработка
-#         CA = ClusterAnalysis()
-#         data = CA.get_clusters_keywords(arr)
-#         # Сравнение с эталоном
-#         with open("test_true_result.csv", "r", encoding="utf-8") as f:
-#             assert data[2] == int(f.readline()[:-1])  # Количество кластеров
-#             assert data[1] == int(f.readline()[:-1])  # Количество вопросов
-#             assert "" == f.readline()[:-1]
-#             for ar in data[0]:  # Проверяем каждый кластер
-#                 assert len(ar[0]) == int(f.readline()[:-1])  # Объём кластера
-#                 for a in ar[1]:
-#                     assert (
-#                         a == f.readline()[:-1]
-#                     )  # Все ключевые слова и выражения по кластеру
-#                 assert (
-#                     ar[2][0] == f.readline()[:-1]
-#                 )  # Дата получения чат-ботом первого вопроса в кластере
-#                 assert (
-#                     ar[2][1] == f.readline()[:-1]
-#                 )  # Дата получения чат-ботом последнего вопроса в кластере
-#                 assert "" == f.readline()[:-1]
+        # Импорт тестовых данных
+        arr = []
+        with open("test_db.csv", "r", encoding="utf-8") as f:
+            s = f.readline()
+            while s:
+                x = int(s.split(" --- ")[2])
+                if x == 0:
+                    x = mark_of_question.have_not_answer
+                elif x == 1:
+                    x = mark_of_question.have_low_score
+                elif x == 2:
+                    x = mark_of_question.have_high_score
+                else:
+                    x = mark_of_question.have_not_score
+                arr.append(
+                    {
+                        "text": s.split(" --- ")[0],
+                        "date": s.split(" --- ")[1],
+                        "type": x,
+                    }
+                )
+                s = f.readline()
+        # Обработка
+        CA = ClusterAnalysis()
+        data = CA.get_clusters_keywords(arr)
+        # Сравнение с эталоном
+        with open("test_true_result.csv", "r", encoding="utf-8") as f:
+            assert data[2] == int(f.readline()[:-1])  # Количество кластеров
+            assert data[1] == int(f.readline()[:-1])  # Количество вопросов
+            assert "" == f.readline()[:-1]
+            for ar in data[0]:  # Проверяем каждый кластер
+                assert len(ar[0]) == int(f.readline()[:-1])  # Объём кластера
+                for a in ar[1]:
+                    assert (
+                        a == f.readline()[:-1]
+                    )  # Все ключевые слова и выражения по кластеру
+                assert (
+                    ar[2][0] == f.readline()[:-1]
+                )  # Дата получения чат-ботом первого вопроса в кластере
+                assert (
+                    ar[2][1] == f.readline()[:-1]
+                )  # Дата получения чат-ботом последнего вопроса в кластере
+                assert "" == f.readline()[:-1]
 
 
 class TestModels:
+    """Класс с функциями тестирования моделей административной панели"""
+
     with app.app_context():
         db.create_all()
 
     def test_get_admins(self):
+        """Функция тестирует получение списка администраторов"""
+
         with app.app_context():
             with Session(db.engine) as session:
                 admin_1 = Admin(
@@ -114,6 +118,7 @@ class TestModels:
             assert admins[1].department == "iot"
 
     def test_get_questions_from_clusters(self):
+        """Функция тестирует получение вопросов из кластеров"""
 
         def sort_by_question_number(item):
             return int(item["text"].replace("Вопрос", ""))
