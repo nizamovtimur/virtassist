@@ -140,7 +140,7 @@ class TestModels:
                     QuestionAnswer(
                         question="Вопрос3",
                         answer="",
-                        score=None,
+                        score=5,
                         user_id=3,
                         created_at=datetime.now() - timedelta(days=2),
                     ),
@@ -188,17 +188,17 @@ class TestModels:
                 time_start, time_end, False, False, True, False
             )
             result.sort(key=sort_by_question_number)
-            assert len(result) == 2
+            assert len(result) == 3
             assert result[0]["text"] == "Вопрос1"
-            assert result[1]["text"] == "Вопрос5"
+            assert result[1]["text"] == "Вопрос3"
+            assert result[2]["text"] == "Вопрос5"
             assert result[0]["type"] == mark_of_question.have_high_score
             result = get_questions_for_clusters(
                 time_start, time_end, False, False, False, True
             )
             result.sort(key=sort_by_question_number)
-            assert len(result) == 2
-            assert result[0]["text"] == "Вопрос3"
-            assert result[1]["text"] == "Вопрос6"
+            assert len(result) == 1
+            assert result[0]["text"] == "Вопрос6"
             assert result[0]["type"] == mark_of_question.have_not_score
             result = get_questions_for_clusters(
                 time_start, time_end, True, True, False, False
@@ -215,13 +215,14 @@ class TestModels:
                 time_start, time_end, True, True, True, False
             )
             result.sort(key=sort_by_question_number)
-            assert len(result) == 6
+            assert len(result) == 7
             assert result[0]["text"] == "Вопрос1"
             assert result[1]["text"] == "Вопрос2"
             assert result[2]["text"] == "Вопрос3"
-            assert result[3]["text"] == "Вопрос4"
-            assert result[4]["text"] == "Вопрос5"
-            assert result[5]["text"] == "Вопрос6"
+            assert result[3]["text"] == "Вопрос3"
+            assert result[4]["text"] == "Вопрос4"
+            assert result[5]["text"] == "Вопрос5"
+            assert result[6]["text"] == "Вопрос6"
             assert result[0]["type"] == mark_of_question.have_high_score
             assert result[1]["type"] == mark_of_question.have_low_score
             assert result[2]["type"] == mark_of_question.have_not_answer
@@ -229,14 +230,20 @@ class TestModels:
                 time_start, time_end, True, True, True, True
             )
             result.sort(key=sort_by_question_number)
-            assert len(result) == 6
+            assert len(result) == 8
             assert result[0]["text"] == "Вопрос1"
             assert result[1]["text"] == "Вопрос2"
             assert result[2]["text"] == "Вопрос3"
-            assert result[3]["text"] == "Вопрос4"
-            assert result[4]["text"] == "Вопрос5"
-            assert result[5]["text"] == "Вопрос6"
+            assert result[3]["text"] == "Вопрос3"
+            assert result[4]["text"] == "Вопрос4"
+            assert result[5]["text"] == "Вопрос5"
+            assert result[6]["text"] == "Вопрос6"
+            assert result[7]["text"] == "Вопрос6"
             assert result[0]["type"] == mark_of_question.have_high_score
             assert result[1]["type"] == mark_of_question.have_low_score
             assert result[2]["type"] == mark_of_question.have_not_answer
-            assert result[5]["type"] == mark_of_question.have_not_score
+            assert result[3]["type"] == mark_of_question.have_high_score
+            assert result[4]["type"] == mark_of_question.have_low_score
+            assert result[5]["type"] == mark_of_question.have_high_score
+            assert result[6]["type"] == mark_of_question.have_not_answer
+            assert result[7]["type"] == mark_of_question.have_not_score
