@@ -117,7 +117,7 @@ class TestModels:
             assert admins[1].email == "456@mail.com"
             assert admins[1].department == "iot"
 
-    def test_get_questions_from_clusters(self):
+    def test_get_questions_for_clusters(self):
         """Функция тестирует получение вопросов из кластеров"""
 
         def sort_by_question_number(item):

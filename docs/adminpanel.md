@@ -187,7 +187,7 @@
 #### `test_get_admins()`
 Функция тестирует получение списка администраторов
 
-#### `test_get_questions_from_clusters()`
+#### `test_get_questions_for_clusters()`
 Функция тестирует получение вопросов из кластеров
 
 ## [views](../adminpanel/views.py)
