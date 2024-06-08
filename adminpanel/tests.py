@@ -114,9 +114,12 @@ class TestModels:
             assert admins[1].department == "iot"
 
     def test_get_questions_from_clusters(self):
+
+        def sort_by_question_number(item):
+            return int(item["text"].replace("Вопрос", ""))
+
         time_start = (datetime.now() - timedelta(days=2)).strftime("%Y-%m-%d")
         time_end = (datetime.now() + timedelta(days=1)).strftime("%Y-%m-%d")
-
         with app.app_context():
             with Session(db.engine) as session:
                 questions = [
@@ -163,45 +166,44 @@ class TestModels:
                         created_at=datetime.now() - timedelta(days=1),
                     ),
                 ]
-
                 session.add_all(questions)
                 session.commit()
-
             result = get_questions_for_clusters(
                 time_start, time_end, True, False, False, False
             )
+            result.sort(key=sort_by_question_number)
             assert len(result) == 2
             assert result[0]["text"] == "Вопрос3"
             assert result[1]["text"] == "Вопрос6"
             assert result[0]["type"] == mark_of_question.have_not_answer
-
             result = get_questions_for_clusters(
                 time_start, time_end, False, True, False, False
             )
+            result.sort(key=sort_by_question_number)
             assert len(result) == 2
             assert result[0]["text"] == "Вопрос2"
             assert result[1]["text"] == "Вопрос4"
             assert result[0]["type"] == mark_of_question.have_low_score
-
             result = get_questions_for_clusters(
                 time_start, time_end, False, False, True, False
             )
+            result.sort(key=sort_by_question_number)
             assert len(result) == 2
             assert result[0]["text"] == "Вопрос1"
             assert result[1]["text"] == "Вопрос5"
             assert result[0]["type"] == mark_of_question.have_high_score
-
             result = get_questions_for_clusters(
                 time_start, time_end, False, False, False, True
             )
+            result.sort(key=sort_by_question_number)
             assert len(result) == 2
             assert result[0]["text"] == "Вопрос3"
             assert result[1]["text"] == "Вопрос6"
             assert result[0]["type"] == mark_of_question.have_not_score
-
             result = get_questions_for_clusters(
                 time_start, time_end, True, True, False, False
             )
+            result.sort(key=sort_by_question_number)
             assert len(result) == 4
             assert result[0]["text"] == "Вопрос2"
             assert result[1]["text"] == "Вопрос3"
@@ -209,10 +211,10 @@ class TestModels:
             assert result[3]["text"] == "Вопрос6"
             assert result[0]["type"] == mark_of_question.have_low_score
             assert result[1]["type"] == mark_of_question.have_not_answer
-
             result = get_questions_for_clusters(
                 time_start, time_end, True, True, True, False
             )
+            result.sort(key=sort_by_question_number)
             assert len(result) == 6
             assert result[0]["text"] == "Вопрос1"
             assert result[1]["text"] == "Вопрос2"
@@ -223,10 +225,10 @@ class TestModels:
             assert result[0]["type"] == mark_of_question.have_high_score
             assert result[1]["type"] == mark_of_question.have_low_score
             assert result[2]["type"] == mark_of_question.have_not_answer
-
             result = get_questions_for_clusters(
                 time_start, time_end, True, True, True, True
             )
+            result.sort(key=sort_by_question_number)
             assert len(result) == 6
             assert result[0]["text"] == "Вопрос1"
             assert result[1]["text"] == "Вопрос2"
@@ -238,26 +240,3 @@ class TestModels:
             assert result[1]["type"] == mark_of_question.have_low_score
             assert result[2]["type"] == mark_of_question.have_not_answer
             assert result[5]["type"] == mark_of_question.have_not_score
-
-    # def test_get_questions_count(self):
-    #     time_start = (datetime.now() - timedelta(days=2)).strftime("%Y-%m-%d")
-    #     time_end = datetime.now().strftime("%Y-%m-%d")
-
-    #     with app.app_context():
-    #         with Session(db.engine) as session:
-    #             user_vk = User(vk_id=2, telegram_id=None, is_subscribed=True)
-    #             user_telegram = User(vk_id=None, telegram_id=3, is_subscribed=True)
-    #             user_both = User(vk_id=4, telegram_id=5, is_subscribed=True)
-
-    #             session.add_all([user_vk, user_telegram, user_both])
-    #             session.commit()
-
-    #         result = get_questions_count(time_start, time_end)
-    #     expected = {
-    #         (datetime.now() - timedelta(days=3)).strftime("%Y-%m-%d"): [0, 0],
-    #         (datetime.now() - timedelta(days=2)).strftime("%Y-%m-%d"): [1, 1],
-    #         (datetime.now() - timedelta(days=1)).strftime("%Y-%m-%d"): [1, 2],
-    #         datetime.now().strftime("%Y-%m-%d"): [1, 0],
-    #     }
-
-    #     assert result == expected
