@@ -29,12 +29,6 @@ tr {
     background-color: #EEEEEE;
 }
 
-/* .btn-blue {
-  color: white;;
-  background-color: #34547A;
-  border-radius: .5rem;
-} */
-
 .btn-blue {
   --bs-btn-font-weight: 600;
   --bs-btn-color: #ffffff;
