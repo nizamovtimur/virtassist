@@ -51,4 +51,13 @@ tr {
     text-align: center;
     border-radius: 50%;
     padding: .3em .65em;
-  }
+}
+
+.unselectable {
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    -khtml-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+}
