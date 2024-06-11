@@ -37,6 +37,7 @@ deploy:
     - cp $ENV_PRODUCTION .env.docker
   script:
     - docker compose --env-file .env.docker up -d
+    - docker logs -t virtassist-db-migrate
   only:
     - main
   tags:
