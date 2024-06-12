@@ -3,7 +3,7 @@ from typing import Optional, List
 from bcrypt import hashpw, gensalt, checkpw
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import UserMixin
-from sqlalchemy import BigInteger, Column, DateTime, ForeignKey, Text, func
+from sqlalchemy import BigInteger, Column, DateTime, ForeignKey, Text, func, and_
 from sqlalchemy.orm import Mapped, Session, mapped_column, relationship
 from pgvector.sqlalchemy import Vector
 from cluster_analysis import mark_of_question
@@ -19,7 +19,7 @@ class Chunk(db.Model):
     Args:
         confluence_url (str): ссылка на источник
         text (str): текст фрагмента
-        embedding (Vector): векторное представление текста фрагмента
+        embedding (Vector): векторное представление текста фрагмента размерностью 1024
         created_at (datetime): время создания модели
         updated_at (datetime): время обновления модели
     """
@@ -29,7 +29,7 @@ class Chunk(db.Model):
     id: Mapped[int] = mapped_column(primary_key=True)
     confluence_url: Mapped[str] = mapped_column(Text(), index=True)
     text: Mapped[str] = mapped_column(Text())
-    embedding: Mapped[Vector] = mapped_column(Vector(312))
+    embedding: Mapped[Vector] = mapped_column(Vector(1024))
 
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
@@ -42,6 +42,8 @@ class User(db.Model):
         id (int): id пользователя
         vk_id (int | None): id пользователя ВКонтакте
         telegram_id (int | None): id пользователя Telegram
+        is_subscribed (bool): состояние подписки пользователя
+        question_answers (List[QuestionAnswer]): вопросы пользователя
         created_at (datetime): время создания модели
         updated_at (datetime): время обновления модели
     """
@@ -73,6 +75,7 @@ class QuestionAnswer(db.Model):
         confluence_url (str | None): ссылка на страницу в вики-системе, содержащую ответ
         score (int | None): оценка пользователем ответа
         user_id (int): id пользователя, задавшего вопрос
+        user (User): пользователь, задавший вопрос
         created_at (datetime): время создания модели
         updated_at (datetime): время обновления модели
     """
@@ -169,7 +172,11 @@ def get_questions_for_clusters(
         )
         questions = []
         if have_not_answer:
-            for qa in query.filter(QuestionAnswer.answer == ""):
+            for qa in (
+                query.filter(QuestionAnswer.answer == "")
+                .order_by(QuestionAnswer.id)
+                .all()
+            ):
                 questions.append(
                     {
                         "text": qa.question,
@@ -178,7 +185,11 @@ def get_questions_for_clusters(
                     }
                 )
         if have_low_score:
-            for qa in query.filter(QuestionAnswer.score == 1):
+            for qa in (
+                query.filter(QuestionAnswer.score == 1)
+                .order_by(QuestionAnswer.id)
+                .all()
+            ):
                 questions.append(
                     {
                         "text": qa.question,
@@ -187,7 +198,11 @@ def get_questions_for_clusters(
                     }
                 )
         if have_high_score:
-            for qa in query.filter(QuestionAnswer.score == 5):
+            for qa in (
+                query.filter(QuestionAnswer.score == 5)
+                .order_by(QuestionAnswer.id)
+                .all()
+            ):
                 questions.append(
                     {
                         "text": qa.question,
@@ -196,7 +211,13 @@ def get_questions_for_clusters(
                     }
                 )
         if have_not_score:
-            for qa in query.filter(QuestionAnswer.score == None):
+            for qa in (
+                query.filter(
+                    and_(QuestionAnswer.score == None, QuestionAnswer.answer != "")
+                )
+                .order_by(QuestionAnswer.id)
+                .all()
+            ):
                 questions.append(
                     {
                         "text": qa.question,
@@ -271,6 +292,6 @@ def get_admins() -> list[Admin]:
                 email=admin.email,
                 department=admin.department,
             )
-            for admin in session.query(Admin).all()
+            for admin in session.query(Admin).order_by(Admin.id).all()
         ]
     return admins

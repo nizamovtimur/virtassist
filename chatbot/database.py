@@ -29,7 +29,10 @@ class User(Base):
         id (int): id пользователя
         vk_id (int | None): id пользователя ВКонтакте
         telegram_id (int | None): id пользователя Telegram
-        vk_id (int | None): id пользователя ВКонтакте
+        is_subscribed (bool): состояние подписки пользователя
+        question_answers (List[QuestionAnswer]): вопросы пользователя
+        created_at (datetime): время создания модели
+        updated_at (datetime): время обновления модели
     """
 
     __tablename__ = "user"
@@ -55,10 +58,13 @@ class QuestionAnswer(Base):
     Args:
         id (int): id ответа
         question (str): вопрос пользователя
-        answer (str): ответ на вопрос пользователя
-        confluence_url (str): ссылка на страницу в вики-системе, содержащую ответ
-        score (int): оценка пользователем ответа
+        answer (str | None): ответ на вопрос пользователя
+        confluence_url (str | None): ссылка на страницу в вики-системе, содержащую ответ
+        score (int | None): оценка пользователем ответа
         user_id (int): id пользователя, задавшего вопрос
+        user (User): пользователь, задавший вопрос
+        created_at (datetime): время создания модели
+        updated_at (datetime): время обновления модели
     """
 
     __tablename__ = "question_answer"

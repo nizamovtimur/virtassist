@@ -5,6 +5,7 @@ from database import (
     Base,
     QuestionAnswer,
     add_user,
+    get_subscribed_users,
     get_user_id,
     subscribe_user,
     check_subscribing,
@@ -56,6 +57,31 @@ class TestDBFunctions:
         assert check_subscribing(self.engine, user_id) is False
         assert subscribe_user(self.engine, user_id) is True
         assert check_subscribing(self.engine, user_id) is True
+
+    def test_get_subscribed_users(self):
+        """Тест получения списков подписанных пользователей"""
+
+        _, user_id = add_user(self.engine, 10, None)
+        assert check_subscribing(self.engine, user_id) is True
+        _, user_id = add_user(self.engine, 20, None)
+        assert check_subscribing(self.engine, user_id) is True
+        _, user_id = add_user(self.engine, 30, None)
+        assert subscribe_user(self.engine, user_id) is False
+        assert check_subscribing(self.engine, user_id) is False
+        _, user_id = add_user(self.engine, None, 100)
+        assert check_subscribing(self.engine, user_id) is True
+        _, user_id = add_user(self.engine, None, 200)
+        assert check_subscribing(self.engine, user_id) is True
+        _, user_id = add_user(self.engine, None, 300)
+        assert subscribe_user(self.engine, user_id) is False
+        assert check_subscribing(self.engine, user_id) is False
+        vk_users, tg_users = get_subscribed_users(self.engine)
+        assert 10 in vk_users
+        assert 20 in vk_users
+        assert 30 not in vk_users
+        assert 100 in tg_users
+        assert 200 in tg_users
+        assert 300 not in tg_users
 
     def test_rate_answer(self):
         """Тест функции оценивания ответа"""
