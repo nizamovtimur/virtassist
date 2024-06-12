@@ -1,6 +1,12 @@
 from datetime import date, timedelta
 from flask import render_template, redirect, request, url_for
-from flask_login import LoginManager, login_user, logout_user, login_required
+from flask_login import (
+    LoginManager,
+    login_user,
+    logout_user,
+    login_required,
+    current_user,
+)
 import requests
 from config import app
 from cluster_analysis import ClusterAnalysis
@@ -25,6 +31,9 @@ def login():
     Returns:
         str: отрендеренная главная веб-страница сервиса
     """
+
+    if current_user.is_authenticated:
+        return redirect(url_for("index"))
     if request.method == "POST":
         email = request.form["email"]
         password = request.form["password"]
