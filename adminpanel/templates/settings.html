@@ -28,9 +28,9 @@
             <div id="{{ user.name }}" class="accordion-collapse collapse">
                 <div class="accordion-body">
                     <strong>Email:</strong> {{ user.email }}<br/>
-                    <strong>Подразделение:</strong> {{ user.department }}
-                    <form action="{{ url_for('logout') }}" method="post" class="d-inline">
-                        <button class="btn btn-close btn-lg float-end"></button>
+                    <strong>Подразделение:</strong> {{ user.department }}<br/>
+                    <form action="{{ url_for('logout') }}" method="post" class="mt-1">
+                        <button class="btn btn-danger">Разжаловать</button>
                     </form>
                 </div>
             </div>

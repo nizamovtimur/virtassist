@@ -13,33 +13,33 @@
             <form id="dateRangeForm" method="GET">
                 <div class="form-check form-check-inline">
                     <input class="form-check-input" type="checkbox" value="have_not_answer" id="haveNotAnswerCheckbox" name="have_not_answer"{% if have_not_answer %} checked{% endif %}>
-                    <label class="form-check-label" for="haveNotAnswerCheckbox">
+                    <label class="form-check-label unselectable" for="haveNotAnswerCheckbox">
                         Вопросы без ответа ❓
                     </label>
                 </div>
                 <div class="form-check form-check-inline">
                     <input class="form-check-input" type="checkbox" value="have_low_score" id="haveLowScoreCheckbox" name="have_low_score"{% if have_low_score %} checked{% endif %}>
-                    <label class="form-check-label" for="haveLowScoreCheckbox">
+                    <label class="form-check-label unselectable" for="haveLowScoreCheckbox">
                         Низкая оценка ответа ❌
                     </label>
                 </div>
                 <div class="form-check form-check-inline">
                     <input class="form-check-input" type="checkbox" value="have_high_score" id="haveHighScoreCheckbox" name="have_high_score"{% if have_high_score %} checked{% endif %}>
-                    <label class="form-check-label" for="haveHighScoreCheckbox">
+                    <label class="form-check-label unselectable" for="haveHighScoreCheckbox">
                         Высокая оценка ответа ✔️
                     </label>
                 </div>
                 <div class="form-check form-check-inline">
                     <input class="form-check-input" type="checkbox" value="have_not_score" id="haveNotScoreCheckbox" name="have_not_score"{% if have_not_score %} checked{% endif %}>
-                    <label class="form-check-label" for="haveNotScoreCheckbox">
+                    <label class="form-check-label unselectable" for="haveNotScoreCheckbox">
                         Ответы не оценены ✏️
                     </label>
                 </div>
                 <div class="input-group mt-3">
                     <span class="input-group-text">с</span>
-                    <input type="date" value="{{ time_start }}" class="form-control" id="time_start" name="time_start">
+                    <input type="date" value="{{ time_start }}" class="form-control unselectable" id="time_start" name="time_start">
                     <span class="input-group-text">по</span>
-                    <input type="date" value="{{ time_end }}" class="form-control" id="time_end" name="time_end">
+                    <input type="date" value="{{ time_end }}" class="form-control unselectable" id="time_end" name="time_end">
                 </div>
                 <div class="row mt-3">
                     <div class="col-8 align-self-center">
@@ -73,7 +73,7 @@
                 <div class="accordion-body">
                     <strong>Вопросы:</strong><br/>
                     {% for q in cluster[0] %}
-                    <span>{{ marks[q[1].value] }}</span> {{ q[0] }}<br/>
+                    <span data-bs-toggle="tooltip" data-bs-placement="left" title="{{ q[1].value }}">{{ marks[q[1].value] }}</span> {{ q[0] }}<br/>
                     {% endfor %}
                     <strong>Период:</strong> с {{ cluster[2][0] }} по {{ cluster[2][1] }}
                 </div>
