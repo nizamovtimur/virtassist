@@ -19,7 +19,7 @@ class Chunk(db.Model):
     Args:
         confluence_url (str): ссылка на источник
         text (str): текст фрагмента
-        embedding (Vector): векторное представление текста фрагмента
+        embedding (Vector): векторное представление текста фрагмента размерностью 1024
         created_at (datetime): время создания модели
         updated_at (datetime): время обновления модели
     """

@@ -42,6 +42,8 @@
         confluence_url (str): ссылка на источник
         text (str): текст фрагмента
         embedding (Vector): векторное представление текста фрагмента размерностью 1024
+        created_at (datetime): время создания модели
+        updated_at (datetime): время обновления модели
 
 ## [confluence_retrieving](../qa/confluence_retrieving.py)
 

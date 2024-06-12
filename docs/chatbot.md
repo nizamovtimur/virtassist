@@ -173,7 +173,8 @@
         id (int): id пользователя
         vk_id (int | None): id пользователя ВКонтакте
         telegram_id (int | None): id пользователя Telegram
-        vk_id (int | None): id пользователя ВКонтакте
+        created_at (datetime): время создания модели
+        updated_at (datetime): время обновления модели
 
 ### `class QuestionAnswer(Base)`
 Вопрос пользователя с ответом на него
@@ -185,6 +186,8 @@
         confluence_url (str): ссылка на страницу в вики-системе, содержащую ответ
         score (int): оценка пользователем ответа
         user_id (int): id пользователя, задавшего вопрос
+        created_at (datetime): время создания модели
+        updated_at (datetime): время обновления модели
 
 ### `add_user(engine: Engine, vk_id: int | None = None, telegram_id: int | None = None) -> tuple[bool, int]`
 Функция добавления в БД пользователя виртуального помощника
