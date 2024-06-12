@@ -170,7 +170,11 @@ def get_questions_for_clusters(
         )
         questions = []
         if have_not_answer:
-            for qa in query.filter(QuestionAnswer.answer == ""):
+            for qa in (
+                query.filter(QuestionAnswer.answer == "")
+                .order_by(QuestionAnswer.id)
+                .all()
+            ):
                 questions.append(
                     {
                         "text": qa.question,
@@ -179,7 +183,11 @@ def get_questions_for_clusters(
                     }
                 )
         if have_low_score:
-            for qa in query.filter(QuestionAnswer.score == 1):
+            for qa in (
+                query.filter(QuestionAnswer.score == 1)
+                .order_by(QuestionAnswer.id)
+                .all()
+            ):
                 questions.append(
                     {
                         "text": qa.question,
@@ -188,7 +196,11 @@ def get_questions_for_clusters(
                     }
                 )
         if have_high_score:
-            for qa in query.filter(QuestionAnswer.score == 5):
+            for qa in (
+                query.filter(QuestionAnswer.score == 5)
+                .order_by(QuestionAnswer.id)
+                .all()
+            ):
                 questions.append(
                     {
                         "text": qa.question,
@@ -197,7 +209,11 @@ def get_questions_for_clusters(
                     }
                 )
         if have_not_score:
-            for qa in query.filter(QuestionAnswer.score == None):
+            for qa in (
+                query.filter(QuestionAnswer.score == None)
+                .order_by(QuestionAnswer.id)
+                .all()
+            ):
                 questions.append(
                     {
                         "text": qa.question,
