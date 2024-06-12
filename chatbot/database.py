@@ -30,6 +30,7 @@ class User(Base):
         vk_id (int | None): id пользователя ВКонтакте
         telegram_id (int | None): id пользователя Telegram
         is_subscribed (bool): состояние подписки пользователя
+        question_answers (List[QuestionAnswer]): вопросы пользователя
         created_at (datetime): время создания модели
         updated_at (datetime): время обновления модели
     """
@@ -61,6 +62,7 @@ class QuestionAnswer(Base):
         confluence_url (str | None): ссылка на страницу в вики-системе, содержащую ответ
         score (int | None): оценка пользователем ответа
         user_id (int): id пользователя, задавшего вопрос
+        user (User): пользователь, задавший вопрос
         created_at (datetime): время создания модели
         updated_at (datetime): время обновления модели
     """

@@ -29,7 +29,7 @@ class Chunk(db.Model):
     id: Mapped[int] = mapped_column(primary_key=True)
     confluence_url: Mapped[str] = mapped_column(Text(), index=True)
     text: Mapped[str] = mapped_column(Text())
-    embedding: Mapped[Vector] = mapped_column(Vector(312))
+    embedding: Mapped[Vector] = mapped_column(Vector(1024))
 
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
@@ -43,6 +43,7 @@ class User(db.Model):
         vk_id (int | None): id пользователя ВКонтакте
         telegram_id (int | None): id пользователя Telegram
         is_subscribed (bool): состояние подписки пользователя
+        question_answers (List[QuestionAnswer]): вопросы пользователя
         created_at (datetime): время создания модели
         updated_at (datetime): время обновления модели
     """
@@ -74,6 +75,7 @@ class QuestionAnswer(db.Model):
         confluence_url (str | None): ссылка на страницу в вики-системе, содержащую ответ
         score (int | None): оценка пользователем ответа
         user_id (int): id пользователя, задавшего вопрос
+        user (User): пользователь, задавший вопрос
         created_at (datetime): время создания модели
         updated_at (datetime): время обновления модели
     """
