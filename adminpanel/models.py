@@ -3,7 +3,7 @@ from typing import Optional, List
 from bcrypt import hashpw, gensalt, checkpw
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import UserMixin
-from sqlalchemy import BigInteger, Column, DateTime, ForeignKey, Text, func, _and
+from sqlalchemy import BigInteger, Column, DateTime, ForeignKey, Text, func, and_
 from sqlalchemy.orm import Mapped, Session, mapped_column, relationship
 from pgvector.sqlalchemy import Vector
 from cluster_analysis import mark_of_question
@@ -213,7 +213,7 @@ def get_questions_for_clusters(
         if have_not_score:
             for qa in (
                 query.filter(
-                    _and(QuestionAnswer.score == None, QuestionAnswer.answer != "")
+                    and_(QuestionAnswer.score == None, QuestionAnswer.answer != "")
                 )
                 .order_by(QuestionAnswer.id)
                 .all()
