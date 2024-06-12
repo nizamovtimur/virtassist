@@ -96,6 +96,8 @@
         id (int): id пользователя
         vk_id (int | None): id пользователя ВКонтакте
         telegram_id (int | None): id пользователя Telegram
+        is_subscribed (bool): состояние подписки пользователя
+        question_answers (List[QuestionAnswer]): вопросы пользователя
         created_at (datetime): время создания модели
         updated_at (datetime): время обновления модели
 
@@ -105,10 +107,11 @@
     Args:
         id (int): id ответа
         question (str): вопрос пользователя
-        answer (str): ответ на вопрос пользователя
-        confluence_url (str): ссылка на страницу в вики-системе, содержащую ответ
-        score (int): оценка пользователем ответа
+        answer (str | None): ответ на вопрос пользователя
+        confluence_url (str | None): ссылка на страницу в вики-системе, содержащую ответ
+        score (int | None): оценка пользователем ответа
         user_id (int): id пользователя, задавшего вопрос
+        user (User): пользователь, задавший вопрос
         created_at (datetime): время создания модели
         updated_at (datetime): время обновления модели
 
@@ -179,7 +182,16 @@
 Класс с функцией тестирования анализа вопросов
 
 #### `test_preprocessing()`
-Тест анализа вопросов
+Функция тестирует анализ вопросов
+
+### `class TestModels`
+Класс с функциями тестирования моделей административной панели
+
+#### `test_get_admins()`
+Функция тестирует получение списка администраторов
+
+#### `test_get_questions_for_clusters()`
+Функция тестирует получение вопросов из кластеров
 
 ## [views](../adminpanel/views.py)
 
