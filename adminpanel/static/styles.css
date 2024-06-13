@@ -3,14 +3,14 @@ body, html{
 }
 
 tr {
-    line-height: 30px;
-    min-height: 30px;
-    height: 30px;
+    line-height: 2rem;
+    min-height: 2rem;
+    height: 2rem;
 }
 
 .broadcast-check {
-    width: 30px;
-    height: 30px;
+    width: 2rem;
+    height: 2rem;
 }
 
 .bg-dark-blue {
@@ -29,12 +29,6 @@ tr {
     background-color: #EEEEEE;
 }
 
-/* .btn-blue {
-  color: white;;
-  background-color: #34547A;
-  border-radius: .5rem;
-} */
-
 .btn-blue {
   --bs-btn-font-weight: 600;
   --bs-btn-color: #ffffff;
@@ -48,4 +42,22 @@ tr {
   --bs-btn-active-color: #ffffff;
   --bs-btn-active-bg: #1f4a7e;
   --bs-btn-active-border-color: #1f4a7e;
+}
+
+.span1{
+    display: inline-block;
+    background: #ccc;
+    color: #000;
+    text-align: center;
+    border-radius: 50%;
+    padding: .3em .65em;
+}
+
+.unselectable {
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    -khtml-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
 }
