@@ -153,15 +153,9 @@ def broadcast() -> str:
             url=f"http://{app.config['CHATBOT_HOST']}/broadcast/",
             json={"text": text, "tg": tg_bool, "vk": vk_bool},
         )
-        if response.status_code == 200:
-            return render_template(
-                "broadcast.html", page_title="Рассылка", response=response.text
-            )
-        else:
-            response = "Ваше сообщение не доставлено"
-            return render_template(
-                "broadcast.html", page_title="Рассылка", response=response
-            )
+        return render_template(
+            "broadcast.html", page_title="Рассылка", response=response.text
+        )
     return render_template("broadcast.html", page_title="Рассылка")
 
 
