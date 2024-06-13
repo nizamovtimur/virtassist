@@ -25,6 +25,7 @@
                 </div>
             </div>
         </div>
+
         <div class="row mb-4">
             <div class="col-12">
                 <textarea cols="30" rows="10" class="form-control" type="text" placeholder="Сообщение" id="validationCustom05" name="name" required></textarea>
@@ -33,11 +34,35 @@
                 </div>
             </div>
         </div>
+
         <div class="row">
-            <div class="col offset-md-5">
-                <button class="btn btn-blue btn-lg" type="submit">Отправить</button>
+            <div class="col-2 offset-5">
+                <button class="btn btn-blue btn-lg w-100" type="button" data-bs-toggle="modal" data-bs-target="#confirmModal">Отправить</button>
+            </div>
+
+            <div class="modal fade" id="confirmModal" tabindex="-1" aria-labelledby="confirmModalLabel" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="confirmModalLabel">Подтвердить отправку рассылки?</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Закрыть"></button>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-danger" data-bs-dismiss="modal">Закрыть</button>
+                            <button type="submit" class="btn btn-blue">Сохранить изменения</button>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
+
+        {% if response != "Проверка" %}
+        <div class="row mt-4">
+            <div class="col-4 offset-4">
+                <h3 class="text-center">{{ response }}</h3>
+            </div>
+        </div>
+        {% endif %}
     </form>
 </div>
 {% endblock %}
