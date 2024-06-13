@@ -14,30 +14,32 @@
             <div class="row vh-100">
                 <div class="col-lg-2 text-white position-fixed h-100 bg-dark-blue">
                     <nav>
-                        <div class="text-end mt-3 fs-5">
-                            <span class="vertical-align-middle">{{ current_user.name }} {{ current_user.surname }}</span>
+                        <div class="mt-3 fs-5 text-end">
                             <form action="{{ url_for('logout') }}" method="post" class="d-inline">
                                 <button class="btn btn-sm btn-outline-secondary vertical-align-middle">Выйти</button>
                             </form>
                         </div>
+                        <div class="mt-2 fs-4 text-center">
+                            <span class="vertical-align-middle">{{ current_user.name }} {{ current_user.surname }}</span>
+                        </div>
                         <div class="text-center my-4">
-                            <h1 class="fs-3">Виртуальный помощник студента</h1>
+                            <h1 class="fs-3 unselectable">Виртуальный помощник студента</h1>
                         </div>
                         <div class="text-center mb-4 {{ 'bg-orange' if page_title == 'Сводка' }}">
-                            <a href="{{ url_for('index') }}" class="link-light text-end fs-2 fst-italic text-decoration-none">Сводка</a>
+                            <a href="{{ url_for('index') }}" class="link-light text-end fs-2 fst-italic text-decoration-none unselectable">Сводка</a>
                         </div>
                         <div class="text-center mb-4 {{ 'bg-orange' if page_title == 'Анализ вопросов' }}">
-                            <a href="{{ url_for('questions_analysis') }}" class="link-light text-end fs-2 fst-italic text-decoration-none">Анализ вопросов</a>
+                            <a href="{{ url_for('questions_analysis') }}" class="link-light text-end fs-2 fst-italic text-decoration-none unselectable">Анализ вопросов</a>
                         </div>
                         <div class="text-center mb-4 {{ 'bg-orange' if page_title == 'Рассылка' }}">
-                            <a href="{{ url_for('broadcast') }}" class="link-light text-end fs-2 fst-italic text-decoration-none">Рассылка</a>
+                            <a href="{{ url_for('broadcast') }}" class="link-light text-end fs-2 fst-italic text-decoration-none unselectable">Рассылка</a>
                         </div>
                         <div class="text-center {{ 'bg-orange' if page_title == 'Настройки' }}">
-                            <a href="{{ url_for('settings') }}" class="link-light text-end fs-2 fst-italic text-decoration-none">Настройки</a>
+                            <a href="{{ url_for('settings') }}" class="link-light text-end fs-2 fst-italic text-decoration-none unselectable">Настройки</a>
                         </div>
                     </nav>
                     <div class="position-absolute bottom-0 start-50 translate-middle-x mb-5 w-75">
-                        <img src="{{ url_for('static', filename='UTMN_logo_rus_wiki.svg') }}" class="w-100" alt="UTMN logo">
+                        <img src="{{ url_for('static', filename='UTMN_logo_rus_wiki.svg') }}" class="w-100 unselectable" alt="UTMN logo">
                     </div>
                 </div>
                 <div class="col-lg-10 offset-lg-2 bg-gray-e">

@@ -113,6 +113,12 @@ def questions_analysis() -> str:
         have_high_score=have_high_score,
         have_not_score=have_not_score,
     )
+    marks = {
+        "нет оценки": "✏️",
+        "высокая оценка": "✔️",
+        "низкая оценка": "❌",
+        "нет ответа": "❓",
+    }
     clusters, questions_len, clusters_len = analysis.get_clusters_keywords(questions)
     return render_template(
         "questions-analysis.html",
@@ -125,6 +131,7 @@ def questions_analysis() -> str:
         clusters=clusters,
         questions_len=questions_len,
         clusters_len=clusters_len,
+        marks=marks,
         page_title="Анализ вопросов",
     )
 

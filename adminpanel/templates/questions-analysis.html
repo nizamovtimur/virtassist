@@ -6,40 +6,40 @@
 
 <div class="col-md-12 my-3">
     <div class="card">
-        <div class="card-header">
+        <div class="card-header unselectable">
             Настройки
         </div>
         <div class="card-body">
             <form id="dateRangeForm" method="GET">
                 <div class="form-check form-check-inline">
                     <input class="form-check-input" type="checkbox" value="have_not_answer" id="haveNotAnswerCheckbox" name="have_not_answer"{% if have_not_answer %} checked{% endif %}>
-                    <label class="form-check-label" for="haveNotAnswerCheckbox">
-                        Вопросы без ответа
+                    <label class="form-check-label unselectable" for="haveNotAnswerCheckbox">
+                        Вопросы без ответа ❓
                     </label>
                 </div>
                 <div class="form-check form-check-inline">
                     <input class="form-check-input" type="checkbox" value="have_low_score" id="haveLowScoreCheckbox" name="have_low_score"{% if have_low_score %} checked{% endif %}>
-                    <label class="form-check-label" for="haveLowScoreCheckbox">
-                        Низкая оценка ответа
+                    <label class="form-check-label unselectable" for="haveLowScoreCheckbox">
+                        Низкая оценка ответа ❌
                     </label>
                 </div>
                 <div class="form-check form-check-inline">
                     <input class="form-check-input" type="checkbox" value="have_high_score" id="haveHighScoreCheckbox" name="have_high_score"{% if have_high_score %} checked{% endif %}>
-                    <label class="form-check-label" for="haveHighScoreCheckbox">
-                        Высокая оценка ответа
+                    <label class="form-check-label unselectable" for="haveHighScoreCheckbox">
+                        Высокая оценка ответа ✔️
                     </label>
                 </div>
                 <div class="form-check form-check-inline">
                     <input class="form-check-input" type="checkbox" value="have_not_score" id="haveNotScoreCheckbox" name="have_not_score"{% if have_not_score %} checked{% endif %}>
-                    <label class="form-check-label" for="haveNotScoreCheckbox">
-                        Ответы не оценены
+                    <label class="form-check-label unselectable" for="haveNotScoreCheckbox">
+                        Ответы не оценены ✏️
                     </label>
                 </div>
                 <div class="input-group mt-3">
                     <span class="input-group-text">с</span>
-                    <input type="date" value="{{ time_start }}" class="form-control" id="time_start" name="time_start">
+                    <input type="date" value="{{ time_start }}" class="form-control unselectable" id="time_start" name="time_start">
                     <span class="input-group-text">по</span>
-                    <input type="date" value="{{ time_end }}" class="form-control" id="time_end" name="time_end">
+                    <input type="date" value="{{ time_end }}" class="form-control unselectable" id="time_end" name="time_end">
                 </div>
                 <div class="row mt-3">
                     <div class="col-8 align-self-center">
@@ -59,14 +59,21 @@
         <div class="accordion-item">
             <h2 class="accordion-header">
                 <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#panelsStayOpen-collapse{{ clusters.index(cluster) + 1 }}" aria-expanded="false" aria-controls="panelsStayOpen-collapse{{ clusters.index(cluster) + 1 }}">
-                    {{ ', '.join(cluster[1]) }}
+                    <div class="row w-100">
+                        <div class="col-11">
+                            {{ ', '.join(cluster[1]) }}
+                        </div>
+                        <div class="col-1">
+                            <span class="span1">{{ cluster[0]|length }}</span>
+                        </div>
+                    </div>
                 </button>
             </h2>
             <div id="panelsStayOpen-collapse{{ clusters.index(cluster) + 1 }}" class="accordion-collapse collapse">
                 <div class="accordion-body">
-                    <strong>Вопросы ({{ cluster[0]|length }}):</strong><br/>
+                    <strong>Вопросы:</strong><br/>
                     {% for q in cluster[0] %}
-                    <span><i>({{ q[1].value }})</i></span> {{ q[0] }}<br/>
+                    <span data-bs-toggle="tooltip" data-bs-placement="left" title="{{ q[1].value }}">{{ marks[q[1].value] }}</span> {{ q[0] }}<br/>
                     {% endfor %}
                     <strong>Период:</strong> с {{ cluster[2][0] }} по {{ cluster[2][1] }}
                 </div>
