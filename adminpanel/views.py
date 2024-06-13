@@ -162,7 +162,7 @@ def broadcast() -> str:
             return render_template(
                 "broadcast.html", page_title="Рассылка", response=response
             )
-    return render_template("broadcast.html", page_title="Рассылка", response="Проверка")
+    return render_template("broadcast.html", page_title="Рассылка")
 
 
 @app.get("/settings")
