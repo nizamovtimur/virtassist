@@ -459,20 +459,32 @@ async def broadcast(request: web.Request) -> web.Response:
 
     try:
         data = await request.json()
-        vk_users, tg_users = get_subscribed_users(engine)
         if not data["vk"] and not data["tg"]:
             raise Exception("ничего не выбрано")
         if len(data["text"]) < 3:
             raise Exception("в сообщении меньше трёх символов")
+        vk_users, tg_users = get_subscribed_users(engine)
+        vk_count, tg_count = 0, 0
         if data["vk"]:
             for user_id in vk_users:
-                await vk_bot.api.messages.send(
-                    user_id=user_id, message=data["text"], random_id=0
-                )
+                try:
+                    await vk_bot.api.messages.send(
+                        user_id=user_id, message=data["text"], random_id=0
+                    )
+                    vk_count += 1
+                except vk.VKAPIError:
+                    continue
         if data["tg"]:
             for user_id in tg_users:
-                await tg_bot.send_message(chat_id=user_id, text=data["text"])
-        return web.Response(text="Массовая рассылка успешно осуществлена", status=200)
+                try:
+                    await tg_bot.send_message(chat_id=user_id, text=data["text"])
+                    tg_count += 1
+                except tg.utils.exceptions.BotBlocked:
+                    await asyncio.sleep(1)
+        return web.Response(
+            text=f"Осуществлена массовая рассылка пользователям VK: {vk_count}, Telegram: {tg_count}",
+            status=200,
+        )
     except Exception as e:
         return web.Response(
             text=f"В ходе массовой рассылки произошла ошибка: {str(e)}",
