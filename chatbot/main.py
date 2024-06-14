@@ -460,18 +460,24 @@ async def broadcast(request: web.Request) -> web.Response:
     try:
         data = await request.json()
         vk_users, tg_users = get_subscribed_users(engine)
-        if data["vk"] and len(vk_users) != 0 and len(data["text"]) != 0:
+        if not data["vk"] and not data["tg"]:
+            raise Exception("ничего не выбрано")
+        if len(data["text"]) < 3:
+            raise Exception("в сообщении меньше трёх символов")
+        if data["vk"]:
             for user_id in vk_users:
                 await vk_bot.api.messages.send(
                     user_id=user_id, message=data["text"], random_id=0
                 )
-        if data["tg"] and len(tg_users) != 0 and len(data["text"]) != 0:
+        if data["tg"]:
             for user_id in tg_users:
                 await tg_bot.send_message(chat_id=user_id, text=data["text"])
-        return web.Response(status=200)
+        return web.Response(text="Массовая рассылка успешно осуществлена", status=200)
     except Exception as e:
-        logging.warning(str(e))
-        return web.Response(text=str(e), status=500)
+        return web.Response(
+            text=f"В ходе массовой рассылки произошла ошибка: {str(e)}",
+            status=500,
+        )
 
 
 def launch_vk_bot():
