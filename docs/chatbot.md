@@ -248,7 +248,7 @@
         user_id (int): id пользователя
 
     Returns:
-        bool: пользователь задал три вопроса за последнюю минуту
+        bool: пользователь задал пять вопросов за последнюю минуту
 
 ### `add_question_answer(engine: Engine, question: str, answer: str, confluence_url: str | None, user_id: int) -> int`
 Функция добавления в БД вопроса пользователя с ответом на него

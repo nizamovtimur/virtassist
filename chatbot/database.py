@@ -189,17 +189,17 @@ def check_spam(engine: Engine, user_id: int) -> bool:
         user_id (int): id пользователя
 
     Returns:
-        bool: пользователь задал три вопроса за последнюю минуту
+        bool: пользователь задал пять вопросов за последнюю минуту
     """
 
     with Session(engine) as session:
         user = session.scalars(select(User).where(User.id == user_id)).first()
         if user is None:
             return False
-        if len(user.question_answers) > 3:
+        if len(user.question_answers) > 5:
             minute_ago = datetime.now() - timedelta(minutes=1)
-            third_message_date = user.question_answers[2].created_at
-            return minute_ago < third_message_date.replace(tzinfo=None)
+            fifth_message_date = user.question_answers[4].created_at
+            return minute_ago < fifth_message_date.replace(tzinfo=None)
         return False
 
 

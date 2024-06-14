@@ -123,7 +123,7 @@ class TestDBFunctions:
         assert user_id is not None
         assert check_spam(self.engine, user_id) is False
         with Session(self.engine) as session:
-            for _ in range(4):
+            for _ in range(6):
                 session.add(
                     QuestionAnswer(
                         question=self.test_question,
