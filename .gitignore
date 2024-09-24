@@ -1,5 +1,5 @@
 .idea
-[v]env
+[.][v]env
 .env*
 !.env.example
 saved_models
